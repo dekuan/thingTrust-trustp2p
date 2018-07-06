@@ -1,0 +1,11 @@
+package trust_note_p2p_saying_package;
+
+syntax = "proto3";
+
+
+message TrustNoteP2pSaying
+{
+	optional string type		= 1 [ default = "saying" ];
+	required string subject		= 2 [ default = "" ];
+	required string body		= 3 [ default = "" ];
+}
