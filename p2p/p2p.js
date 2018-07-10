@@ -3,43 +3,11 @@
 
 let _conf			= require( '../conf.js' );
 
+let CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 let _network_peer		= require( './p2pPeer.js' );
-let _network_heartbeat		= require( './p2pHeartbeat.js' );
-
-let m_nIntervalHeartbeat	= null;
 
 
-
-/**
- *	start heart beat
- *	@private
- */
-function _startHeartbeat()
-{
-	if ( null !== m_nIntervalHeartbeat )
-	{
-		return;
-	}
-
-	//
-	//	if we have exactly same intervals on two clints,
-	//	they might send heartbeats to each other at the same time
-	//
-	m_nIntervalHeartbeat = setInterval
-	(
-		_network_heartbeat.heartbeatEmitter,
-		3 * 1000 + _network_peer.getRandomInt( 0, 1000 )
-	);
-}
-function _stopHeartbeat()
-{
-	if ( null !== m_nIntervalHeartbeat )
-	{
-		clearInterval( m_nIntervalHeartbeat );
-		m_nIntervalHeartbeat = null;
-	}
-}
-
+let m_cHeartbeat		= new CP2pHeartbeat();
 
 
 
@@ -142,7 +110,7 @@ function startClient()
 	//
 	//	start heartbeat
 	//
-	_startHeartbeat();
+	m_cHeartbeat.start();
 }
 
 /**
@@ -167,7 +135,7 @@ function startServer( oOptions )
 	//
 	//	start heartbeat
 	//
-	_startHeartbeat();
+	m_cHeartbeat.start();
 }
 
 

@@ -26,6 +26,15 @@
  */
 
 
+const m = new Map();
+
+m.set('edition', 6)        // 键是字符串
+m.set(262, 'standard')     // 键是数值
+m.set(undefined, 'nah....')    // 键是 undefined
+console.log( m.get( undefined ) );
+
+
+
 /**
  *	先执行
  *	$ node --expose-gc
@@ -89,4 +98,4 @@ function test_weakMap()
 
 
 
-test_weakMap();
+//test_weakMap();

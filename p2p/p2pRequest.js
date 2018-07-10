@@ -5,7 +5,7 @@ let _				= require( 'lodash' );
 let _object_hash		= require( '../object_hash.js' );
 
 let _event_bus			= require( './p2pEvents.js' );
-let _network_consts		= require( './p2pConstants.js' );
+let _p2pConstants		= require( './p2pConstants.js' );
 let _network_message		= require( './p2pMessage.js' );
 let _network_peer		= require( './p2pPeer.js' );
 
@@ -82,7 +82,7 @@ function sendRequest( ws, command, params, bReRoutable, pfnResponseHandler )
 	content.tag	= tag;
 
 	//
-	//	after _network_consts.STALLED_TIMEOUT, reroute the request to another peer
+	//	after _p2pConstants.STALLED_TIMEOUT, reroute the request to another peer
 	//	it'll work correctly even if the current peer is already disconnected when the timeout fires
 	//
 	//	THIS function will be called when the request is timeout
@@ -166,7 +166,7 @@ function sendRequest( ws, command, params, bReRoutable, pfnResponseHandler )
 				console.log( '# network::sendRequest request ' + command + ', send to ' + ws.peer + ' was overtime.' );
 				pfnReroute.apply( this, arguments );
 			},
-			_network_consts.STALLED_TIMEOUT
+			_p2pConstants.STALLED_TIMEOUT
 		)
 		: null;
 
@@ -194,7 +194,7 @@ function sendRequest( ws, command, params, bReRoutable, pfnResponseHandler )
 				);
 				delete ws.assocPendingRequests[ tag ];
 			},
-			_network_consts.RESPONSE_TIMEOUT
+			_p2pConstants.RESPONSE_TIMEOUT
 		);
 
 	//

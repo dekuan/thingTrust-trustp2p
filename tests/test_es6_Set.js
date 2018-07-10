@@ -48,7 +48,7 @@ _setQueue.add( 100 );
 _setQueue.add( 0 );
 _setQueue.add( 0 );
 
-//_setQueue	= new Set( [..._setQueue].sort() );
+_setQueue	= new Set( [..._setQueue].sort() );
 console.log( _setQueue );
 
 
