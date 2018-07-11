@@ -23,18 +23,20 @@
 
 
 
-let read = (function* () {
-	yield 'hello';
-	yield* 'hello';
-})();
 
-console.log( read.next() );	//	{ value: 'hello', done: false }
-console.log( read.next() );	//	{ value: 'h', done: false }
-console.log( read.next() );	//	{ value: 'e', done: false }
-console.log( read.next() );	//	{ value: 'l', done: false }
-console.log( read.next() );	//	{ value: 'l', done: false }
-console.log( read.next() );	//	{ value: 'o', done: false }
-console.log( read.next() );	//	{ value: undefined, done: true }
+//
+// let read = (function* () {
+// 	yield 'hello';
+// 	yield* 'hello';
+// })();
+//
+// console.log( read.next() );	//	{ value: 'hello', done: false }
+// console.log( read.next() );	//	{ value: 'h', done: false }
+// console.log( read.next() );	//	{ value: 'e', done: false }
+// console.log( read.next() );	//	{ value: 'l', done: false }
+// console.log( read.next() );	//	{ value: 'l', done: false }
+// console.log( read.next() );	//	{ value: 'o', done: false }
+// console.log( read.next() );	//	{ value: undefined, done: true }
 
 
 
@@ -142,33 +144,33 @@ console.log( read.next() );	//	{ value: undefined, done: true }
 
 
 
-//
-//
-// function * f()
-// {
-// 	for( let i = 0; true; i++ )
-// 	{
-// 		//
-// 		//	yield表达式本身没有返回值，或者说总是返回undefined。
-// 		//	next方法可以带一个参数，该参数就会被当作上一个yield表达式的返回值。
-// 		//
-// 		let reset = yield i;
-// 		if ( reset )
-// 		{
-// 			i = -1;
-// 		}
-// 	}
-// }
-// let g = f();
-//
-// console.log( g.next() );	// { value: 0, done: false }
-// console.log( g.next() );	// { value: 1, done: false }
-// console.log( g.next() );	// { value: 2, done: false }
-// console.log( g.next( true ) );	// { value: 0, done: false }
-// console.log( g.next() );	// { value: 1, done: false }
-// console.log( g.next() );	// { value: 1, done: false }
-// console.log( g.next() );	// { value: 1, done: false }
-//
+
+
+function * f()
+{
+	for( let i = 0; true; i++ )
+	{
+		//
+		//	yield表达式本身没有返回值，或者说总是返回undefined。
+		//	next方法可以带一个参数，该参数就会被当作上一个yield表达式的返回值。
+		//
+		let reset = yield i;
+		if ( reset )
+		{
+			i = -1;
+		}
+	}
+}
+let g = f();
+
+console.log( g.next() );	// { value: 0, done: false }
+console.log( g.next() );	// { value: 1, done: false }
+console.log( g.next() );	// { value: 2, done: false }
+console.log( g.next( true ) );	// { value: 0, done: false }
+console.log( g.next() );	// { value: 1, done: false }
+console.log( g.next() );	// { value: 1, done: false }
+console.log( g.next() );	// { value: 1, done: false }
+
 
 
 

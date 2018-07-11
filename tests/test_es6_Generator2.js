@@ -7,6 +7,7 @@
  */
 let co	= require( 'co' );
 
+
 co( function * ()
 {
 	let arrValues;

@@ -6,10 +6,14 @@ let socks			= process.browser ? null : require( 'socks' + '' );
 
 let _conf			= require( '../conf.js' );
 
-let _db				= require( '../db.js' );
+let _crypto			= require( 'crypto' );
 
-let _event_bus			= require( './p2pEvents' );
-let _network_message		= require( './p2pMessage.js' );
+let _p2pUtils			= require( './p2pUtils.js' );
+let _p2pLog			= require( './p2pLog.js' );
+let _p2pPersistence		= require( './p2pPersistence.js' );
+
+let _p2pEvents			= require( './p2pEvents.js' );
+let _p2pMessage			= require( './p2pMessage.js' );
 
 
 
@@ -18,8 +22,6 @@ let _network_message		= require( './p2pMessage.js' );
  */
 class CP2pPeerServer
 {
-	m_oWss	= null;
-
 	constructor()
 	{
 		this.init();
@@ -32,6 +34,15 @@ class CP2pPeerServer
 	init()
 	{
 		this.m_oWss	= { clients : [] };
+		this.m_oOptions	=
+			{
+				port		: 80,
+				bServeAsHub	: false,
+				bLight		: false,
+				subscribe	: () => {},
+				onMessage	: () => {},
+				onClose		: () => {},
+			};
 	}
 
 
@@ -40,17 +51,32 @@ class CP2pPeerServer
 	 *
 	 *	@param oOptions
 	 *		.port
+	 *		.bServeAsHub
+	 *		.bLight
 	 *		.subscribe
 	 *		.onMessage
 	 *		.onClose
 	 */
-	startServer( oOptions )
+	async startServer( oOptions )
 	{
+		if ( ! Number.isInteger( oOptions.port ) ||
+			( oOptions.hasOwnProperty( 'subscribe' ) && ! _p2pUtils.isFunction( oOptions.subscribe ) ) ||
+			( oOptions.hasOwnProperty( 'onMessage' ) && ! _p2pUtils.isFunction( oOptions.onMessage ) ) ||
+			( oOptions.hasOwnProperty( 'onClose' ) && ! _p2pUtils.isFunction( oOptions.onClose )  ) )
+		{
+			throw Error( 'startServer with invalid parameter.' );
+		}
+
+		//
+		//	copy options
+		//
+		this.m_oOptions = Object.assign( {}, this.m_oOptions, oOptions );
+
 		//
 		//	delete all ...
 		//
-		_db.query( "DELETE FROM watched_light_addresses" );
-		_db.query( "DELETE FROM watched_light_units" );
+		await _p2pPersistence.clearWholeWatchList();
+
 
 		//
 		//	create a new web socket server
@@ -64,7 +90,7 @@ class CP2pPeerServer
 		this.m_oWss	= new WebSocket.Server
 		(
 			{
-				port	: oOptions.port
+				port	: this.m_oOptions.port
 			}
 		);
 
@@ -78,13 +104,10 @@ class CP2pPeerServer
 		//		request is the http GET request sent by the client.
 		// 		Useful for parsing authority headers, cookie headers, and other information.
 		//
-		this.m_oWss.on
-		(
-			'connection',
-			this._onPeerConnected
-		);
+		this.m_oWss.on( 'connection', this._onPeerConnectedIn );
 
-		console.log( 'WSS running at port ' + oOptions.port );
+		//	...
+		_p2pLog.info( 'WSS running at port ' + this.m_oOptions.port );
 	}
 
 	/**
@@ -101,20 +124,19 @@ class CP2pPeerServer
 	 *	@private
 	 *	@param ws
 	 */
-	_onPeerConnected( ws )
+	async _onPeerConnectedIn( ws )
 	{
 		//
 		//	ws
 		//	- the connected Web Socket handle of remote client
 		//
 		let sRemoteAddress;
-		let bStatsCheckUnderWay;
 
 		//	...
 		sRemoteAddress = this._getRemoteAddress( ws );
 		if ( ! sRemoteAddress )
 		{
-			console.log( "no ip/sRemoteAddress in accepted connection" );
+			_p2pLog.error( "no ip/sRemoteAddress in accepted connection" );
 			ws.terminate();
 			return;
 		}
@@ -130,90 +152,64 @@ class CP2pPeerServer
 		ws.last_ts			= Date.now();
 
 		//	...
-		console.log( 'got connection from ' + ws.peer + ", host " + ws.host );
+		_p2pLog.info( 'got connection from ' + ws.peer + ", host " + ws.host );
 
 		if ( this.m_oWss.clients.length >= _conf.MAX_INBOUND_CONNECTIONS )
 		{
-			console.log( "inbound connections maxed out, rejecting new client " + sRemoteAddress );
+			_p2pLog.error( "inbound connections maxed out, rejecting new client " + sRemoteAddress );
 
 			//	1001 doesn't work in cordova
 			ws.close( 1000, "inbound connections maxed out" );
-			return;
+			return null;
+		}
+		if ( ! await _p2pPersistence.isGoodPeer( ws.host ) )
+		{
+			_p2pLog.error( "# rejecting new client " + ws.host + " because of bad stats" );
+			return ws.terminate();
 		}
 
-		//	...
-		bStatsCheckUnderWay	= true;
+		//
+		//	WELCOME THE NEW PEER WITH THE LIST OF FREE JOINTS
+		//
+		//	if (!m_bCatchingUp)
+		//		_sendFreeJoints(ws);
+		//
+		//	*
+		//	so, we response the version of this hub/witness
+		//
+		_p2pMessage.sendVersion( ws );
+
 
 		//
-		//	calculate the counts of elements in status invalid and new_good
-		//	from table [peer_events] by peer_host for a hour ago.
+		//	I'm a hub, send challenge
 		//
-		_db.query
-		(
-			"SELECT \
-				SUM( CASE WHEN event='invalid' THEN 1 ELSE 0 END ) AS count_invalid, \
-				SUM( CASE WHEN event='new_good' THEN 1 ELSE 0 END ) AS count_new_good \
-				FROM peer_events WHERE peer_host = ? AND event_date > " + _db.addTime( "-1 HOUR" ),
-			[
-				//	remote host/sRemoteAddress connected by this ws
-				ws.host
-			],
-			( rows ) =>
-			{
-				let oStats;
+		if ( this.m_oOptions.bServeAsHub )
+		{
+			//
+			//	create 'challenge' key for clients
+			//
+			ws.challenge	= _crypto.randomBytes( 30 ).toString( "base64" );
 
-				//	...
-				bStatsCheckUnderWay	= false;
+			//
+			//	the new peer, I am a hub and I have ability to exchange data
+			//
+			_p2pMessage.sendJustSaying( ws, 'hub/challenge', ws.challenge );
+		}
 
-				//	...
-				oStats	= rows[ 0 ];
-				if ( oStats.count_invalid )
-				{
-					//
-					//	CONNECTION WAS REJECTED
-					//	this peer have invalid events before
-					//
-					console.log( "# rejecting new client " + ws.host + " because of bad stats" );
-					return ws.terminate();
-				}
+		if ( ! this.m_oOptions.bLight )
+		{
+			//
+			//	call
+			//	subscribe data from others
+			//	while a client connected to me
+			//
+			this.m_oOptions.subscribe( ws );
+		}
 
-				//
-				//	WELCOME THE NEW PEER WITH THE LIST OF FREE JOINTS
-				//
-				//	if (!m_bCatchingUp)
-				//		_sendFreeJoints(ws);
-				//
-				//	*
-				//	so, we response the version of this hub/witness
-				//
-				_network_message.sendVersion( ws );
-
-				//	I'm a hub, send challenge
-				if ( _conf.bServeAsHub )
-				{
-					ws.challenge	= _crypto.randomBytes( 30 ).toString( "base64" );
-
-					//
-					//	the new peer, I am a hub and I have ability to exchange data
-					//
-					_network_message.sendJustSaying( ws, 'hub/challenge', ws.challenge );
-				}
-				if ( ! _conf.bLight )
-				{
-					//
-					//	call
-					//	subscribe data from others
-					//	while a client connected to me
-					//
-					oOptions.subscribe( ws );
-				}
-
-				//
-				//	emit a event say there was a client connected
-				//
-				_event_bus.emit( 'connected', ws );
-			}
-		);
+		//
+		//	emit a event say there was a client connected
+		//
+		_p2pEvents.emit( 'connected', ws );
 
 		//
 		//	receive message
@@ -221,30 +217,12 @@ class CP2pPeerServer
 		ws.on
 		(
 			'message',
-			function( message )
+			( message ) =>
 			{
-				//	might come earlier than stats check completes
-				function tryHandleMessage()
-				{
-					if ( bStatsCheckUnderWay )
-					{
-						setTimeout
-						(
-							tryHandleMessage,
-							100
-						);
-					}
-					else
-					{
-						//
-						//	call while receiving message
-						//
-						oOptions.onMessage.call( ws, message );
-					}
-				}
-
-				//	...
-				tryHandleMessage();
+				//
+				//	call while receiving message
+				//
+				this.m_oOptions.onMessage.call( ws, message );
 			}
 		);
 
@@ -254,17 +232,19 @@ class CP2pPeerServer
 		ws.on
 		(
 			'close',
-			function()
+			async () =>
 			{
-				_db.query( "DELETE FROM watched_light_addresses WHERE peer = ?", [ ws.peer ] );
-				_db.query( "DELETE FROM watched_light_units WHERE peer = ?", [ ws.peer ] );
-				//_db.query( "DELETE FROM light_peer_witnesses WHERE peer = ?", [ ws.peer ] );
-				console.log( "client " + ws.peer + " disconnected" );
+				_p2pLog.warning( "client " + ws.peer + " disconnected" );
+
+				//
+				//	...
+				//
+				await _p2pPersistence.removePeerFromWatchList( ws.peer );
 
 				//
 				//	call while the connection was closed
 				//
-				oOptions.onClose( ws );
+				this.m_oOptions.onClose( ws );
 			}
 		);
 
@@ -274,9 +254,9 @@ class CP2pPeerServer
 		ws.on
 		(
 			'error',
-			function( e )
+			( e ) =>
 			{
-				console.log( "error on client " + ws.peer + ": " + e );
+				_p2pLog.error( "error on client " + ws.peer + ": " + e );
 
 				//	close
 				ws.close( 1000, "received error" );
@@ -284,8 +264,9 @@ class CP2pPeerServer
 		);
 
 		//	...
-		addPeerHost( ws.host );
+		await _p2pPersistence.addPeerHost( ws.host );
 	}
+
 
 	/**
 	 *	@private
@@ -321,6 +302,7 @@ class CP2pPeerServer
 
 		return sRet;
 	}
+
 }
 
 
