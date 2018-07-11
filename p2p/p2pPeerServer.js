@@ -3,7 +3,6 @@
 
 let WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 let socks			= process.browser ? null : require( 'socks' + '' );
-let WebSocketServer		= WebSocket.Server;
 
 let _conf			= require( '../conf.js' );
 
@@ -62,7 +61,7 @@ class CP2pPeerServer
 		//	_db.query("DELETE FROM light_peer_witnesses");
 		//	listen for new connections
 		//
-		this.m_oWss	= new WebSocketServer
+		this.m_oWss	= new WebSocket.Server
 		(
 			{
 				port	: oOptions.port

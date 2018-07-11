@@ -3,7 +3,6 @@
 
 let WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 let socks			= process.browser ? null : require( 'socks' + '' );
-let WebSocketServer		= WebSocket.Server;
 
 let _conf			= require( '../conf.js' );
 
@@ -1042,7 +1041,7 @@ function startWebSocketServer( oOptions )
 	//	_db.query("DELETE FROM light_peer_witnesses");
 	//	listen for new connections
 	//
-	m_oWss	= new WebSocketServer
+	m_oWss	= new WebSocket.Server
 	(
 		{
 			port	: oOptions.port

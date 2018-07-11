@@ -23,9 +23,10 @@
     "async": "^1.5.2",
     "bitcore-mnemonic": "~1.0.0",
     "bittorrent-dht": ">=v1.0",
-    "torrent-discovery": ">=v1.0",
+    "co": "^1.0.1",
     "lodash": "^4.6.1",
     "longjohn": "^0.2.11",
+    "magnet-uri": "^1.0.1",
     "mysql": "^2.10.2",
     "node4mailer": "git+https://github.com/edemaine/node4mailer.git",
     "protobufjs": ">=1.0",
@@ -33,8 +34,8 @@
     "socks": "1.1.10",
     "sqlite3": "3.1.4",
     "thirty-two": "^1.0.1",
-    "ws": "^1.0.1",
-    "magnet-uri": "^1.0.1"
+    "torrent-discovery": ">=v1.0",
+    "ws": "^1.0.1"
   },
   "scripts": {
     "test": "yarn ava"
