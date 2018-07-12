@@ -24,29 +24,11 @@ class CP2pPeerServer
 {
 	constructor()
 	{
-		this.init();
+		this._init();
 	}
 
 	/**
-	 *	@public
-	 *	initialize web socket server
-	 */
-	init()
-	{
-		this.m_oWss	= { clients : [] };
-		this.m_oOptions	=
-			{
-				port		: 80,
-				bServeAsHub	: false,
-				bLight		: false,
-				subscribe	: () => {},
-				onMessage	: () => {},
-				onClose		: () => {},
-			};
-	}
-
-
-	/**
+	 * 	@public
 	 *	start web socket server
 	 *
 	 *	@param oOptions
@@ -59,8 +41,11 @@ class CP2pPeerServer
 	 */
 	async startServer( oOptions )
 	{
-		if ( ! Number.isInteger( oOptions.port ) ||
-			( oOptions.hasOwnProperty( 'subscribe' ) && ! _p2pUtils.isFunction( oOptions.subscribe ) ) ||
+		if ( ! this._isValidPortNumber( oOptions.port ) )
+		{
+			throw Error( 'startServer with invalid socket port number.' );
+		}
+		if ( ( oOptions.hasOwnProperty( 'subscribe' ) && ! _p2pUtils.isFunction( oOptions.subscribe ) ) ||
 			( oOptions.hasOwnProperty( 'onMessage' ) && ! _p2pUtils.isFunction( oOptions.onMessage ) ) ||
 			( oOptions.hasOwnProperty( 'onClose' ) && ! _p2pUtils.isFunction( oOptions.onClose )  ) )
 		{
@@ -87,10 +72,10 @@ class CP2pPeerServer
 		//	_db.query("DELETE FROM light_peer_witnesses");
 		//	listen for new connections
 		//
-		this.m_oWss	= new WebSocket.Server
+		this.m_oWss = new WebSocket.Server
 		(
 			{
-				port	: this.m_oOptions.port
+				port : this.m_oOptions.port
 			}
 		);
 
@@ -119,6 +104,26 @@ class CP2pPeerServer
 		return this.m_oWss.clients;
 	}
 
+
+
+
+	/**
+	 *	@private
+	 *	initialize web socket server
+	 */
+	_init()
+	{
+		this.m_oWss	= { clients : [] };
+		this.m_oOptions	=
+			{
+				port		: 80,
+				bServeAsHub	: false,
+				bLight		: false,
+				subscribe	: () => {},
+				onMessage	: () => {},
+				onClose		: () => {},
+			};
+	}
 
 	/**
 	 *	@private
@@ -169,13 +174,9 @@ class CP2pPeerServer
 		}
 
 		//
-		//	WELCOME THE NEW PEER WITH THE LIST OF FREE JOINTS
+		//	WELCOME THE NEW PEER
 		//
-		//	if (!m_bCatchingUp)
-		//		_sendFreeJoints(ws);
-		//
-		//	*
-		//	so, we response the version of this hub/witness
+		//	so, we respond our version to the new client
 		//
 		_p2pMessage.sendVersion( ws );
 
@@ -187,12 +188,9 @@ class CP2pPeerServer
 		{
 			//
 			//	create 'challenge' key for clients
-			//
-			ws.challenge	= _crypto.randomBytes( 30 ).toString( "base64" );
-
-			//
 			//	the new peer, I am a hub and I have ability to exchange data
 			//
+			ws.challenge = _crypto.randomBytes( 30 ).toString( "base64" );
 			_p2pMessage.sendJustSaying( ws, 'hub/challenge', ws.challenge );
 		}
 
@@ -286,6 +284,7 @@ class CP2pPeerServer
 		{
 			//
 			//	check for proxy
+			//	ONLY VALID FOR 127.0.0.1 and resources addresses
 			//
 			if ( ws.upgradeReq.headers[ 'x-real-ip' ] &&
 				( sRet === '127.0.0.1' || sRet.match( /^192\.168\./ ) ) )
@@ -303,6 +302,17 @@ class CP2pPeerServer
 		return sRet;
 	}
 
+	/**
+	 *	@private
+	 *	@param nPort
+	 *	@returns {boolean}
+	 */
+	_isValidPortNumber( nPort )
+	{
+		return ( Number.isInteger( nPort ) &&
+			Number.isSafeInteger( nPort ) &&
+			nPort >= 1024 && nPort < 65535 );
+	}
 }
 
 
