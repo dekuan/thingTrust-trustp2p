@@ -35,9 +35,10 @@ class CP2pPeerServer
 	 *		.port
 	 *		.bServeAsHub
 	 *		.bLight
-	 *		.subscribe
+	 *		.onConnected
 	 *		.onMessage
-	 *		.onClose
+	 *		.onClosed
+	 *		.onError
 	 */
 	async startServer( oOptions )
 	{
@@ -45,9 +46,11 @@ class CP2pPeerServer
 		{
 			throw Error( 'startServer with invalid socket port number.' );
 		}
-		if ( ( oOptions.hasOwnProperty( 'subscribe' ) && ! _p2pUtils.isFunction( oOptions.subscribe ) ) ||
+		if ( ( oOptions.hasOwnProperty( 'onConnected' ) && ! _p2pUtils.isFunction( oOptions.onConnected ) ) ||
 			( oOptions.hasOwnProperty( 'onMessage' ) && ! _p2pUtils.isFunction( oOptions.onMessage ) ) ||
-			( oOptions.hasOwnProperty( 'onClose' ) && ! _p2pUtils.isFunction( oOptions.onClose )  ) )
+			( oOptions.hasOwnProperty( 'onClosed' ) && ! _p2pUtils.isFunction( oOptions.onClosed )  ) ||
+			( oOptions.hasOwnProperty( 'onError' ) && ! _p2pUtils.isFunction( oOptions.onError )  )
+		)
 		{
 			throw Error( 'startServer with invalid parameter.' );
 		}
@@ -120,8 +123,10 @@ class CP2pPeerServer
 				bServeAsHub	: false,
 				bLight		: false,
 				subscribe	: () => {},
+				onConnected	: () => {},
 				onMessage	: () => {},
-				onClose		: () => {},
+				onClosed	: () => {},
+				onError		: () => {},
 			};
 	}
 
@@ -207,7 +212,8 @@ class CP2pPeerServer
 		//
 		//	emit a event say there was a client connected
 		//
-		_p2pEvents.emit( 'connected', ws );
+		this.m_oOptions.onConnected( ws );
+		//_p2pEvents.emit( 'connected', ws );
 
 		//
 		//	receive message
@@ -242,7 +248,7 @@ class CP2pPeerServer
 				//
 				//	call while the connection was closed
 				//
-				this.m_oOptions.onClose( ws );
+				this.m_oOptions.onClosed( ws );
 			}
 		);
 
@@ -258,6 +264,11 @@ class CP2pPeerServer
 
 				//	close
 				ws.close( 1000, "received error" );
+
+				//
+				//
+				//
+				this.m_oOptions.onError( e );
 			}
 		);
 
