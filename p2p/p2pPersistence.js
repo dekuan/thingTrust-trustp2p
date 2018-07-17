@@ -13,7 +13,16 @@ class CP2pPersistence
 {
 	static async addPeerHost( sHost )
 	{
-		return true;
+		return new Promise( ( resolve, reject ) =>
+		{
+			resolve();
+		})
+		.then( () =>
+		{
+		})
+		.catch( () =>
+		{
+		});
 	}
 
 	/**
@@ -87,7 +96,8 @@ class CP2pPersistence
 
 					//	...
 					oStats = rows[ 0 ];
-					if ( 0 === oStats.count_invalid )
+					if ( 0 === oStats.count_invalid ||
+						null === oStats.count_invalid )
 					{
 						resolve();
 					}
@@ -124,4 +134,4 @@ class CP2pPersistence
 /**
  *	exprots
  */
-exports	= CP2pPersistence;
+module.exports	= CP2pPersistence;

@@ -17,6 +17,19 @@ class CP2pUtils
 		return ( 'function' === typeof vValue );
 	}
 
+
+	/**
+	 *	check if the given number is a valid socket listen port number
+	 *	@public
+	 *	@param nPort
+	 *	@returns {boolean}
+	 */
+	static isValidPortNumber( nPort )
+	{
+		return ( Number.isInteger( nPort ) &&
+			Number.isSafeInteger( nPort ) &&
+			nPort >= 1024 && nPort < 65535 );
+	}
 }
 
 
@@ -25,4 +38,4 @@ class CP2pUtils
 /**
  *	exports
  */
-exports	= CP2pUtils;
+module.exports	= CP2pUtils;

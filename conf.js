@@ -2,20 +2,10 @@
 "use strict";
 
 
-function mergeExports( anotherModule )
-{
-	for ( let key in anotherModule )
-	{
-		exports[ key ] = anotherModule[ key ];
-	}
-}
-
-
 //	port we are listening on.  Set to null to disable accepting connections
 //	recommended port for livenet: 6611
 //	recommended port for testnet: 16611
-//exports.port = 6611;
-exports.port	= 6611;
+exports.port	= 1107;
 
 
 // how peers connect to me
@@ -83,6 +73,18 @@ if ( process.browser )
 }
 
 
+
+
+
+function mergeExports( anotherModule )
+{
+	for ( let key in anotherModule )
+	{
+		exports[ key ] = anotherModule[ key ];
+	}
+}
+
+
 /*
 	There are 3 ways to customize conf in modules that use byteballcore lib:
 	1. drop a custom conf.js into the project root.  The code below will find it and merge.  Will not work under browserify.
@@ -94,51 +96,51 @@ if ( process.browser )
 	The later require()s of this conf will see the modified version.
 	This way is not recommended as the code becomes loading order dependent.
 */
-
-if ( typeof window === 'undefined' || ! window.cordova )
-{
-	//	desktop
-	var desktopApp		= require( './desktop_app.js'+'' );
-
-	//	merge conf from other modules that include us as lib.  The other module must place its custom conf.js into its root directory
-	var appRootDir		= desktopApp.getAppRootDir();
-	var appPackageJson	= require(appRootDir + '/package.json');
-
-	//	...
-	exports.program		= appPackageJson.name;
-	exports.program_version	= appPackageJson.version;
-	if ( appRootDir !== __dirname )
-	{
-		try
-		{
-			mergeExports( require( appRootDir + '/conf.js' ) );
-			console.log( 'merged app root conf from ' + appRootDir + '/conf.js' );
-		}
-		catch( e )
-		{
-			console.log( "not using app root conf: " + e );
-		}
-	}
-	else
-	{
-		console.log( "I'm already at the root" );
-	}
-
-	//
-	//	merge conf from user home directory, if any.
-	//	Note that it is json rather than js to avoid code injection
-	//
-	var appDataDir = desktopApp.getAppDataDir();
-	try
-	{
-		mergeExports( require( appDataDir + '/conf.json' ) );
-		console.log( 'merged user conf from ' + appDataDir + '/conf.json' );
-	}
-	catch( e )
-	{
-		console.log( 'not using user conf: ' + e );
-	}
-}
+//
+// if ( typeof window === 'undefined' || ! window.cordova )
+// {
+// 	//	desktop
+// 	var desktopApp		= require( './desktop_app.js'+'' );
+//
+// 	//	merge conf from other modules that include us as lib.  The other module must place its custom conf.js into its root directory
+// 	var appRootDir		= desktopApp.getAppRootDir();
+// 	var appPackageJson	= require(appRootDir + '/package.json');
+//
+// 	//	...
+// 	exports.program		= appPackageJson.name;
+// 	exports.program_version	= appPackageJson.version;
+// 	if ( appRootDir !== __dirname )
+// 	{
+// 		try
+// 		{
+// 			mergeExports( require( appRootDir + '/conf.js' ) );
+// 			console.log( 'merged app root conf from ' + appRootDir + '/conf.js' );
+// 		}
+// 		catch( e )
+// 		{
+// 			console.log( "not using app root conf: " + e );
+// 		}
+// 	}
+// 	else
+// 	{
+// 		console.log( "I'm already at the root" );
+// 	}
+//
+// 	//
+// 	//	merge conf from user home directory, if any.
+// 	//	Note that it is json rather than js to avoid code injection
+// 	//
+// 	var appDataDir = desktopApp.getAppDataDir();
+// 	try
+// 	{
+// 		mergeExports( require( appDataDir + '/conf.json' ) );
+// 		console.log( 'merged user conf from ' + appDataDir + '/conf.json' );
+// 	}
+// 	catch( e )
+// 	{
+// 		console.log( 'not using user conf: ' + e );
+// 	}
+// }
 
 
 /**

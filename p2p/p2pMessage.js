@@ -95,12 +95,12 @@ function sendErrorResponse( ws, tag, error )
 /**
  *	exports
  */
-exports.sendMessage			= sendMessage;
-exports.sendJustSaying			= sendJustSaying;
-exports.sendError			= sendError;
-exports.sendInfo			= sendInfo;
-exports.sendResult			= sendResult;
-exports.sendErrorResult			= sendErrorResult;
-exports.sendVersion			= sendVersion;
-exports.sendResponse			= sendResponse;
-exports.sendErrorResponse		= sendErrorResponse;
+module.exports.sendMessage			= sendMessage;
+module.exports.sendJustSaying			= sendJustSaying;
+module.exports.sendError			= sendError;
+module.exports.sendInfo				= sendInfo;
+module.exports.sendResult			= sendResult;
+module.exports.sendErrorResult			= sendErrorResult;
+module.exports.sendVersion			= sendVersion;
+module.exports.sendResponse			= sendResponse;
+module.exports.sendErrorResponse		= sendErrorResponse;

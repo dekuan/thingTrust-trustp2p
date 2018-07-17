@@ -36,7 +36,8 @@
     "redis": ">=1.0",
     "thirty-two": "^1.0.1",
     "torrent-discovery": ">=v1.0",
-    "ws": "^1.0.1"
+    "ws": "^1.0.1",
+    "sleep": ">=1.0"
   },
   "scripts": {
     "test": "yarn ava"

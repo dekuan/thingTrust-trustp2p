@@ -29,4 +29,4 @@ class CP2pLog
  *	exports
  *	@type {CP2pLog}
  */
-exports	= CP2pLog;
+module.exports	= CP2pLog;

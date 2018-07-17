@@ -4,7 +4,6 @@
 
 module.exports = function(connection_or_pool){
 
-	console.log("constructor");
 	var safe_connection = connection_or_pool;
 	safe_connection.original_query = safe_connection.query;
 	safe_connection.original_release = safe_connection.release;
