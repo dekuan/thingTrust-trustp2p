@@ -4,15 +4,14 @@
 /**
  *	@require	module: *
  */
-let WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
-let socks			= process.browser ? null : require( 'socks' + '' );
+const WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
+const CP2pPersistence		= require( './p2pPersistence.js' );
 
-let _crypto			= require( 'crypto' );
-let _p2pUtils			= require( './p2pUtils.js' );
-let _p2pLog			= require( './p2pLog.js' );
-let _p2pPersistence		= require( './p2pPersistence.js' );
-let _p2pMessage			= require( './p2pMessage.js' );
+const _crypto			= require( 'crypto' );
+const _p2pUtils			= require( './p2pUtils.js' );
+const _p2pLog			= require( './p2pLog.js' );
+const _p2pMessage		= require( './p2pMessage.js' );
 
 
 
@@ -36,6 +35,7 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 		//	...
 		this.m_oWss		= { clients : [] };
 		this.m_oOptions		= Object.assign( {}, super.oOptions, oOptions );
+		this.m_cP2pPersistence	= new CP2pPersistence();
 	}
 
 	/**
@@ -52,7 +52,7 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 		//
 		//	delete all ...
 		//
-		await _p2pPersistence.clearWholeWatchList();
+		await this.m_cP2pPersistence.clearWholeWatchList();
 
 
 		//
@@ -73,7 +73,12 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 
 		//	...
 		_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
-		this.emit( CP2pConnectionDriver.EVENT_START, this.m_oWss, `WSS running at port ${ this.m_oOptions.nPort }` );
+		this.emit
+		(
+			CP2pConnectionDriver.EVENT_START,
+			this.m_oWss,
+			`WSS running at port ${ this.m_oOptions.nPort }`
+		);
 
 		//
 		//	Event 'connection'
@@ -85,9 +90,9 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 		//		request is the http GET request sent by the client.
 		// 		Useful for parsing authority headers, cookie headers, and other information.
 		//
-		this.m_oWss.on( 'connection', ( ws ) =>
+		this.m_oWss.on( 'connection', ( oWs ) =>
 		{
-			this._onPeerConnectedIn( ws );
+			return this._onClientConnectedIn( oWs );
 		});
 	}
 
@@ -102,10 +107,12 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 
 
 	/**
+	 * 	callback function for a incoming connection
+	 *
 	 *	@private
-	 *	@param ws
+	 *	@param	{object}	oWs
 	 */
-	async _onPeerConnectedIn( ws )
+	async _onClientConnectedIn( oWs )
 	{
 		//
 		//	ws
@@ -113,40 +120,47 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 		//
 		let sRemoteAddress;
 
+		if ( ! oWs )
+		{
+			_p2pLog.error( `_onClientConnectedIn with invalid oWs.` );
+			return false;
+		}
+
 		//	...
-		sRemoteAddress = this._getRemoteAddress( ws );
+		sRemoteAddress = this._getRemoteAddress( oWs );
 		if ( ! sRemoteAddress )
 		{
 			_p2pLog.error( `no ip/sRemoteAddress in accepted connection` );
-			ws.terminate();
-			return;
+			oWs.terminate();
+			return false;
 		}
 
 		//
 		//	...
 		//
-		ws.peer				= sRemoteAddress + ":" + ws.upgradeReq.connection.remotePort;
-		ws.host				= sRemoteAddress;
-		ws.assocPendingRequests		= {};
-		ws.assocInPreparingResponse	= {};
-		ws.bInbound			= true;
-		ws.last_ts			= Date.now();
+		oWs.peer			= sRemoteAddress + ":" + oWs.upgradeReq.connection.remotePort;
+		oWs.host			= sRemoteAddress;
+		oWs.assocPendingRequests	= {};
+		oWs.assocInPreparingResponse	= {};
+		oWs.bInbound			= true;
+		oWs.last_ts			= Date.now();
 
 		//	...
-		_p2pLog.info( `got connection from ${ ws.peer }, host ${ ws.host }` );
+		_p2pLog.info( `got connection from ${ oWs.peer }, host ${ oWs.host }` );
 
-		if ( this.m_oWss.clients.length >= this.m_oOptions.MAX_INBOUND_CONNECTIONS )
+		if ( this.m_oWss.clients.length >= this.m_oOptions.CONNECTION_MAX_INBOUND )
 		{
 			_p2pLog.error( `inbound connections maxed out, rejecting new client ${ sRemoteAddress }` );
 
 			//	1001 doesn't work in cordova
-			ws.close( 1000, "inbound connections maxed out" );
-			return null;
+			oWs.close( 1000, "inbound connections maxed out" );
+			return false;
 		}
-		if ( ! await _p2pPersistence.isGoodPeer( ws.host ) )
+		if ( ! await this.m_cP2pPersistence.isGoodPeer( oWs.host ) )
 		{
-			_p2pLog.error( `# rejecting new client ${ ws.host } because of bad stats` );
-			return ws.terminate();
+			_p2pLog.error( `# rejecting new client ${ oWs.host } because of bad stats` );
+			oWs.terminate();
+			return false;
 		}
 
 		//
@@ -154,7 +168,7 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 		//
 		//	so, we respond our version to the new client
 		//
-		_p2pMessage.sendVersion( ws );
+		_p2pMessage.sendVersion( oWs );
 
 
 		//
@@ -166,8 +180,8 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 			//	create 'challenge' key for clients
 			//	the new peer, I am a hub and I have ability to exchange data
 			//
-			ws.challenge = _crypto.randomBytes( 30 ).toString( "base64" );
-			_p2pMessage.sendJustSaying( ws, 'hub/challenge', ws.challenge );
+			oWs.challenge = _crypto.randomBytes( 30 ).toString( "base64" );
+			_p2pMessage.sendJustSaying( oWs, 'hub/challenge', oWs.challenge );
 		}
 
 		// if ( ! this.m_oOptions.bLight )
@@ -183,12 +197,12 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 		//
 		//	emit a event say there was a client connected
 		//
-		this.emit( CP2pConnectionDriver.EVENT_CONNECTION, ws );
+		this.emit( CP2pConnectionDriver.EVENT_CONNECTION, oWs );
 
 		//
 		//	receive message
 		//
-		ws.on
+		oWs.on
 		(
 			'message',
 			( vMessage ) =>
@@ -196,50 +210,53 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 				//
 				//	call while receiving message
 				//
-				this.emit( CP2pConnectionDriver.EVENT_MESSAGE, ws, vMessage );
+				this.emit( CP2pConnectionDriver.EVENT_MESSAGE, oWs, vMessage );
 			}
 		);
 
 		//
 		//	on close
 		//
-		ws.on
+		oWs.on
 		(
 			'close',
 			async () =>
 			{
-				_p2pLog.warning( `client ${ ws.peer } disconnected` );
+				_p2pLog.warning( `client ${ oWs.peer } disconnected` );
 
 				//
 				//	...
 				//
-				await _p2pPersistence.removePeerFromWatchList( ws.peer );
+				await this.m_cP2pPersistence.removePeerFromWatchList( oWs.peer );
 
 				//
 				//	call while the connection was closed
 				//
-				this.emit( CP2pConnectionDriver.EVENT_CLOSE, ws );
+				this.emit( CP2pConnectionDriver.EVENT_CLOSE, oWs );
 			}
 		);
 
 		//
 		//	on error
 		//
-		ws.on
+		oWs.on
 		(
 			'error',
 			( vError ) =>
 			{
-				_p2pLog.error( `error on client ${ ws.peer }: ${ vError }` );
+				_p2pLog.error( `error on client ${ oWs.peer }: ${ vError }` );
 
 				//	close
-				ws.close( 1000, "received error" );
+				oWs.close( 1000, "received error" );
 				this.emit( CP2pConnectionDriver.EVENT_ERROR, vError );
 			}
 		);
 
 		//	...
-		await _p2pPersistence.addPeerHost( ws.host );
+		//await this.m_cP2pPersistence.addPeerHost( oWs.host );
+
+		//	...
+		return true;
 	}
 
 

@@ -1100,7 +1100,7 @@ function startWebSocketServer( oOptions )
 
 			console.log( 'got connection from ' + ws.peer + ", host " + ws.host );
 
-			if ( m_oWss.clients.length >= _conf.MAX_INBOUND_CONNECTIONS )
+			if ( m_oWss.clients.length >= _conf.CONNECTION_MAX_INBOUND )
 			{
 				console.log( "inbound connections maxed out, rejecting new client " + sRemoteAddress );
 

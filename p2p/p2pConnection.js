@@ -33,8 +33,8 @@ class CP2pConnection
 			};
 
 		const sDriver			= _p2pConstants.CONNECTION_DRIVER;
-		let CConnectionClient		= require( this.m_oDrivers[ sDriver ][ 'client' ] );
-		let CConnectionServer		= require( this.m_oDrivers[ sDriver ][ 'server' ] );
+		const CConnectionClient		= require( this.m_oDrivers[ sDriver ][ 'client' ] );
+		const CConnectionServer		= require( this.m_oDrivers[ sDriver ][ 'server' ] );
 
 		this.m_cConnectionClient	= new CConnectionClient( oOptions );
 		this.m_cConnectionServer	= new CConnectionServer( oOptions );

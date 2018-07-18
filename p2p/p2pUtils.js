@@ -17,6 +17,11 @@ class CP2pUtils
 		return ( 'function' === typeof vValue );
 	}
 
+	static isObject( vValue )
+	{
+		return ( 'object' === typeof vValue );
+	}
+
 
 	/**
 	 *	check if the given number is a valid socket listen port number

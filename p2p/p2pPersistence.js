@@ -1,8 +1,10 @@
 /*jslint node: true */
 "use strict";
 
-let _db				= require( '../db.js' );
-let _p2pUtils			= require( './p2pUtils.js' );
+let _db			= require( '../db.js' );
+let _p2pConstants	= require( './p2pConstants.js' );
+let _p2pUtils		= require( './p2pUtils.js' );
+let CP2pNerve		= require( './p2pNerve.js' );
 
 
 
@@ -11,25 +13,164 @@ let _p2pUtils			= require( './p2pUtils.js' );
  */
 class CP2pPersistence
 {
-	static async addPeerHost( sHost )
+	constructor()
 	{
-		return new Promise( ( resolve, reject ) =>
+		this.m_cP2pNerve	= new CP2pNerve();
+	}
+
+	getHostByPeer( sUrl )
+	{
+		let arrMatches;
+
+		//
+		//	this regex will match wss://xxx and ws://xxx
+		//
+		arrMatches = sUrl.match( /^wss?:\/\/(.*)$/i );
+		if ( Array.isArray( arrMatches ) && arrMatches.length >= 1 )
 		{
-			resolve();
-		})
+			sUrl = arrMatches[ 1 ];
+		}
+
+		//	...
+		arrMatches	= sUrl.match( /^(.*?)[:\/]/ );
+		return ( Array.isArray( arrMatches ) && arrMatches.length >= 1 ) ? arrMatches[ 1 ] : sUrl;
+	}
+
+	/**
+	 *	get key by peer
+	 *
+	 *	@param	{string}	sType
+	 *	@param	{string}	sUrl
+	 *	@returns {*}
+	 */
+	getKeyByPeer( sType, sUrl )
+	{
+		if ( ! _p2pUtils.isString( sType ) || 0 === sType.length )
+		{
+			return null;
+		}
+		if ( ! [ _p2pConstants.PEER_TYPE_CLIENT, _p2pConstants.PEER_TYPE_SERVER ].includes( sType ) )
+		{
+			return null;
+		}
+
+		return `p2p_peer_${ sType }_${ this.getHostByPeer( sUrl ) }`;
+	}
+
+
+	/**
+	 *	add server peer synchronously
+	 *
+	 *	@param	{string}	sUrl
+	 *	@returns {boolean}
+	 */
+	async addServerSync( sUrl )
+	{
+		return this.addPeerSync( _p2pConstants.PEER_TYPE_SERVER, sUrl );
+	}
+
+	/**
+	 * 	add server peer
+	 *	@param	{string}	sUrl
+	 *	@returns {Promise<any>}
+	 */
+	async addServer( sUrl )
+	{
+		return this.addPeer( _p2pConstants.PEER_TYPE_SERVER, sUrl );
+	}
+
+
+	/**
+	 *	add client peer synchronously
+	 *
+	 *	@param	{string}	sUrl
+	 *	@returns {boolean}
+	 */
+	async addClientSync( sUrl )
+	{
+		return this.addPeerSync( _p2pConstants.PEER_TYPE_CLIENT, sUrl );
+	}
+
+	/**
+	 * 	add client peer
+	 *	@param	{string}	sUrl
+	 *	@returns {Promise<any>}
+	 */
+	async addClient( sUrl )
+	{
+		return this.addPeer( _p2pConstants.PEER_TYPE_CLIENT, sUrl );
+	}
+
+	/**
+	 *	add server to storage synchronously
+	 *
+	 *	@param	{string}	sType
+	 *	@param	{string}	sUrl
+	 *	@returns {boolean}
+	 */
+	async addPeerSync( sType, sUrl )
+	{
+		let bRet;
+
+		//	...
+		bRet	= false;
+		await this.addPeer( sType, sUrl )
 		.then( () =>
 		{
+			bRet = true;
 		})
 		.catch( () =>
 		{
 		});
+
+		return bRet;
 	}
+
+	/**
+	 *	add server to storage
+	 *
+	 *	@param	{string}	sType
+	 *	@param	{string}	sUrl
+	 *	@returns {Promise<any>}
+	 */
+	async addPeer( sType, sUrl )
+	{
+		return new Promise( ( pfnResolve, pfnReject ) =>
+		{
+			let sKey;
+
+			if ( ! _p2pUtils.isString( sUrl ) || 0 === sUrl.length )
+			{
+				//	rejected
+				return pfnReject( `addServer with invalid url.` );
+			}
+
+			//	...
+			sUrl	= sUrl.trim().toLocaleLowerCase();
+			sKey	= this.getKeyByPeer( sType, sUrl );
+			if ( ! this.m_cP2pNerve.isKeyExistsSync( sKey ) )
+			{
+				this.m_cP2pNerve.setStringValue( sKey, sUrl );
+				pfnResolve( `add server successfully.` );
+			}
+			else
+			{
+				return pfnResolve( `server already added before.` );
+			}
+		});
+	}
+
+
+
+
+
+
 
 	/**
 	 *	clear up all watch list
 	 *	@returns {Promise<boolean>}
 	 */
-	static async clearWholeWatchList()
+	async clearWholeWatchList()
 	{
 		_db.query( "DELETE FROM watched_light_addresses" );
 		_db.query( "DELETE FROM watched_light_units" );
@@ -42,7 +183,7 @@ class CP2pPersistence
 	 *	@param sPeer
 	 *	@returns {Promise<boolean>}
 	 */
-	static async removePeerFromWatchList( sPeer )
+	async removePeerFromWatchList( sPeer )
 	{
 		if ( ! _p2pUtils.isString( sPeer ) || 0 === sPeer.length )
 		{
@@ -61,7 +202,7 @@ class CP2pPersistence
 	 *	@param sHost
 	 *	@returns {Promise<boolean>}
 	 */
-	static async isGoodPeer( sHost )
+	async isGoodPeer( sHost )
 	{
 		let bRet;
 

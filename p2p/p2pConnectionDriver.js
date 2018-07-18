@@ -4,23 +4,27 @@ const _p2pConstants	= require( './p2pConstants.js' );
 /**
  *	@constant
  */
-const EVENT_START	= 'start';	//	( oSocket, sInfo )
-const EVENT_CONNECTION	= 'connection';	//	( oSocket )		Emitted when a new connection is made.
-const EVENT_MESSAGE	= 'message';	//	( oSocket, vMessage )
-const EVENT_CLOSE	= 'close';	//	( oSocket )
-const EVENT_ERROR	= 'error';	//	( vError )
+const EVENT_START	= 'start';	//	( oSocket, sInfo )	| emitted while your implementation started.
+const EVENT_CONNECTION	= 'connection';	//	( oSocket )		| emitted while a new connection is made.
+const EVENT_MESSAGE	= 'message';	//	( oSocket, vMessage )	| emitted while a new message was received.
+const EVENT_CLOSE	= 'close';	//	( oSocket )		| emitted while socket was closed.
+const EVENT_ERROR	= 'error';	//	( vError )		| emitted while a error was occurred.
 
 
 /**
  *	interface P2pConnectionDriver
  *	@module	CP2pConnectionDriver
  *	@class	CP2pConnectionDriver
+ *
+ *	@description
+ *		communicate with caller by emitting events below in your implementation for this interface
+ *	@see constant
  */
 class CP2pConnectionDriver extends EventEmitter
 {
 	/**
 	 *	@constructor
-	 *	@param oOptions
+	 *	@param	{object}	oOptions	configurations
 	 */
 	constructor( oOptions )
 	{
@@ -35,9 +39,10 @@ class CP2pConnectionDriver extends EventEmitter
 				nPort			: 1107,
 				bServeAsHub		: false,
 				bLight			: false,
+				oProxy			: null,
 
 				//	...
-				MAX_INBOUND_CONNECTIONS	: _p2pConstants.MAX_INBOUND_CONNECTIONS,
+				CONNECTION_MAX_INBOUND	: _p2pConstants.CONNECTION_MAX_INBOUND,
 			};
 	}
 
