@@ -2,7 +2,6 @@
 "use strict";
 
 const _redis		= require( 'redis' );
-const { _promise_util }	= require( 'util' );
 
 const _p2pUtils		= require( './p2pUtils.js' );
 
@@ -17,8 +16,6 @@ class CP2pNerve
 	constructor()
 	{
 		this.m_oRedisClient	= _redis.createClient();
-		this.m_pfnGetAsync	= _promise_util( this.m_oRedisClient.get ).bind( this.m_oRedisClient );
-		this.m_pfnExistsAsync	= _promise_util( this.m_oRedisClient.exists ).bind( this.m_oRedisClient );
 	}
 
 	/**
@@ -89,14 +86,25 @@ class CP2pNerve
 
 		//	...
 		vRet	= null;
-		await this.m_pfnGetAsync( sKey, ( err, vReply ) =>
+		await new Promise( ( pfnResolve, pfnReject ) =>
 		{
-			if ( null === err )
+			this.m_oRedisClient.get( sKey, ( vError, vReply ) =>
 			{
-				vRet = vReply;
-			}
+				if ( null === vError )
+				{
+					pfnResolve( vReply );
+				}
+				else
+				{
+					pfnReject( vError );
+				}
+			});
 		})
-		.catch( () =>
+		.then( vReply =>
+		{
+			vRet = vReply;
+		})
+		.catch( vError =>
 		{
 		});
 
@@ -121,11 +129,25 @@ class CP2pNerve
 
 		//	...
 		bRet	= false;
-		await this.m_pfnExistsAsync.exists( sKey, function( err, vReply )
+		await new Promise( ( pfnResolve, pfnReject ) =>
+		{
+			this.m_oRedisClient.exists( sKey, ( vError, vReply ) =>
+			{
+				if ( null === vError )
+				{
+					pfnResolve( vReply );
+				}
+				else
+				{
+					pfnReject( vError );
+				}
+			});
+		})
+		.then( vReply =>
 		{
 			bRet = ( 1 === vReply );
 		})
-		.catch( () =>
+		.catch( vError =>
 		{
 		});
 

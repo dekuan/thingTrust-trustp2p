@@ -161,21 +161,45 @@ class CP2pPersistence
 	}
 
 
+	/**
+	 *	clear up all watch list synchronously
+	 *
+	 * 	@public
+	 *	@returns {boolean}
+	 */
+	async clearWholeWatchListSync()
+	{
+		let bRet;
 
+		//	...
+		bRet	= false;
+		await this.clearWholeWatchList()
+		.then( () =>
+		{
+			bRet = true;
+		})
+		.catch( () =>
+		{
+		});
 
-
-
+		//	...
+		return bRet;
+	}
 
 	/**
 	 *	clear up all watch list
-	 *	@returns {Promise<boolean>}
+	 *
+	 * 	@public
+	 *	@returns {Promise<null>}
 	 */
 	async clearWholeWatchList()
 	{
-		_db.query( "DELETE FROM watched_light_addresses" );
-		_db.query( "DELETE FROM watched_light_units" );
-
-		return true;
+		return new Promise( ( pfnResolve, pfnReject ) =>
+		{
+			// _db.query( "DELETE FROM watched_light_addresses" );
+			// _db.query( "DELETE FROM watched_light_units" );
+			pfnResolve();
+		});
 	}
 
 	/**

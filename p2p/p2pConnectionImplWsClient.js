@@ -254,7 +254,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 					//
 					//	browser implementation of Web Socket might add '/'
 					//
-					if ( oWs.url !== url && oWs.url !== sUrl + "/" )
+					if ( oWs.url !== sUrl && oWs.url !== sUrl + "/" )
 					{
 						throw Error( `url is different: ${ oWs.url }` );
 					}
@@ -320,7 +320,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 					//
 					//	emit a event to subscriber that we have connect to the server successfully.
 					//
-					this.emit( CP2pConnectionDriver.EVENT_CONNECTION, oWs );
+					this.emit( CP2pConnectionDriver.EVENT_OPEN, oWs );
 
 					//
 					//	...
@@ -431,8 +431,8 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 		oRet	= null;
 		if ( socks &&
 			_p2pUtils.isObject( this.m_oOptions.oProxy ) &&
-			this.m_oOptions.oProxy.hasOwnProperty( 'sHost' ) &&
-			this.m_oOptions.oProxy.hasOwnProperty( 'nPort' ) )
+			'sHost' in this.m_oOptions.oProxy &&
+			'nPort' in this.m_oOptions.oProxy )
 		{
 			oRet =
 			{

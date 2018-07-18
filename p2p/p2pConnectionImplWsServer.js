@@ -39,60 +39,68 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 	}
 
 	/**
-	 * 	@public
 	 *	start web socket server
+	 * 	@public
+	 *	@returns {Promise<any>}
 	 */
 	async startServer()
 	{
-		if ( ! _p2pUtils.isValidPortNumber( this.m_oOptions.nPort ) )
+		return new Promise( ( pfnResolve, pfnReject ) =>
 		{
-			throw Error( `startServer with invalid socket port number.` );
-		}
-
-		//
-		//	delete all ...
-		//
-		await this.m_cP2pPersistence.clearWholeWatchList();
-
-
-		//
-		//	create a new web socket server
-		//
-		//	npm ws
-		//	https://github.com/websockets/ws
-		//
-		//	_db.query("DELETE FROM light_peer_witnesses");
-		//	listen for new connections
-		//
-		this.m_oWss = new WebSocket.Server
-		(
+			if ( ! _p2pUtils.isValidPortNumber( this.m_oOptions.nPort ) )
 			{
-				port : this.m_oOptions.nPort
+				pfnReject( `startServer with invalid socket port number.` );
+				return false;
 			}
-		);
 
-		//	...
-		_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
-		this.emit
-		(
-			CP2pConnectionDriver.EVENT_START,
-			this.m_oWss,
-			`WSS running at port ${ this.m_oOptions.nPort }`
-		);
+			//
+			//	delete all ...
+			//
+			this.m_cP2pPersistence.clearWholeWatchListSync();
 
-		//
-		//	Event 'connection'
-		//		Emitted when the handshake is complete.
-		//
-		//		- socket	{ WebSocket }
-		//		- request	{ http.IncomingMessage }
-		//
-		//		request is the http GET request sent by the client.
-		// 		Useful for parsing authority headers, cookie headers, and other information.
-		//
-		this.m_oWss.on( 'connection', ( oWs ) =>
-		{
-			return this._onClientConnectedIn( oWs );
+			//
+			//	create a new web socket server
+			//
+			//	npm ws
+			//	https://github.com/websockets/ws
+			//
+			//	_db.query("DELETE FROM light_peer_witnesses");
+			//	listen for new connections
+			//
+			this.m_oWss = new WebSocket.Server
+			(
+				{
+					port : this.m_oOptions.nPort
+				}
+			);
+
+			//	...
+			_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
+			this.emit
+			(
+				CP2pConnectionDriver.EVENT_START,
+				this.m_oWss,
+				`WSS running at port ${ this.m_oOptions.nPort }`
+			);
+
+			//
+			//	Event 'connection'
+			//		Emitted when the handshake is complete.
+			//
+			//		- socket	{ WebSocket }
+			//		- request	{ http.IncomingMessage }
+			//
+			//		request is the http GET request sent by the client.
+			// 		Useful for parsing authority headers, cookie headers, and other information.
+			//
+			this.m_oWss.on( 'connection', ( oWs ) =>
+			{
+				return this._onClientConnectedIn( oWs );
+			});
+
+			//	...
+			pfnResolve();
+			return true;
 		});
 	}
 

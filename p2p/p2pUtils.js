@@ -9,17 +9,17 @@ class CP2pUtils
 {
 	static isString( vValue )
 	{
-		return ( 'string' === typeof vValue );
+		return ( vValue && 'string' === typeof vValue );
 	}
 
 	static isFunction( vValue )
 	{
-		return ( 'function' === typeof vValue );
+		return ( vValue && 'function' === typeof vValue );
 	}
 
 	static isObject( vValue )
 	{
-		return ( 'object' === typeof vValue );
+		return ( vValue && 'object' === typeof vValue );
 	}
 
 

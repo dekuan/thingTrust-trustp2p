@@ -6,6 +6,7 @@ const _p2pConstants	= require( './p2pConstants.js' );
  */
 const EVENT_START	= 'start';	//	( oSocket, sInfo )	| emitted while your implementation started.
 const EVENT_CONNECTION	= 'connection';	//	( oSocket )		| emitted while a new connection is made.
+const EVENT_OPEN	= 'open';	//	( oSocket )		| emitted after successfully connected to server.
 const EVENT_MESSAGE	= 'message';	//	( oSocket, vMessage )	| emitted while a new message was received.
 const EVENT_CLOSE	= 'close';	//	( oSocket )		| emitted while socket was closed.
 const EVENT_ERROR	= 'error';	//	( vError )		| emitted while a error was occurred.
@@ -73,6 +74,7 @@ module.exports	= CP2pConnectionDriver;
  */
 module.exports.EVENT_START		= EVENT_START;
 module.exports.EVENT_CONNECTION		= EVENT_CONNECTION;
+module.exports.EVENT_OPEN		= EVENT_OPEN;
 module.exports.EVENT_MESSAGE		= EVENT_MESSAGE;
 module.exports.EVENT_CLOSE		= EVENT_CLOSE;
 module.exports.EVENT_ERROR		= EVENT_ERROR;
