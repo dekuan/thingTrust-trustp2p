@@ -27,13 +27,14 @@ class CP2pConnection
 			{
 				'ws'	:
 				{
-					'client'	: './p2pConnectionWsServer.js',
-					'server'	: './p2pConnectionWsServer.js',
+					'client'	: './p2pConnectionImplWsServer.js',
+					'server'	: './p2pConnectionImplWsServer.js',
 				}
 			};
 
-		let CConnectionClient		= require( this.m_oDrivers[ _p2pConstants.CONNECTION_DRIVER ][ 'client' ] );
-		let CConnectionServer		= require( this.m_oDrivers[ _p2pConstants.CONNECTION_DRIVER ][ 'server' ] );
+		const sDriver			= _p2pConstants.CONNECTION_DRIVER;
+		let CConnectionClient		= require( this.m_oDrivers[ sDriver ][ 'client' ] );
+		let CConnectionServer		= require( this.m_oDrivers[ sDriver ][ 'server' ] );
 
 		this.m_cConnectionClient	= new CConnectionClient( oOptions );
 		this.m_cConnectionServer	= new CConnectionServer( oOptions );
@@ -49,9 +50,9 @@ class CP2pConnection
 		{
 			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_START }] from server.`, sInfo );
 		})
-		.on( _p2pConnectionDriver.EVENT_CONNECT, ( oSocket ) =>
+		.on( _p2pConnectionDriver.EVENT_CONNECTION, ( oSocket ) =>
 		{
-			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_CONNECT }] from server.` );
+			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_CONNECTION }] from server.` );
 		})
 		.on( _p2pConnectionDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{

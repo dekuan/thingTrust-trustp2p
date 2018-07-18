@@ -6,7 +6,7 @@
  */
 let WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 let socks			= process.browser ? null : require( 'socks' + '' );
-const iP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
+const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
 
 let _crypto			= require( 'crypto' );
 let _p2pUtils			= require( './p2pUtils.js' );
@@ -22,7 +22,7 @@ let _p2pMessage			= require( './p2pMessage.js' );
  *	@module	CP2pConnectionWsServer
  *	@class	CP2pConnectionWsServer
  */
-class CP2pConnectionWsServer extends iP2pConnectionDriver
+class CP2pConnectionWsServer extends CP2pConnectionDriver
 {
 	/**
 	 *	@constructor
@@ -73,7 +73,7 @@ class CP2pConnectionWsServer extends iP2pConnectionDriver
 
 		//	...
 		_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
-		this.emit( iP2pConnectionDriver.EVENT_START, this.m_oWss, `WSS running at port ${ this.m_oOptions.nPort }` );
+		this.emit( CP2pConnectionDriver.EVENT_START, this.m_oWss, `WSS running at port ${ this.m_oOptions.nPort }` );
 
 		//
 		//	Event 'connection'
@@ -183,7 +183,7 @@ class CP2pConnectionWsServer extends iP2pConnectionDriver
 		//
 		//	emit a event say there was a client connected
 		//
-		this.emit( iP2pConnectionDriver.EVENT_CONNECT, ws );
+		this.emit( CP2pConnectionDriver.EVENT_CONNECTION, ws );
 
 		//
 		//	receive message
@@ -196,7 +196,7 @@ class CP2pConnectionWsServer extends iP2pConnectionDriver
 				//
 				//	call while receiving message
 				//
-				this.emit( iP2pConnectionDriver.EVENT_MESSAGE, ws, vMessage );
+				this.emit( CP2pConnectionDriver.EVENT_MESSAGE, ws, vMessage );
 			}
 		);
 
@@ -218,7 +218,7 @@ class CP2pConnectionWsServer extends iP2pConnectionDriver
 				//
 				//	call while the connection was closed
 				//
-				this.emit( iP2pConnectionDriver.EVENT_CLOSE, ws );
+				this.emit( CP2pConnectionDriver.EVENT_CLOSE, ws );
 			}
 		);
 
@@ -234,7 +234,7 @@ class CP2pConnectionWsServer extends iP2pConnectionDriver
 
 				//	close
 				ws.close( 1000, "received error" );
-				this.emit( iP2pConnectionDriver.EVENT_ERROR, vError );
+				this.emit( CP2pConnectionDriver.EVENT_ERROR, vError );
 			}
 		);
 
