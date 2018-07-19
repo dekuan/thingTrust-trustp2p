@@ -1,34 +1,67 @@
 /*jslint node: true */
 "use strict";
 
-let socks			= process.browser ? null : require( 'socks' + '' );
+/**
+ *	@module	p2p heartbeat
+ */
+const socks			= process.browser ? null : require( 'socks' + '' );
 
-let _p2pConstants		= require( './p2pConstants.js' );
-let _p2pMessage			= require( './p2pMessage.js' );
-let _p2pRequest			= require( './p2pRequest.js' );
-let _p2pPeer			= require( './p2pPeer.js' );
+const _p2pConstants		= require( './p2pConstants.js' );
+const _p2pMessage		= require( './p2pMessage.js' );
+const _p2pRequest		= require( './p2pRequest.js' );
+const _p2pPeer			= require( './p2pPeer.js' );
+
 
 
 
 /**
- *	class of CP2pHeartbeat
+ *	p2p heartbeat
+ *
+ *	@class	CP2pHeartbeat
+ *
+ *	@description
+ *
+ * 	Web Socket Protocol
+ * 	@see https://tools.ietf.org/html/rfc6455#section-5.5.2
+ *
+ * 	Control Frames
+ * 		Currently defined opcodes for control frames include 0x8 (Close), 0x9 (Ping), and 0xA (Pong)
+ *
+ * 	Ping
+ * 		be sent only from server to client
+ * 	Pong
+ * 		answer as soon as possible by client
+ *
+ *
+ *
  */
-class CP2pHeartbeat
+class CP2pConnectionImplWsHeartbeat
 {
-	m_nLastHeartbeatWakeTs	= null;
-	m_nIntervalHeartbeat	= null;
-
+	/**
+	 *	@constructor
+	 */
 	constructor()
 	{
-		this.m_nLastHeartbeatWakeTs	= Date.now();
 		this.m_nIntervalHeartbeat	= null;
+		this.m_nLastHeartbeatWakeTs	= Date.now();
 	}
 
 	/**
-	 *	@public
-	 *	start heartbeat
+	 *	get interval time in milliseconds.
+	 *	@returns {number}
 	 */
-	start()
+	getInterval()
+	{
+		return _p2pConstants.HEARTBEAT_INTERVAL + _p2pPeer.getRandomInt( 0, 1000 );
+	}
+
+
+	/**
+	 *
+	 *
+	 *	@public
+	 */
+	startPing()
 	{
 		if ( null !== this.m_nIntervalHeartbeat )
 		{
@@ -41,7 +74,7 @@ class CP2pHeartbeat
 		//
 		this.m_nIntervalHeartbeat = setInterval
 		(
-			this._heartbeatEmitter,
+			this.pingClients,
 			_p2pConstants.HEARTBEAT_INTERVAL + _p2pPeer.getRandomInt( 0, 1000 )
 		);
 
@@ -53,7 +86,7 @@ class CP2pHeartbeat
 	 *	@public
 	 *	stop heartbeat
 	 */
-	stop()
+	stopPing()
 	{
 		if ( null !== this.m_nIntervalHeartbeat )
 		{
@@ -64,55 +97,18 @@ class CP2pHeartbeat
 
 
 	/**
-	 *	@public
-	 *	handle received heartbeat message
+	 * 	keep on sending heartbeat Ping from server to all clients
 	 *
-	 *	@param	ws
-	 *	@param	tag
-	 */
-	handleReceivedMessage( ws, tag )
-	{
-		let bPaused;
-
-		//
-		//	the peer is sending heartbeats, therefore he is awake
-		//
-		ws.bSleeping = false;
-
-		//
-		//	true if our timers were paused
-		//	Happens only on android, which suspends timers when the app becomes paused but still keeps network connections
-		//	Handling 'pause' event would've been more straightforward but with preference KeepRunning=false,
-		// 	the event is delayed till resume
-		//
-		bPaused = (
-			typeof window !== 'undefined' &&
-			window &&
-			window.cordova &&
-			Date.now() - this.m_nLastHeartbeatWakeTs > _p2pConstants.PAUSE_TIMEOUT
-		);
-		if ( bPaused )
-		{
-			//	opt out of receiving heartbeats and move the connection into a sleeping state
-			return _p2pMessage.sendResponse( ws, tag, 'sleep' );
-		}
-
-		//	...
-		_p2pMessage.sendResponse( ws, tag );
-	}
-
-
-
-	/**
 	 *	@private
-	 *
-	 *	*
-	 *	heartbeat
-	 *	about every 3 seconds
+	 *	@description
+	 *	about every 3 seconds we try to send ping command to all clients
 	 */
-	_heartbeatEmitter()
+	pingClients( arrSocket )
 	{
 		let bJustResumed;
+
+		if ( !  )
+
 
 		//	just resumed after sleeping
 		bJustResumed	= ( typeof window !== 'undefined' &&
@@ -186,11 +182,48 @@ class CP2pHeartbeat
 		});
 	}
 
+	/**
+	 *	@public
+	 *	handle received heartbeat message
+	 *
+	 *	@param	ws
+	 *	@param	tag
+	 */
+	handlePong( ws, tag )
+	{
+		let bPaused;
+
+		//
+		//	the peer is sending heartbeats, therefore he is awake
+		//
+		ws.bSleeping = false;
+
+		//
+		//	true if our timers were paused
+		//	Happens only on android, which suspends timers when the app becomes paused but still keeps network connections
+		//	Handling 'pause' event would've been more straightforward but with preference KeepRunning=false,
+		// 	the event is delayed till resume
+		//
+		bPaused = (
+			typeof window !== 'undefined' &&
+			window &&
+			window.cordova &&
+			Date.now() - this.m_nLastHeartbeatWakeTs > _p2pConstants.HEARTBEAT_PAUSE_TIMEOUT
+		);
+		if ( bPaused )
+		{
+			//	opt out of receiving heartbeats and move the connection into a sleeping state
+			return _p2pMessage.sendResponse( ws, tag, 'sleep' );
+		}
+
+		//	...
+		_p2pMessage.sendResponse( ws, tag );
+	}
 }
 
 
 
 /**
- *	exports
+ *	@exports
  */
-exports.CP2pHeartbeat	= CP2pHeartbeat;
+module.exports	= CP2pConnectionImplWsHeartbeat;

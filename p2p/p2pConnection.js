@@ -13,7 +13,8 @@ const _p2pConnectionDriver	= require( './p2pConnectionDriver.js' );
 
 
 /**
- *	class CP2pConnection
+ *	p2p connection
+ *
  *	@module	CP2pConnection
  *	@class	CP2pConnection
  */
@@ -138,8 +139,7 @@ class CP2pConnection extends EventEmitter
 
 
 /**
- *	exports
  *	@exports
- *	@type {CP2pConnectionWsServer}
+ *	@type {CP2pConnection}
  */
 module.exports	= CP2pConnection;

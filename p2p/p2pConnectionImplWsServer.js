@@ -17,11 +17,12 @@ const _p2pMessage		= require( './p2pMessage.js' );
 
 
 /**
- *	class CP2pConnectionWsServer
- *	@module	CP2pConnectionWsServer
- *	@class	CP2pConnectionWsServer
+ *	implementation of p2p connection server using Web Socket
+ *
+ *	@module	CP2pConnectionImplWsServer
+ *	@class	CP2pConnectionImplWsServer
  */
-class CP2pConnectionWsServer extends CP2pConnectionDriver
+class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 {
 	/**
 	 *	@constructor
@@ -310,8 +311,7 @@ class CP2pConnectionWsServer extends CP2pConnectionDriver
 
 
 /**
- *	exports
  *	@exports
- *	@type {CP2pConnectionWsServer}
+ *	@type {CP2pConnectionImplWsServer}
  */
-module.exports	= CP2pConnectionWsServer;
+module.exports	= CP2pConnectionImplWsServer;

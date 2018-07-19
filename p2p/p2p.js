@@ -10,6 +10,10 @@ let _network_peer		= require( './p2pPeer.js' );
 let m_cHeartbeat		= new CP2pHeartbeat();
 
 
+/**
+ * 	Mandatory upgrade required,
+ * 	please check the release notes at https://github.com/byteball/byteball/releases and upgrade.
+ */
 
 
 /**

@@ -18,8 +18,6 @@
 // }
 
 
-
-
 const CP2pConnection 	= require( '../p2p/p2pConnection.js' );
 
 

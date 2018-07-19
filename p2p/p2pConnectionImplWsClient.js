@@ -6,115 +6,35 @@
  */
 const WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 const socks			= process.browser ? null : require( 'socks' + '' );
+
+/**
+ *	@import class
+ */
 const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
 const CP2pPersistence		= require( './p2pPersistence.js' );
+const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
+const CP2pPackage		= require( './p2pPackage.js' );
 
+/**
+ *	@import library
+ */
+const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
 const _p2pLog			= require( './p2pLog.js' );
 const _p2pMessage		= require( './p2pMessage.js' );
 
 
-/**
- *	class CSocketHandleCache
- *	@class	CSocketHandleCache
- */
-class CSocketHandleCache
-{
-	constructor()
-	{
-		//	all clients connected in
-		this.m_arrOutboundPeers	= [];
-	}
-
-
-	/**
-	 *	get socket handle by url
-	 *
-	 * 	@public
-	 *	@param	{string}	sUrl
-	 *	@returns {null}
-	 */
-	getHandleByUrl( sUrl )
-	{
-		let oRet;
-		let arrResult;
-
-		if ( ! _p2pUtils.isString( sUrl ) || 0 === sUrl.length )
-		{
-			return null;
-		}
-
-		//	...
-		oRet		= null;
-		sUrl		= sUrl.trim().toLowerCase();
-		arrResult	= this.m_arrOutboundPeers.filter( oSocket => oSocket.peer === sUrl );
-		if ( Array.isArray( arrResult ) && 1 === arrResult.length )
-		{
-			oRet = arrResult[ 0 ];
-		}
-
-		return oRet;
-	}
-
-	/**
-	 *	add new socket handle by url
-	 *
-	 * 	@public
-	 *	@param	{object}	oSocket
-	 *	@returns {boolean}
-	 */
-	addHandle( oSocket )
-	{
-		if ( ! oSocket )
-		{
-			return false;
-		}
-
-		//	...
-		this.removeHandle( oSocket );
-		this.m_arrOutboundPeers.push( oSocket );
-		return true;
-	}
-
-	/**
-	 *	remove socket handle by url
-	 *
-	 * 	@public
-	 *	@param	{object}	oSocket
-	 *	@returns {boolean}
-	 */
-	removeHandle( oSocket )
-	{
-		let bRet;
-		let nIndex;
-
-		if ( ! oSocket )
-		{
-			return false;
-		}
-
-		//	...
-		bRet	= false;
-		nIndex	= this.m_arrOutboundPeers.indexOf( oSocket );
-		if ( -1 !== nIndex )
-		{
-			bRet = true;
-			this.m_arrOutboundPeers.splice( nIndex, 1 );
-		}
-
-		return bRet;
-	}
-}
 
 
 
 
 /**
- *	class p2pConnectionImplWsClient
- *	@module	p2pConnectionImplWsClient
- *	@class	p2pConnectionImplWsClient
+ *	implementation of p2p connection client using Web Socket
+ *
+ *	@module	CP2pConnectionImplWsClient
+ *	@class	CP2pConnectionImplWsClient
  */
-class p2pConnectionImplWsClient extends CP2pConnectionDriver
+class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 {
 	/**
 	 *	@constructor
@@ -127,8 +47,9 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 
 		//	...
 		this.m_oOptions			= Object.assign( {}, super.oOptions, oOptions );
-		this.m_cSocketHandleCache	= new CSocketHandleCache();
+		this.m_cP2pSocketHandleCache	= new CP2pSocketHandleCache();
 		this.m_cP2pPersistence		= new CP2pPersistence();
+		this.m_cP2pPackage		= new CP2pPackage();
 	}
 
 	/**
@@ -153,7 +74,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 			}
 
 			//	...
-			oWs = this.m_cSocketHandleCache.getHandleByUrl( sUrl );
+			oWs = this.m_cP2pSocketHandleCache.getHandleByUrl( sUrl );
 			if ( ! oWs )
 			{
 				this._createConnection( sUrl )
@@ -190,7 +111,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 			}
 
 			//	...
-			oWs	= this.m_cSocketHandleCache.getHandleByUrl( sUrl );
+			oWs	= this.m_cP2pSocketHandleCache.getHandleByUrl( sUrl );
 			if ( oWs )
 			{
 				oWs.close( 1000, 'disconnect from server manually.' );
@@ -233,9 +154,9 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 			oWs	= ( oProxy && oProxy.agent ) ? new WebSocket( sUrl, oProxy ) : new WebSocket( sUrl );
 
 			//
-			//	avoid warning
+			//	set max listeners for EventEmitter
 			//
-			oWs.setMaxListeners( 20 );
+			oWs.setMaxListeners( _p2pConstants.EVENTEMITTER_MAX_LISTENERS );
 			oWs.on
 			(
 				'open', () =>
@@ -260,7 +181,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 					}
 
 					//	...
-					oWsAnotherToSameServer	= this.m_cSocketHandleCache.getHandleByUrl( sUrl );
+					oWsAnotherToSameServer	= this.m_cP2pSocketHandleCache.getHandleByUrl( sUrl );
 					if ( oWsAnotherToSameServer )
 					{
 						//
@@ -292,7 +213,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 					//	cache new socket handle
 					// 	and, save new peer
 					//
-					this.m_cSocketHandleCache.addHandle( oWs );
+					this.m_cP2pSocketHandleCache.addHandle( oWs );
 					this.m_cP2pPersistence.addServerSync( sUrl );
 
 					//
@@ -334,7 +255,7 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 				'close', () =>
 				{
 					_p2pLog.info( `socket was close` );
-					this.m_cSocketHandleCache.removeHandle( oWs );
+					this.m_cP2pSocketHandleCache.removeHandle( oWs );
 
 					//	...
 					this.emit( CP2pConnectionDriver.EVENT_CLOSE, oWs );
@@ -462,6 +383,6 @@ class p2pConnectionImplWsClient extends CP2pConnectionDriver
 /**
  *	exports
  *	@exports
- *	@type {p2pConnectionImplWsClient}
+ *	@type {CP2pConnectionImplWsClient}
  */
-module.exports	= p2pConnectionImplWsClient;
+module.exports	= CP2pConnectionImplWsClient;

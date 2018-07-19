@@ -1,7 +1,16 @@
+/*jslint node: true */
+"use strict";
+
+
 const EventEmitter	= require( 'events' );
+
 const _p2pConstants	= require( './p2pConstants.js' );
 
+
+
+
 /**
+ * 	connection events
  *	@constant
  */
 const EVENT_START	= 'start';	//	( oSocket, sInfo )	| emitted while your implementation started.
@@ -12,8 +21,13 @@ const EVENT_CLOSE	= 'close';	//	( oSocket )		| emitted while socket was closed.
 const EVENT_ERROR	= 'error';	//	( vError )		| emitted while a error was occurred.
 
 
+
+
+
+
 /**
- *	interface P2pConnectionDriver
+ *	interface definition of p2p connection, so we call it Driver
+ *
  *	@module	CP2pConnectionDriver
  *	@class	CP2pConnectionDriver
  *

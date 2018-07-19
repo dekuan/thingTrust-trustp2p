@@ -12,12 +12,11 @@ module.exports.RESPONSE_TIMEOUT			= 300 * 1000;		//	after this timeout, the requ
 module.exports.HEARTBEAT_INTERVAL		= 3 * 1000;
 module.exports.HEARTBEAT_TIMEOUT		= 10 * 1000;
 module.exports.HEARTBEAT_RESPONSE_TIMEOUT	= 60 * 1000;
-module.exports.PAUSE_TIMEOUT			= 2 * exports.HEARTBEAT_TIMEOUT;
+module.exports.HEARTBEAT_PAUSE_TIMEOUT		= 2 * exports.HEARTBEAT_TIMEOUT;
 
+module.exports.EVENTEMITTER_MAX_LISTENERS	= 20;
 
 module.exports.CONNECTION_MAX_INBOUND		= 100;
-module.exports.CONNECTION_MAX_LISTENERS		= 20;
-
 
 module.exports.CONNECTION_DRIVER		= 'ws';		//	web socket
 
