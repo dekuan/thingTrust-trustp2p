@@ -6,12 +6,12 @@
  */
 const WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
-const CP2pPersistence		= require( './p2pPersistence.js' );
+const CP2pPersistence		= require( '../p2pPersistence.js' );
 
-const _crypto			= require( 'crypto' );
-const _p2pUtils			= require( './p2pUtils.js' );
-const _p2pLog			= require( './p2pLog.js' );
-const _p2pMessage		= require( './p2pMessage.js' );
+const _p2pConstants		= require( '../p2pConstants.js' );
+const _p2pUtils			= require( '../p2pUtils.js' );
+const _p2pLog			= require( '../p2pLog.js' );
+const _p2pMessage		= require( '../p2pMessage.js' );
 
 
 
@@ -34,9 +34,9 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 		super( oOptions );
 
 		//	...
-		this.m_oWss		= { clients : [] };
-		this.m_oOptions		= Object.assign( {}, super.oOptions, oOptions );
-		this.m_cP2pPersistence	= new CP2pPersistence();
+		this.m_oWss			= { clients : [] };
+		this.m_oOptions			= Object.assign( {}, super.oOptions, oOptions );
+		this.m_cP2pPersistence		= new CP2pPersistence();
 	}
 
 	/**
@@ -111,8 +111,11 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 	 */
 	getClients()
 	{
-		return this.m_oWss.clients;
+		return Array.isArray( this.m_oWss.clients )
+			? this.m_oWss.clients
+			: [];
 	}
+
 
 
 	/**
@@ -172,36 +175,6 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 			return false;
 		}
 
-		//
-		//	WELCOME THE NEW PEER
-		//
-		//	so, we respond our version to the new client
-		//
-		_p2pMessage.sendVersion( oWs );
-
-
-		//
-		//	I'm a hub, send challenge
-		//
-		if ( this.m_oOptions.bServeAsHub )
-		{
-			//
-			//	create 'challenge' key for clients
-			//	the new peer, I am a hub and I have ability to exchange data
-			//
-			oWs.challenge = _crypto.randomBytes( 30 ).toString( "base64" );
-			_p2pMessage.sendJustSaying( oWs, 'hub/challenge', oWs.challenge );
-		}
-
-		// if ( ! this.m_oOptions.bLight )
-		// {
-		// 	//
-		// 	//	call
-		// 	//	subscribe data from others
-		// 	//	while a client connected to me
-		// 	//
-		// 	this.m_oOptions.subscribe( ws );
-		// }
 
 		//
 		//	emit a event say there was a client connected

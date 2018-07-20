@@ -4,7 +4,7 @@
 /**
  *	@import library
  */
-const _p2pUtils			= require( './p2pUtils.js' );
+const _p2pUtils			= require( '../p2pUtils.js' );
 
 
 

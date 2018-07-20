@@ -6,10 +6,10 @@
  */
 const socks			= process.browser ? null : require( 'socks' + '' );
 
-const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pMessage		= require( './p2pMessage.js' );
-const _p2pRequest		= require( './p2pRequest.js' );
-const _p2pPeer			= require( './p2pPeer.js' );
+const _p2pConstants		= require( '../p2pConstants.js' );
+const _p2pMessage		= require( '../p2pMessage.js' );
+const _p2pRequest		= require( '../p2pRequest.js' );
+const _p2pPeer			= require( '../p2pPeer.js' );
 
 
 
@@ -43,7 +43,6 @@ class CP2pConnectionImplWsHeartbeat
 	constructor()
 	{
 		this.m_nIntervalHeartbeat	= null;
-		this.m_nLastHeartbeatWakeTs	= Date.now();
 	}
 
 	/**
@@ -96,91 +95,7 @@ class CP2pConnectionImplWsHeartbeat
 	}
 
 
-	/**
-	 * 	keep on sending heartbeat Ping from server to all clients
-	 *
-	 *	@private
-	 *	@description
-	 *	about every 3 seconds we try to send ping command to all clients
-	 */
-	pingClients( arrSocket )
-	{
-		let bJustResumed;
 
-		if ( !  )
-
-
-		//	just resumed after sleeping
-		bJustResumed	= ( typeof window !== 'undefined' &&
-			window &&
-			window.cordova &&
-			Date.now() - this.m_nLastHeartbeatWakeTs > 2 * _p2pConstants.HEARTBEAT_TIMEOUT );
-		this.m_nLastHeartbeatWakeTs	= Date.now();
-
-		//
-		//	The concat() method is used to merge two or more arrays.
-		//	This method does not change the existing arrays, but instead returns a new array.
-		//
-		_p2pPeer.getAllInboundClientsAndOutboundPeers().forEach( function( ws )
-		{
-			let nElapsedSinceLastReceived;
-			let nElapsedSinceLastSentHeartbeat;
-
-			if ( ws.bSleeping ||
-				ws.readyState !== ws.OPEN )
-			{
-				//	web socket is not ready
-				return;
-			}
-
-			//	...
-			nElapsedSinceLastReceived	= Date.now() - ws.last_ts;
-			if ( nElapsedSinceLastReceived >= _p2pConstants.HEARTBEAT_TIMEOUT )
-			{
-				//	>= 10 seconds
-				if ( ws.last_sent_heartbeat_ts && ! bJustResumed )
-				{
-					nElapsedSinceLastSentHeartbeat	= Date.now() - ws.last_sent_heartbeat_ts;
-					if ( nElapsedSinceLastSentHeartbeat >= _p2pConstants.HEARTBEAT_RESPONSE_TIMEOUT )
-					{
-						//	>= 60 seconds
-						console.log( 'will disconnect peer ' + ws.peer + ' who was silent for ' + nElapsedSinceLastReceived + 'ms' );
-						ws.close( 1000, 'lost connection' );
-					}
-				}
-				else
-				{
-					ws.last_sent_heartbeat_ts	= Date.now();
-					_p2pRequest.sendRequest
-					(
-						ws,
-						'heartbeat',
-						null,
-						false,
-						function( ws, request, response )
-						{
-							delete ws.last_sent_heartbeat_ts;
-							ws.last_sent_heartbeat_ts = null;
-
-							if ( 'sleep' === response )
-							{
-								//
-								//	the peer doesn't want to be bothered with heartbeats any more,
-								//	but still wants to keep the connection open
-								//
-								ws.bSleeping = true;
-							}
-
-							//
-							//	as soon as the peer sends a heartbeat himself,
-							//	we'll think he's woken up and resume our heartbeats too
-							//
-						}
-					);
-				}
-			}
-		});
-	}
 
 	/**
 	 *	@public

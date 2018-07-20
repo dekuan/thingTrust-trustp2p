@@ -1,6 +1,6 @@
-const CP2pConnection 	= require( '../p2p/p2pConnection.js' );
+const CP2pServer 	= require( '../p2p/p2pServer.js' );
 
 
-let _p2pConnection	= new CP2pConnection();
+let _p2pServer	= new CP2pServer();
 
-_p2pConnection.startServer();
+_p2pServer.startServer();

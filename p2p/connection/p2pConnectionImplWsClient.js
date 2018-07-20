@@ -11,17 +11,17 @@ const socks			= process.browser ? null : require( 'socks' + '' );
  *	@import class
  */
 const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
-const CP2pPersistence		= require( './p2pPersistence.js' );
+const CP2pPersistence		= require( '../p2pPersistence.js' );
 const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
-const CP2pPackage		= require( './p2pPackage.js' );
+const CP2pPackage		= require( '../p2pPackage.js' );
 
 /**
  *	@import library
  */
-const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pUtils			= require( './p2pUtils.js' );
-const _p2pLog			= require( './p2pLog.js' );
-const _p2pMessage		= require( './p2pMessage.js' );
+const _p2pConstants		= require( '../p2pConstants.js' );
+const _p2pUtils			= require( '../p2pUtils.js' );
+const _p2pLog			= require( '../p2pLog.js' );
+const _p2pMessage		= require( '../p2pMessage.js' );
 
 
 
@@ -215,11 +215,6 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					//
 					this.m_cP2pSocketHandleCache.addHandle( oWs );
 					this.m_cP2pPersistence.addServerSync( sUrl );
-
-					//
-					//	send our version information to server peer
-					//
-					_p2pMessage.sendVersion( oWs );
 
 					//
 					//	TODO

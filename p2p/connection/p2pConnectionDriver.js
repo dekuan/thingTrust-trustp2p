@@ -4,7 +4,7 @@
 
 const EventEmitter	= require( 'events' );
 
-const _p2pConstants	= require( './p2pConstants.js' );
+const _p2pConstants	= require( '../p2pConstants.js' );
 
 
 

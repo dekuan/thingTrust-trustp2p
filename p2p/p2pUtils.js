@@ -24,6 +24,19 @@ class CP2pUtils
 
 
 	/**
+	 *	get random integer
+	 *
+	 *	@public
+	 *	@param	{number}	nMin
+	 *	@param	{number}	nMax
+	 *	@returns {number}
+	 */
+	static getRandomInt( nMin, nMax )
+	{
+		return Math.floor( Math.random() * ( nMax + 1 - nMin ) ) + nMin;
+	}
+
+	/**
 	 *	check if the given number is a valid socket listen port number
 	 *	@public
 	 *	@param nPort

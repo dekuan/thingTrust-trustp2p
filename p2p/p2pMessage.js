@@ -6,85 +6,91 @@ let _conf			= require( '../conf.js' );
 let _constants			= require( './p2pConstants.js' );
 
 
-
-//////////////////////////////////////////////////////////////////////
-//	general network functions
-//////////////////////////////////////////////////////////////////////
-
-
-function sendMessage( ws, type, content )
+/**
+ *	@class	CP2pMessage
+ */
+class CP2pMessage
 {
-	let message;
-
-	//	...
-	message	= JSON.stringify( [ type, content ] );
-
-	if ( ws.readyState !== ws.OPEN )
+	constructor()
 	{
-		return console.log( "readyState=" + ws.readyState + ' on peer ' + ws.peer + ', will not send ' + message );
+
 	}
 
-	console.log( "SENDING " + message + " to " + ws.peer );
-	ws.send( message );
-}
+	sendMessage( ws, type, content )
+	{
+		let message;
 
-function sendJustSaying( ws, subject, body )
-{
-	sendMessage( ws, 'justsaying', { subject : subject, body : body } );
-}
+		//	...
+		message	= JSON.stringify( [ type, content ] );
 
-function sendError( ws, error )
-{
-	sendJustSaying( ws, 'error', error );
-}
-
-function sendInfo( ws, content )
-{
-	sendJustSaying( ws, 'info', content );
-}
-
-function sendResult( ws, content )
-{
-	sendJustSaying( ws, 'result', content );
-}
-
-function sendErrorResult( ws, unit, error )
-{
-	sendResult( ws, { unit : unit, result : 'error', error : error } );
-}
-
-function sendVersion( ws )
-{
-	let libraryPackageJson;
-
-	//	...
-	libraryPackageJson	= require( '../package.json' );
-
-	//	...
-	sendJustSaying
-	(
-		ws,
-		'version',
+		if ( ws.readyState !== ws.OPEN )
 		{
-			protocol_version	: _constants.version,
-			alt			: _constants.alt,
-			library			: libraryPackageJson.name,
-			library_version		: libraryPackageJson.version,
-			program			: _conf.program,
-			program_version		: _conf.program_version
+			return console.log( "readyState=" + ws.readyState + ' on peer ' + ws.peer + ', will not send ' + message );
 		}
-	);
-}
 
-function sendResponse( ws, tag, response )
-{
-	delete ws.assocInPreparingResponse[ tag ];
-	sendMessage( ws, 'response', { tag: tag, response: response } );
-}
+		console.log( "SENDING " + message + " to " + ws.peer );
+		ws.send( message );
+	}
 
-function sendErrorResponse( ws, tag, error )
-{
-	sendResponse( ws, tag, { error : error } );
+	sendJustSaying( ws, subject, body )
+	{
+		this.sendMessage( ws, 'justsaying', { subject : subject, body : body } );
+	}
+
+	sendError( ws, error )
+	{
+		this.sendJustSaying( ws, 'error', error );
+	}
+
+	sendInfo( ws, content )
+	{
+		this.sendJustSaying( ws, 'info', content );
+	}
+
+	sendResult( ws, content )
+	{
+		this.sendJustSaying( ws, 'result', content );
+	}
+
+	sendErrorResult( ws, unit, error )
+	{
+		this.sendResult( ws, { unit : unit, result : 'error', error : error } );
+	}
+
+	sendVersion( ws )
+	{
+		let libraryPackageJson;
+
+		//	...
+		libraryPackageJson	= require( '../package.json' );
+
+		//	...
+		this.sendJustSaying
+		(
+			ws,
+			'version',
+			{
+				protocol_version	: _constants.version,
+				alt			: _constants.alt,
+				library			: libraryPackageJson.name,
+				library_version		: libraryPackageJson.version,
+				program			: _conf.program,
+				program_version		: _conf.program_version
+			}
+		);
+	}
+
+	sendResponse( ws, tag, response )
+	{
+		delete ws.assocInPreparingResponse[ tag ];
+		this.sendMessage( ws, 'response', { tag: tag, response: response } );
+	}
+
+	sendErrorResponse( ws, tag, error )
+	{
+		this.sendResponse( ws, tag, { error : error } );
+	}
+
 }
 
 
@@ -95,12 +101,4 @@ function sendErrorResponse( ws, tag, error )
 /**
  *	exports
  */
-module.exports.sendMessage			= sendMessage;
-module.exports.sendJustSaying			= sendJustSaying;
-module.exports.sendError			= sendError;
-module.exports.sendInfo				= sendInfo;
-module.exports.sendResult			= sendResult;
-module.exports.sendErrorResult			= sendErrorResult;
-module.exports.sendVersion			= sendVersion;
-module.exports.sendResponse			= sendResponse;
-module.exports.sendErrorResponse		= sendErrorResponse;
+module.exports	= CP2pMessage;

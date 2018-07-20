@@ -19,6 +19,15 @@ module.exports.EVENTEMITTER_MAX_LISTENERS	= 20;
 module.exports.CONNECTION_MAX_INBOUND		= 100;
 
 module.exports.CONNECTION_DRIVER		= 'ws';		//	web socket
+module.exports.CONNECTION_ADAPTER_LIST		=
+	{
+		'ws'	:
+		{
+			'client'	: 'p2pConnectionImplWsClient.js',
+			'server'	: 'p2pConnectionImplWsServer.js',
+		}
+	};
+
 
 module.exports.PEER_TYPE_SERVER			= 'server';
 module.exports.PEER_TYPE_CLIENT			= 'client';

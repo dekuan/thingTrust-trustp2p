@@ -18,9 +18,9 @@
 // }
 
 
-const CP2pConnection 	= require( '../p2p/p2pConnection.js' );
+const CP2pClient 	= require( '../p2p/p2pClient.js' );
 
 
-let _p2pConnection	= new CP2pConnection();
+let _p2pClient	= new CP2pClient();
 
-_p2pConnection.startClient();
+_p2pClient.startClient();
