@@ -31,12 +31,9 @@ class CP2pServer extends CP2pRequest
 	{
 		super();
 
-		const sDriver			= _p2pConstants.CONNECTION_DRIVER;
-		const sFilename			= `${ __dirname }/connection/${ _p2pConstants.CONNECTION_ADAPTER_LIST[ sDriver ][ 'server' ] }`;
-		const CConnectionServer		= require( sFilename );
-
 		this.m_oOptions			= Object.assign( {}, oOptions );
-		this.m_cConnectionServer	= new CConnectionServer( oOptions );
+		this.m_cConnectionServer	= _p2pConnectionDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
+
 		this.m_nIntervalHeartbeat	= null;
 	}
 

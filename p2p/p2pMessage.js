@@ -25,12 +25,15 @@ class CP2pMessage
 
 		if ( ws.readyState !== ws.OPEN )
 		{
-			return console.log( "readyState=" + ws.readyState + ' on peer ' + ws.peer + ', will not send ' + message );
+			return console.log( `readyState=${ ws.readyState } on peer ${ ws.peer }, will not send ${ message }` );
 		}
 
-		console.log( "SENDING " + message + " to " + ws.peer );
+		console.log( `SENDING ${ message } to ${ ws.peer }` );
 		ws.send( message );
 	}
+
+
+
 
 	sendJustSaying( ws, subject, body )
 	{
@@ -78,17 +81,6 @@ class CP2pMessage
 				program_version		: _conf.program_version
 			}
 		);
-	}
-
-	sendResponse( ws, tag, response )
-	{
-		delete ws.assocInPreparingResponse[ tag ];
-		this.sendMessage( ws, 'response', { tag: tag, response: response } );
-	}
-
-	sendErrorResponse( ws, tag, error )
-	{
-		this.sendResponse( ws, tag, { error : error } );
 	}
 
 }

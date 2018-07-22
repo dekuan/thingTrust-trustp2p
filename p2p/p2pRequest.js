@@ -364,6 +364,19 @@ class CP2pRequest extends CP2pMessage
 			delete this.m_oAssocReroutedConnectionsByTag[ tag ];
 		}
 	}
+
+
+
+	sendResponse( ws, tag, response )
+	{
+		delete ws.assocInPreparingResponse[ tag ];
+		this.sendMessage( ws, 'response', { tag: tag, response: response } );
+	}
+
+	sendErrorResponse( ws, tag, error )
+	{
+		this.sendResponse( ws, tag, { error : error } );
+	}
 }
 
 

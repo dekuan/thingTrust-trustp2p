@@ -3,9 +3,10 @@
 
 
 const EventEmitter	= require( 'events' );
+const _fs		= require( 'fs' );
 
 const _p2pConstants	= require( '../p2pConstants.js' );
-
+const _p2pUtils		= require( '../p2pUtils.js' );
 
 
 
@@ -70,6 +71,43 @@ class CP2pConnectionDriver extends EventEmitter
 	{
 		return this.m_oOptions;
 	}
+
+
+	/**
+	 *	create new instance
+	 *
+	 *	@param	{string}	sDriver
+	 *	@param	{string}	sType
+	 *	@param	{object}	oOptions
+	 *	@returns {instance}
+	 */
+	static createInstance( sDriver, sType, oOptions )
+	{
+		let cRet;
+		let sFullFilename;
+		let CClassName;
+
+		if ( ! _p2pUtils.isString( sDriver ) || 0 === sDriver.length )
+		{
+			return null;
+		}
+		if ( ! _p2pUtils.isString( sType ) || 0 === sType.length )
+		{
+			return null;
+		}
+
+		//	...
+		cRet		= null;
+		sFullFilename	= `${ __dirname }/${ _p2pConstants.CONNECTION_ADAPTER_LIST[ sDriver ][ sType ] }`;
+		if ( _fs.existsSync( sFullFilename ) )
+		{
+			CClassName	= require( sFullFilename );
+			cRet		= new CClassName( oOptions );
+		}
+
+		return cRet;
+	}
+
 }
 
 

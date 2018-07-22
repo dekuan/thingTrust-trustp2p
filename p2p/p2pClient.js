@@ -29,11 +29,10 @@ class CP2pClient extends CP2pRequest
 	{
 		super();
 
-		const sDriver			= _p2pConstants.CONNECTION_DRIVER;
-		const sFilename			= `${ __dirname }/connection/${ _p2pConstants.CONNECTION_ADAPTER_LIST[ sDriver ][ 'client' ] }`;
-		const CConnectionClient		= require( sFilename );
-
-		this.m_cConnectionClient	= new CConnectionClient( oOptions );
+		/**
+		 *	create client instance
+		 */
+		this.m_cConnectionClient = _p2pConnectionDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
 	}
 
 
