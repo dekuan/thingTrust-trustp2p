@@ -32,7 +32,7 @@ class CP2pClient extends CP2pRequest
 		/**
 		 *	create client instance
 		 */
-		this.m_cConnectionClient = CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
+		this.m_cDriverClient = CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
 	}
 
 
@@ -44,7 +44,7 @@ class CP2pClient extends CP2pRequest
 	 */
 	async startClient()
 	{
-		return this.m_cConnectionClient
+		return this.m_cDriverClient
 		.on( CP2pDriver.EVENT_OPEN, ( oSocket ) =>
 		{
 			console.log( `Received [${ CP2pDriver.EVENT_CONNECTION }] from server.` );

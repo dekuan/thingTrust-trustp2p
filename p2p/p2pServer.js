@@ -32,9 +32,9 @@ class CP2pServer extends CP2pRequest
 	{
 		super();
 
-		this.m_oOptions			= Object.assign( {}, oOptions );
-		this.m_cConnectionServer	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
-		this.m_cP2pHeartbeat		= new CP2pHeartbeat();
+		this.m_oOptions		= Object.assign( {}, oOptions );
+		this.m_cDriverServer	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
+		this.m_cP2pHeartbeat	= new CP2pHeartbeat();
 	}
 
 
@@ -46,7 +46,7 @@ class CP2pServer extends CP2pRequest
 	 */
 	async startServer()
 	{
-		return this.m_cConnectionServer
+		return this.m_cDriverServer
 		.on( CP2pDriver.EVENT_START, ( oSocket, sInfo ) =>
 		{
 			console.log( `Received a message [${ CP2pDriver.EVENT_START }] from server.`, sInfo );
@@ -115,7 +115,7 @@ class CP2pServer extends CP2pRequest
 	 */
 	getClients()
 	{
-		return this.m_cConnectionServer.getClients();
+		return this.m_cDriverServer.getClients();
 	}
 
 }

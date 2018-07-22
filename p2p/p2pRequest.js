@@ -152,13 +152,13 @@ class CP2pRequest extends CP2pMessage
 	 *	1. its pfnResponseHandler will be called too but no second request will be sent to the wire
 	 *	2. bReRoutable flag must be the same
 	 *
-	 *	@param ws
+	 *	@param oSocket
 	 *	@param command
 	 *	@param params
 	 *	@param bReRoutable
 	 *	@param pfnResponseHandler
 	 */
-	sendRequest( ws, command, params, bReRoutable, pfnResponseHandler )
+	sendRequest( oSocket, command, params, bReRoutable, pfnResponseHandler )
 	{
 		//
 		//	params for 'catchup'
@@ -190,18 +190,18 @@ class CP2pRequest extends CP2pMessage
 		tag	= _object_hash.getBase64Hash( request );
 
 		//
-		//	if (ws.assocPendingRequests[tag]) // ignore duplicate requests while still waiting for response from the same peer
+		//	if (oSocket.assocPendingRequests[tag]) // ignore duplicate requests while still waiting for response from the same peer
 		//	return console.log("will not send identical "+command+" request");
 		//
-		if ( ws.assocPendingRequests[ tag ] )
+		if ( oSocket.assocPendingRequests[ tag ] )
 		{
 			//	...
-			ws.assocPendingRequests[ tag ].responseHandlers.push( pfnResponseHandler );
+			oSocket.assocPendingRequests[ tag ].responseHandlers.push( pfnResponseHandler );
 
 			//	...
 			return console.log
 			(
-				'already sent a ' + command + ' request to ' + ws.peer + ', will add one more response handler rather than sending a duplicate request to the wire'
+				'already sent a ' + command + ' request to ' + oSocket.peer + ', will add one more response handler rather than sending a duplicate request to the wire'
 			);
 		}
 
@@ -219,26 +219,26 @@ class CP2pRequest extends CP2pMessage
 		//
 		pfnReroute = bReRoutable ? () =>
 			{
-				console.log( 'will try to reroute a ' + command + ' request stalled at ' + ws.peer );
+				console.log( 'will try to reroute a ' + command + ' request stalled at ' + oSocket.peer );
 
-				if ( ! ws.assocPendingRequests[ tag ] )
+				if ( ! oSocket.assocPendingRequests[ tag ] )
 				{
 					return console.log( 'will not reroute - the request was already handled by another peer' );
 				}
 
 				//	...
-				ws.assocPendingRequests[ tag ].bRerouted	= true;
-				_network_peer.findNextPeer( ws, ( next_ws ) =>
+				oSocket.assocPendingRequests[ tag ].bRerouted	= true;
+				_network_peer.findNextPeer( oSocket, ( next_ws ) =>
 				{
 					//
 					//	the callback may be called much later if _network_peer.findNextPeer has to wait for driver
 					//
-					if ( ! ws.assocPendingRequests[ tag ] )
+					if ( ! oSocket.assocPendingRequests[ tag ] )
 					{
 						return console.log( 'will not reroute after findNextPeer - the request was already handled by another peer' );
 					}
 
-					if ( next_ws === ws ||
+					if ( next_ws === oSocket ||
 						this.m_oAssocReroutedConnectionsByTag[ tag ] && this.m_oAssocReroutedConnectionsByTag[ tag ].indexOf( next_ws ) >= 0 )
 					{
 						console.log( `will not reroute ${ command } to the same peer, will rather wait for a new connection` );
@@ -258,8 +258,8 @@ class CP2pRequest extends CP2pMessage
 					//
 					//	SEND REQUEST AGAIN FOR EVERY responseHandlers
 					//
-					console.log( 'rerouting ' + command + ' from ' + ws.peer + ' to ' + next_ws.peer );
-					ws.assocPendingRequests[ tag ].responseHandlers.forEach
+					console.log( 'rerouting ' + command + ' from ' + oSocket.peer + ' to ' + next_ws.peer );
+					oSocket.assocPendingRequests[ tag ].responseHandlers.forEach
 					(
 						( rh ) =>
 						{
@@ -272,7 +272,7 @@ class CP2pRequest extends CP2pMessage
 					//
 					if ( ! this.m_oAssocReroutedConnectionsByTag[ tag ] )
 					{
-						this.m_oAssocReroutedConnectionsByTag[ tag ] = [ ws ];
+						this.m_oAssocReroutedConnectionsByTag[ tag ] = [ oSocket ];
 					}
 					this.m_oAssocReroutedConnectionsByTag[ tag ].push( next_ws );
 				});
@@ -289,7 +289,7 @@ class CP2pRequest extends CP2pMessage
 				() =>
 				{
 					//	callback handler while the request is TIMEOUT
-					console.log( `# network::sendRequest request ${ command }, send to ${ ws.peer } was overtime.` );
+					console.log( `# network::sendRequest request ${ command }, send to ${ oSocket.peer } was overtime.` );
 					pfnReroute.apply( this, arguments );
 				},
 				_p2pConstants.STALLED_TIMEOUT
@@ -306,19 +306,19 @@ class CP2pRequest extends CP2pMessage
 			(
 				() =>
 				{
-					console.log( `# request ${ command }, response from ${ ws.peer } was overtime.` );
+					console.log( `# request ${ command }, response from ${ oSocket.peer } was overtime.` );
 
 					//
 					//	delete all overtime requests/connections in pending requests list
 					//
-					ws.assocPendingRequests[ tag ].responseHandlers.forEach
+					oSocket.assocPendingRequests[ tag ].responseHandlers.forEach
 					(
 						rh =>
 						{
-							rh( ws, request, { error : "[internal] response timeout" } );
+							rh( oSocket, request, { error : "[internal] response timeout" } );
 						}
 					);
-					delete ws.assocPendingRequests[ tag ];
+					delete oSocket.assocPendingRequests[ tag ];
 				},
 				_p2pConstants.RESPONSE_TIMEOUT
 			);
@@ -326,7 +326,7 @@ class CP2pRequest extends CP2pMessage
 		//
 		//	build pending request list
 		//
-		ws.assocPendingRequests[ tag ] =
+		oSocket.assocPendingRequests[ tag ] =
 			{
 				request			: request,
 				responseHandlers	: [ pfnResponseHandler ],
@@ -338,7 +338,7 @@ class CP2pRequest extends CP2pMessage
 		//
 		//	...
 		//
-		this.sendMessage( ws, 'request', content );
+		this.sendMessage( oSocket, 'request', content );
 	}
 
 
@@ -367,15 +367,15 @@ class CP2pRequest extends CP2pMessage
 
 
 
-	sendResponse( ws, tag, response )
+	sendResponse( oSocket, tag, response )
 	{
-		delete ws.assocInPreparingResponse[ tag ];
-		this.sendMessage( ws, 'response', { tag: tag, response: response } );
+		delete oSocket.assocInPreparingResponse[ tag ];
+		this.sendMessage( oSocket, 'response', { tag: tag, response: response } );
 	}
 
-	sendErrorResponse( ws, tag, error )
+	sendErrorResponse( oSocket, tag, error )
 	{
-		this.sendResponse( ws, tag, { error : error } );
+		this.sendResponse( oSocket, tag, { error : error } );
 	}
 }
 
