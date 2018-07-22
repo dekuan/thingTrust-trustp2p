@@ -128,6 +128,44 @@ class CP2pDriverImplWsClient extends CP2pDriver
 
 
 	/**
+	 *	find the next server synchronously
+	 *
+	 *	@param	{object}	oWs
+	 *	@returns {object}
+	 */
+	async findNextServerSync( oWs )
+	{
+		let oRet;
+
+		await this.findNextServer( oWs )
+			.then( oNextWs =>
+			{
+				oRet = oNextWs;
+			})
+			.catch( vError =>
+			{
+			});
+
+		return oRet;
+	}
+
+	/**
+	 *	find the next server
+	 *
+	 *	@param	{object}	oWs
+	 *	@returns {Promise<any>}
+	 */
+	async findNextServer( oWs )
+	{
+		return new Promise( ( pfnResolve, pfnReject ) =>
+		{
+			pfnResolve( oWs );
+		});
+	}
+
+
+
+	/**
 	 *	create new driver
 	 *
 	 *	@private

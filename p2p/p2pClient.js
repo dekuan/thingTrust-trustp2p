@@ -33,6 +33,7 @@ class CP2pClient extends CP2pRequest
 		 *	create client instance
 		 */
 		this.m_cDriverClient = CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
+		super.setDriver( this.m_cDriverClient );
 	}
 
 
@@ -47,7 +48,7 @@ class CP2pClient extends CP2pRequest
 		return this.m_cDriverClient
 		.on( CP2pDriver.EVENT_OPEN, ( oSocket ) =>
 		{
-			console.log( `Received [${ CP2pDriver.EVENT_CONNECTION }] from server.` );
+			console.log( `Received [${ CP2pDriver.EVENT_CONNECTION }], new connection was opened.` );
 
 			//
 			//	send our version information to server peer

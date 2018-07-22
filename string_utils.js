@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-var STRING_JOIN_CHAR = "\x00";
+const	STRING_JOIN_CHAR	= "\x00";
 
 
 
@@ -12,7 +12,7 @@ var STRING_JOIN_CHAR = "\x00";
  */
 function getSourceString( obj )
 {
-	var arrComponents	= [];
+	let arrComponents	= [];
 
 	//	...
 	function extractComponents( variable )
@@ -49,7 +49,7 @@ function getSourceString( obj )
 
                     		//	...
                     		arrComponents.push( '[' );
-                    		for ( var i = 0; i < variable.length; i++ )
+                    		for ( let i = 0; i < variable.length; i++ )
 				{
 					extractComponents( variable[ i ] );
 				}
@@ -59,7 +59,7 @@ function getSourceString( obj )
                 	}
                 	else
                 	{
-                    		var keys = Object.keys( variable ).sort();
+                    		let keys = Object.keys( variable ).sort();
                     		if ( keys.length === 0 )
 				{
 					throw Error( "empty object in " + JSON.stringify( obj ) );

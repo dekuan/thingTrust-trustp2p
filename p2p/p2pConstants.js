@@ -5,6 +5,9 @@
 /**
  *	exports
  */
+module.exports.version                                 = '1.0';
+module.exports.alt                                     = '1';
+
 module.exports.FORWARDING_TIMEOUT		= 10 * 1000;		//	don't forward if the joint was received more than FORWARDING_TIMEOUT ms ago
 module.exports.STALLED_TIMEOUT			= 5000;			//	a request is treated as stalled if no response received within STALLED_TIMEOUT ms
 module.exports.RESPONSE_TIMEOUT			= 300 * 1000;		//	after this timeout, the request is abandoned
@@ -27,7 +30,3 @@ module.exports.CONNECTION_ADAPTER_LIST		=
 			'server'	: 'p2pDriverImplWsServer.js',
 		}
 	};
-
-
-module.exports.PEER_TYPE_SERVER			= 'server';
-module.exports.PEER_TYPE_CLIENT			= 'client';

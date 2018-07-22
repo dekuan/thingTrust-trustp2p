@@ -21,7 +21,8 @@ const EVENT_MESSAGE	= 'message';	//	( oSocket, vMessage )	| emitted while a new 
 const EVENT_CLOSE	= 'close';	//	( oSocket )		| emitted while socket was closed.
 const EVENT_ERROR	= 'error';	//	( vError )		| emitted while a error was occurred.
 
-
+const DRIVER_TYPE_SERVER	= 'server';
+const DRIVER_TYPE_CLIENT	= 'client';
 
 
 
@@ -46,10 +47,9 @@ class CP2pDriver extends EventEmitter
 	{
 		super();
 
-		/**
-		 *	@default
-		 */
-		this.m_oOptions	=
+		//	...
+		this.m_sDriverType	= oOptions.type;
+		this.m_oOptions		=
 			{
 				//	...
 				nPort			: 1107,
@@ -72,6 +72,14 @@ class CP2pDriver extends EventEmitter
 		return this.m_oOptions;
 	}
 
+	/**
+	 *	get driver type
+	 *	@return {string}
+	 */
+	get sDriverType()
+	{
+		return this.m_sDriverType;
+	}
 
 	/**
 	 *	create new instance
@@ -101,8 +109,9 @@ class CP2pDriver extends EventEmitter
 		sFullFilename	= `${ __dirname }/${ _p2pConstants.CONNECTION_ADAPTER_LIST[ sDriver ][ sType ] }`;
 		if ( _fs.existsSync( sFullFilename ) )
 		{
-			CClassName	= require( sFullFilename );
-			cRet		= new CClassName( oOptions );
+			CClassName		= require( sFullFilename );
+			oOptions		= Object.assign( {}, oOptions, { type : sType } );
+			cRet			= new CClassName( oOptions );
 		}
 
 		return cRet;
@@ -129,3 +138,6 @@ module.exports.EVENT_OPEN		= EVENT_OPEN;
 module.exports.EVENT_MESSAGE		= EVENT_MESSAGE;
 module.exports.EVENT_CLOSE		= EVENT_CLOSE;
 module.exports.EVENT_ERROR		= EVENT_ERROR;
+
+module.exports.DRIVER_TYPE_SERVER	= DRIVER_TYPE_SERVER;
+module.exports.DRIVER_TYPE_CLIENT	= DRIVER_TYPE_CLIENT;

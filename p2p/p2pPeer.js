@@ -127,7 +127,7 @@ function checkIfHaveEnoughOutboundPeersAndAdd()
  */
 function _requestPeers( ws )
 {
-	return true;
+	return ws;
 
 	_network_request.sendRequest
 	(

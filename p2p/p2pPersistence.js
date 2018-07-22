@@ -5,7 +5,7 @@ let _db			= require( '../db.js' );
 let _p2pConstants	= require( './p2pConstants.js' );
 let _p2pUtils		= require( './p2pUtils.js' );
 let CP2pNerve		= require( './p2pNerve.js' );
-
+const CP2pDriver	= require( './driver/p2pDriver.js' );
 
 
 /**
@@ -49,7 +49,7 @@ class CP2pPersistence
 		{
 			return null;
 		}
-		if ( ! [ _p2pConstants.PEER_TYPE_CLIENT, _p2pConstants.PEER_TYPE_SERVER ].includes( sType ) )
+		if ( ! [ CP2pDriver.DRIVER_TYPE_CLIENT, CP2pDriver.DRIVER_TYPE_SERVER ].includes( sType ) )
 		{
 			return null;
 		}
@@ -66,7 +66,7 @@ class CP2pPersistence
 	 */
 	async addServerSync( sUrl )
 	{
-		return this.addPeerSync( _p2pConstants.PEER_TYPE_SERVER, sUrl );
+		return this.addPeerSync( CP2pDriver.DRIVER_TYPE_SERVER, sUrl );
 	}
 
 	/**
@@ -76,7 +76,7 @@ class CP2pPersistence
 	 */
 	async addServer( sUrl )
 	{
-		return this.addPeer( _p2pConstants.PEER_TYPE_SERVER, sUrl );
+		return this.addPeer( CP2pDriver.DRIVER_TYPE_SERVER, sUrl );
 	}
 
 
@@ -88,7 +88,7 @@ class CP2pPersistence
 	 */
 	async addClientSync( sUrl )
 	{
-		return this.addPeerSync( _p2pConstants.PEER_TYPE_CLIENT, sUrl );
+		return this.addPeerSync( CP2pDriver.DRIVER_TYPE_CLIENT, sUrl );
 	}
 
 	/**
@@ -98,7 +98,7 @@ class CP2pPersistence
 	 */
 	async addClient( sUrl )
 	{
-		return this.addPeer( _p2pConstants.PEER_TYPE_CLIENT, sUrl );
+		return this.addPeer( CP2pDriver.DRIVER_TYPE_CLIENT, sUrl );
 	}
 
 	/**

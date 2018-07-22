@@ -3,7 +3,7 @@
 
 let _conf			= require( '../conf.js' );
 
-let _constants			= require( './p2pConstants.js' );
+let _p2pConstants		= require( './p2pConstants.js' );
 
 
 /**
@@ -73,8 +73,8 @@ class CP2pMessage
 			ws,
 			'version',
 			{
-				protocol_version	: _constants.version,
-				alt			: _constants.alt,
+				protocol_version	: _p2pConstants.version,
+				alt			: _p2pConstants.alt,
 				library			: libraryPackageJson.name,
 				library_version		: libraryPackageJson.version,
 				program			: _conf.program,
