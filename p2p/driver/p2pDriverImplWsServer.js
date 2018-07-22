@@ -5,24 +5,22 @@
  *	@require	module: *
  */
 const WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
-const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
+const CP2pDriver		= require( './p2pDriver.js' );
 const CP2pPersistence		= require( '../p2pPersistence.js' );
 
 const _p2pConstants		= require( '../p2pConstants.js' );
 const _p2pUtils			= require( '../p2pUtils.js' );
 const _p2pLog			= require( '../p2pLog.js' );
-const _p2pMessage		= require( '../p2pMessage.js' );
-
 
 
 
 /**
- *	implementation of p2p connection server using Web Socket
+ *	implementation of p2p driver server using Web Socket
  *
- *	@module	CP2pConnectionImplWsServer
- *	@class	CP2pConnectionImplWsServer
+ *	@module	CP2pDriverImplWsServer
+ *	@class	CP2pDriverImplWsServer
  */
-class CP2pConnectionImplWsServer extends CP2pConnectionDriver
+class CP2pDriverImplWsServer extends CP2pDriver
 {
 	/**
 	 *	@constructor
@@ -79,13 +77,13 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 			_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
 			this.emit
 			(
-				CP2pConnectionDriver.EVENT_START,
+				CP2pDriver.EVENT_START,
 				this.m_oWss,
 				`WSS running at port ${ this.m_oOptions.nPort }`
 			);
 
 			//
-			//	Event 'connection'
+			//	Event 'driver'
 			//		Emitted when the handshake is complete.
 			//
 			//		- socket	{ WebSocket }
@@ -119,7 +117,7 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 
 
 	/**
-	 * 	callback function for a incoming connection
+	 * 	callback function for a incoming driver
 	 *
 	 *	@private
 	 *	@param	{object}	oWs
@@ -179,7 +177,7 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 		//
 		//	emit a event say there was a client connected
 		//
-		this.emit( CP2pConnectionDriver.EVENT_CONNECTION, oWs );
+		this.emit( CP2pDriver.EVENT_CONNECTION, oWs );
 
 		//
 		//	receive message
@@ -192,7 +190,7 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 				//
 				//	call while receiving message
 				//
-				this.emit( CP2pConnectionDriver.EVENT_MESSAGE, oWs, vMessage );
+				this.emit( CP2pDriver.EVENT_MESSAGE, oWs, vMessage );
 			}
 		);
 
@@ -212,9 +210,9 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 				await this.m_cP2pPersistence.removePeerFromWatchList( oWs.peer );
 
 				//
-				//	call while the connection was closed
+				//	call while the driver was closed
 				//
-				this.emit( CP2pConnectionDriver.EVENT_CLOSE, oWs );
+				this.emit( CP2pDriver.EVENT_CLOSE, oWs );
 			}
 		);
 
@@ -230,7 +228,7 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 
 				//	close
 				oWs.close( 1000, "received error" );
-				this.emit( CP2pConnectionDriver.EVENT_ERROR, vError );
+				this.emit( CP2pDriver.EVENT_ERROR, vError );
 			}
 		);
 
@@ -285,6 +283,6 @@ class CP2pConnectionImplWsServer extends CP2pConnectionDriver
 
 /**
  *	@exports
- *	@type {CP2pConnectionImplWsServer}
+ *	@type {CP2pDriverImplWsServer}
  */
-module.exports	= CP2pConnectionImplWsServer;
+module.exports	= CP2pDriverImplWsServer;

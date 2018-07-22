@@ -11,11 +11,11 @@ const _p2pUtils		= require( '../p2pUtils.js' );
 
 
 /**
- * 	connection events
+ * 	driver events
  *	@constant
  */
 const EVENT_START	= 'start';	//	( oSocket, sInfo )	| emitted while your implementation started.
-const EVENT_CONNECTION	= 'connection';	//	( oSocket )		| emitted while a new connection is made.
+const EVENT_CONNECTION	= 'connection';	//	( oSocket )		| emitted while a new driver is made.
 const EVENT_OPEN	= 'open';	//	( oSocket )		| emitted after successfully connected to server.
 const EVENT_MESSAGE	= 'message';	//	( oSocket, vMessage )	| emitted while a new message was received.
 const EVENT_CLOSE	= 'close';	//	( oSocket )		| emitted while socket was closed.
@@ -27,16 +27,16 @@ const EVENT_ERROR	= 'error';	//	( vError )		| emitted while a error was occurred
 
 
 /**
- *	interface definition of p2p connection, so we call it Driver
+ *	interface definition of p2p driver, so we call it Driver
  *
- *	@module	CP2pConnectionDriver
- *	@class	CP2pConnectionDriver
+ *	@module	CP2pDriver
+ *	@class	CP2pDriver
  *
  *	@description
  *		communicate with caller by emitting events below in your implementation for this interface
  *	@see constant
  */
-class CP2pConnectionDriver extends EventEmitter
+class CP2pDriver extends EventEmitter
 {
 	/**
 	 *	@constructor
@@ -114,11 +114,10 @@ class CP2pConnectionDriver extends EventEmitter
 
 
 /**
- *	exports
  *	@exports
- *	@type {CP2pConnectionDriver}
+ *	@type {CP2pDriver}
  */
-module.exports	= CP2pConnectionDriver;
+module.exports	= CP2pDriver;
 
 /**
  *	events type

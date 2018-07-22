@@ -5,10 +5,10 @@
  *	@require	module: *
  */
 const EventEmitter		= require( 'events' );
+const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pRequest		= require( './p2pRequest.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pConnectionDriver	= require( './connection/p2pConnectionDriver.js' );
 
 
 
@@ -32,7 +32,7 @@ class CP2pClient extends CP2pRequest
 		/**
 		 *	create client instance
 		 */
-		this.m_cConnectionClient = _p2pConnectionDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
+		this.m_cConnectionClient = CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
 	}
 
 
@@ -45,26 +45,26 @@ class CP2pClient extends CP2pRequest
 	async startClient()
 	{
 		return this.m_cConnectionClient
-		.on( _p2pConnectionDriver.EVENT_OPEN, ( oSocket ) =>
+		.on( CP2pDriver.EVENT_OPEN, ( oSocket ) =>
 		{
-			console.log( `Received [${ _p2pConnectionDriver.EVENT_CONNECTION }] from server.` );
+			console.log( `Received [${ CP2pDriver.EVENT_CONNECTION }] from server.` );
 
 			//
 			//	send our version information to server peer
 			//
 			this.sendVersion( oSocket );
 		})
-		.on( _p2pConnectionDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
+		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
-			console.log( `Received ${ _p2pConnectionDriver.EVENT_MESSAGE } :: [${ vMessage }]` );
+			console.log( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ vMessage }]` );
 		})
-		.on( _p2pConnectionDriver.EVENT_CLOSE, ( oSocket ) =>
+		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			console.log( `Received [${ _p2pConnectionDriver.EVENT_CLOSE }] from server.` );
+			console.log( `Received [${ CP2pDriver.EVENT_CLOSE }] from server.` );
 		})
-		.on( _p2pConnectionDriver.EVENT_ERROR, ( vError ) =>
+		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			console.log( `Received [${ _p2pConnectionDriver.EVENT_ERROR }] from server.` );
+			console.log( `Received [${ CP2pDriver.EVENT_ERROR }] from server.` );
 		})
 		.connectToServer( 'ws://127.0.0.1:1107' );
 	}

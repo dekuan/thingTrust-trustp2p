@@ -53,7 +53,7 @@ module.exports = function(connection_or_pool){
 	};
 	
 	safe_connection.release = function(){
-		//console.log("releasing connection");
+		//console.log("releasing driver");
 		connection_or_pool.original_release();
 	};
 
@@ -80,7 +80,7 @@ module.exports = function(connection_or_pool){
 		connection_or_pool.getConnection(function(err, new_connection) {
 			if (err)
 				throw err;
-			console.log("got connection from pool");
+			console.log("got driver from pool");
 			handleConnection(new_connection.original_query ? new_connection : module.exports(new_connection));
 		});
 	};

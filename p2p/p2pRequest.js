@@ -97,7 +97,7 @@ class CP2pRequest extends CP2pMessage
 				{
 					//	>= 60 seconds
 					console.log( `will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
-					oSocket.close( 1000, 'lost connection' );
+					oSocket.close( 1000, 'lost driver' );
 				}
 			}
 			else
@@ -118,7 +118,7 @@ class CP2pRequest extends CP2pMessage
 						{
 							//
 							//	the peer doesn't want to be bothered with heartbeats any more,
-							//	but still wants to keep the connection open
+							//	but still wants to keep the driver open
 							//
 							oNextSocket.bSleeping = true;
 						}
@@ -231,7 +231,7 @@ class CP2pRequest extends CP2pMessage
 				_network_peer.findNextPeer( ws, ( next_ws ) =>
 				{
 					//
-					//	the callback may be called much later if _network_peer.findNextPeer has to wait for connection
+					//	the callback may be called much later if _network_peer.findNextPeer has to wait for driver
 					//
 					if ( ! ws.assocPendingRequests[ tag ] )
 					{
@@ -248,7 +248,7 @@ class CP2pRequest extends CP2pMessage
 						// 	() =>
 						// 	{
 						// 		//	try again
-						// 		console.log( 'got new connection, retrying reroute ' + command );
+						// 		console.log( 'got new driver, retrying reroute ' + command );
 						// 		pfnReroute();
 						// 	}
 						// );

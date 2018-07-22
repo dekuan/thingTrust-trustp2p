@@ -3375,7 +3375,7 @@ function _handleMessageJustSaying( ws, subject, body )
 			//	inbound only
 			if ( ws.bAdvertisedOwnUrl )
 			{
-				//	allow it only once per connection
+				//	allow it only once per driver
 				break;
 			}
 
@@ -3419,8 +3419,8 @@ function _handleMessageJustSaying( ws, subject, body )
 
 					//
 					//	verify it is really your url by connecting to this url,
-					//	sending a random string through this new connection,
-					//	and expecting this same string over existing inbound connection
+					//	sending a random string through this new driver,
+					//	and expecting this same string over existing inbound driver
 					//
 					ws.sent_echo_string	= _crypto.randomBytes( 30 ).toString( "base64" );
 					_network_peer.findOutboundPeerOrConnect
@@ -3459,7 +3459,7 @@ function _handleMessageJustSaying( ws, subject, body )
 			{
 				//
 				//	ignore
-				//	1, inbound only, if this is an outbound connection
+				//	1, inbound only, if this is an outbound driver
 				//	2, if no echo_string received
 				//
 				break;
@@ -3477,7 +3477,7 @@ function _handleMessageJustSaying( ws, subject, body )
 			reverse_ws = _network_peer.getOutboundPeerWsByUrl( ws.claimed_url );
 			if ( ! reverse_ws )
 			{
-				//	no reverse outbound connection
+				//	no reverse outbound driver
 				break;
 			}
 
@@ -3948,7 +3948,7 @@ function _handleMessageRequest( ws, tag, command, params )
 				.some( function( other_ws ){ return ( other_ws.subscription_id === subscription_id ); } ) )
 			{
 				//
-				//	ws.bOutbound tell us this is an outbound connection
+				//	ws.bOutbound tell us this is an outbound driver
 				//
 				if ( ws.bOutbound )
 				{
@@ -3982,7 +3982,7 @@ function _handleMessageRequest( ws, tag, command, params )
 			}
 
 			//
-			//	mark as 'subscribed' on the socket connection
+			//	mark as 'subscribed' on the socket driver
 			//
 			ws.bSubscribed = true;
 
@@ -4802,7 +4802,7 @@ function _onWebSocketClosed( ws )
 		{
 			pendingRequest.responseHandlers.forEach( function( rh )
 			{
-				rh( ws, pendingRequest.request, { error : "[internal] connection closed" } );
+				rh( ws, pendingRequest.request, { error : "[internal] driver closed" } );
 			});
 
 			delete ws.assocPendingRequests[ tag ];

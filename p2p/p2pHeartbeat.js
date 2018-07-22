@@ -6,10 +6,12 @@
  */
 const socks			= process.browser ? null : require( 'socks' + '' );
 
-const _p2pConstants		= require( '../p2pConstants.js' );
-const _p2pMessage		= require( '../p2pMessage.js' );
-const _p2pRequest		= require( '../p2pRequest.js' );
-const _p2pPeer			= require( '../p2pPeer.js' );
+const _p2pConstants		= require( './p2pConstants.js' );
+const _p2pUtils			= require( './p2pUtils.js' );
+
+const _p2pMessage		= require( './p2pMessage.js' );
+const _p2pRequest		= require( './p2pRequest.js' );
+const _p2pPeer			= require( './p2pPeer.js' );
 
 
 
@@ -35,7 +37,7 @@ const _p2pPeer			= require( '../p2pPeer.js' );
  *
  *
  */
-class CP2pConnectionImplWsHeartbeat
+class CP2pHeartbeat
 {
 	/**
 	 *	@constructor
@@ -46,34 +48,34 @@ class CP2pConnectionImplWsHeartbeat
 	}
 
 	/**
-	 *	get interval time in milliseconds.
-	 *	@returns {number}
-	 */
-	getInterval()
-	{
-		return _p2pConstants.HEARTBEAT_INTERVAL + _p2pPeer.getRandomInt( 0, 1000 );
-	}
-
-
-	/**
 	 *
 	 *
 	 *	@public
 	 */
-	startPing()
+	startHeartbeat( pfnCallback )
 	{
-		if ( null !== this.m_nIntervalHeartbeat )
+		if ( ! _p2pUtils.isFunction( pfnCallback ) )
 		{
-			return this.m_nIntervalHeartbeat;
+			return null;
 		}
 
 		//
-		//	if we have exactly same intervals on two clints,
+		//	if it's working, stop it at first
+		//
+		if ( null !== this.m_nIntervalHeartbeat )
+		{
+			this.stopHeartbeat();
+		}
+
+		//
+		//	ONLY SERVER TO CLIENT
+		//
+		//	if we have exactly same intervals on two clients,
 		//	they might send heartbeats to each other at the same time
 		//
 		this.m_nIntervalHeartbeat = setInterval
 		(
-			this.pingClients,
+			pfnCallback,
 			_p2pConstants.HEARTBEAT_INTERVAL + _p2pPeer.getRandomInt( 0, 1000 )
 		);
 
@@ -82,10 +84,11 @@ class CP2pConnectionImplWsHeartbeat
 	}
 
 	/**
+	 * 	stop heartbeat, sending ping from server
 	 *	@public
 	 *	stop heartbeat
 	 */
-	stopPing()
+	stopHeartbeat()
 	{
 		if ( null !== this.m_nIntervalHeartbeat )
 		{
@@ -93,6 +96,9 @@ class CP2pConnectionImplWsHeartbeat
 			this.m_nIntervalHeartbeat = null;
 		}
 	}
+
+
+
 
 
 
@@ -127,7 +133,7 @@ class CP2pConnectionImplWsHeartbeat
 		);
 		if ( bPaused )
 		{
-			//	opt out of receiving heartbeats and move the connection into a sleeping state
+			//	opt out of receiving heartbeats and move the driver into a sleeping state
 			return _p2pMessage.sendResponse( ws, tag, 'sleep' );
 		}
 
@@ -141,4 +147,4 @@ class CP2pConnectionImplWsHeartbeat
 /**
  *	@exports
  */
-module.exports	= CP2pConnectionImplWsHeartbeat;
+module.exports	= CP2pHeartbeat;

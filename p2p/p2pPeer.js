@@ -58,6 +58,8 @@ function setAddressSubscribe( pfnAddress )
  */
 function checkIfHaveEnoughOutboundPeersAndAdd()
 {
+	return true;
+
 	let arrOutboundPeerUrls;
 
 	//	...
@@ -125,6 +127,8 @@ function checkIfHaveEnoughOutboundPeersAndAdd()
  */
 function _requestPeers( ws )
 {
+	return true;
+
 	_network_request.sendRequest
 	(
 		ws,
@@ -207,7 +211,7 @@ function findNextPeer( ws, handleNextPeer )
 
 			//	...
 			peer	= ws ? ws.peer : '[none]';
-			console.log( 'findNextPeer after ' + peer + ' found no appropriate peer, will wait for a new connection' );
+			console.log( 'findNextPeer after ' + peer + ' found no appropriate peer, will wait for a new driver' );
 
 			//	...
 			_event_bus.once
@@ -215,7 +219,7 @@ function findNextPeer( ws, handleNextPeer )
 				'connected_to_source',
 				function( new_ws )
 				{
-					console.log( 'got new connection, findNextPeer retrying findNextPeer after ' + peer );
+					console.log( 'got new driver, findNextPeer retrying findNextPeer after ' + peer );
 					findNextPeer( ws, handleNextPeer );
 				}
 			);
@@ -391,13 +395,13 @@ function connectToPeer( url, onOpen )
 		{
 			if ( m_oAssocConnectingOutboundWebSockets[ url ] )
 			{
-				console.log( 'abandoning connection to ' + url + ' due to timeout' );
+				console.log( 'abandoning driver to ' + url + ' due to timeout' );
 				delete m_oAssocConnectingOutboundWebSockets[ url ];
 				m_oAssocConnectingOutboundWebSockets[ url ]	= null;
 
 				//
 				//	after this,
-				//	new connection attempts will be allowed to the wire,
+				//	new driver attempts will be allowed to the wire,
 				// 	but this one can still succeed.
 				//
 				//	See the check for duplicates below.
@@ -443,11 +447,11 @@ function connectToPeer( url, onOpen )
 			if ( oAnotherWsToSamePeer )
 			{
 				//
-				//	duplicate connection.
-				//	May happen if we abondoned a connection attempt after timeout but it still succeeded while we opened another connection
+				//	duplicate driver.
+				//	May happen if we abondoned a driver attempt after timeout but it still succeeded while we opened another driver
 				//
-				console.log( 'already have a connection to ' + url + ', will keep the old one and close the duplicate' );
-				ws.close( 1000, 'duplicate connection' );
+				console.log( 'already have a driver to ' + url + ', will keep the old one and close the duplicate' );
+				ws.close( 1000, 'duplicate driver' );
 
 				if ( onOpen )
 				{
@@ -460,14 +464,14 @@ function connectToPeer( url, onOpen )
 			//	...
 			ws.peer		= url;				//	peer
 			ws.host		= getHostByPeer( ws.peer );	//	host
-			ws.bOutbound	= true;				//	identify this connection as outbound connection
+			ws.bOutbound	= true;				//	identify this driver as outbound driver
 			ws.last_ts	= Date.now();			//	record the last timestamp while we connected to this peer
 
 			console.log( 'connected to ' + url + ", host " + ws.host );
 
 			//
 			//	*
-			//	save new peer connection to m_arrOutboundPeers
+			//	save new peer driver to m_arrOutboundPeers
 			//
 			m_arrOutboundPeers.push( ws );
 
@@ -552,10 +556,10 @@ function connectToPeer( url, onOpen )
 
 			//	...
 			err	= e.toString();
-			//	! ws.bOutbound means not connected yet. This is to distinguish connection errors from later errors that occur on open connection
+			//	! ws.bOutbound means not connected yet. This is to distinguish driver errors from later errors that occur on open driver
 
 			//
-			//	this is not an outbound connection
+			//	this is not an outbound driver
 			//
 			if ( ! ws.bOutbound )
 			{
@@ -820,7 +824,7 @@ function findOutboundPeerOrConnect( url, onOpen )
 	//
 	//	check if we are already connecting to the peer before
 	//	use m_oAssocConnectingOutboundWebSockets to avoid duplicated connections
-	//	while we sent the connection request to one outbound peer and were waiting for response.
+	//	while we sent the driver request to one outbound peer and were waiting for response.
 	//
 	ws = m_oAssocConnectingOutboundWebSockets[ url ];
 	if ( ws )
@@ -847,8 +851,8 @@ function findOutboundPeerOrConnect( url, onOpen )
 				{
 					//
 					//	can happen
-					//	e.g. if the ws was abandoned but later succeeded, we opened another connection in the meantime,
-					//	and had oAnotherWsToSamePeer on the first connection
+					//	e.g. if the ws was abandoned but later succeeded, we opened another driver in the meantime,
+					//	and had oAnotherWsToSamePeer on the first driver
 					//
 					console.log( 'in second onOpen, websocket already closed' );
 					onOpen( '[internal] websocket already closed' );
@@ -1049,7 +1053,7 @@ function startWebSocketServer( oOptions )
 	);
 
 	//
-	//	Event 'connection'
+	//	Event 'driver'
 	//		Emitted when the handshake is complete.
 	//
 	//		- socket	{ WebSocket }
@@ -1074,7 +1078,7 @@ function startWebSocketServer( oOptions )
 			sRemoteAddress = ws.upgradeReq.connection.remoteAddress;
 			if ( ! sRemoteAddress )
 			{
-				console.log( "no ip/sRemoteAddress in accepted connection" );
+				console.log( "no ip/sRemoteAddress in accepted driver" );
 				ws.terminate();
 				return;
 			}
@@ -1098,7 +1102,7 @@ function startWebSocketServer( oOptions )
 			ws.bInbound			= true;
 			ws.last_ts			= Date.now();
 
-			console.log( 'got connection from ' + ws.peer + ", host " + ws.host );
+			console.log( 'got driver from ' + ws.peer + ", host " + ws.host );
 
 			if ( m_oWss.clients.length >= _conf.CONNECTION_MAX_INBOUND )
 			{
@@ -1230,7 +1234,7 @@ function startWebSocketServer( oOptions )
 					console.log( "client " + ws.peer + " disconnected" );
 
 					//
-					//	call while the connection was closed
+					//	call while the driver was closed
 					//
 					oOptions.onClose( ws );
 				}

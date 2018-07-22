@@ -5,12 +5,13 @@
  *	@require	module: *
  */
 const EventEmitter		= require( 'events' );
+const CP2pDriver		= require( './driver/p2pDriver.js' );
+const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 const CP2pRequest		= require( './p2pRequest.js' );
 
 const _crypto			= require( 'crypto' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pConnectionDriver	= require( './connection/p2pConnectionDriver.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
 
 
@@ -32,9 +33,8 @@ class CP2pServer extends CP2pRequest
 		super();
 
 		this.m_oOptions			= Object.assign( {}, oOptions );
-		this.m_cConnectionServer	= _p2pConnectionDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
-
-		this.m_nIntervalHeartbeat	= null;
+		this.m_cConnectionServer	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
+		this.m_cP2pHeartbeat		= new CP2pHeartbeat();
 	}
 
 
@@ -47,13 +47,13 @@ class CP2pServer extends CP2pRequest
 	async startServer()
 	{
 		return this.m_cConnectionServer
-		.on( _p2pConnectionDriver.EVENT_START, ( oSocket, sInfo ) =>
+		.on( CP2pDriver.EVENT_START, ( oSocket, sInfo ) =>
 		{
-			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_START }] from server.`, sInfo );
+			console.log( `Received a message [${ CP2pDriver.EVENT_START }] from server.`, sInfo );
 		})
-		.on( _p2pConnectionDriver.EVENT_CONNECTION, ( oSocket ) =>
+		.on( CP2pDriver.EVENT_CONNECTION, ( oSocket ) =>
 		{
-			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_CONNECTION }] from server.` );
+			console.log( `Received a message [${ CP2pDriver.EVENT_CONNECTION }] from server.` );
 
 
 			//
@@ -89,19 +89,23 @@ class CP2pServer extends CP2pRequest
 			//
 			//	start heartbeat
 			//
-			this._startPingAllClients();
+			this.m_cP2pHeartbeat.startHeartbeat( () =>
+			{
+				console.log( `HEARTBEAT for ${ this.getClients().length } clients.` );
+				this.handlePingClients( this.getClients() );
+			});
 		})
-		.on( _p2pConnectionDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
+		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
-			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_MESSAGE }] from server.` );
+			console.log( `Received a message [${ CP2pDriver.EVENT_MESSAGE }] from server.` );
 		})
-		.on( _p2pConnectionDriver.EVENT_CLOSE, ( oSocket ) =>
+		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_CLOSE }] from server.` );
+			console.log( `Received a message [${ CP2pDriver.EVENT_CLOSE }] from server.` );
 		})
-		.on( _p2pConnectionDriver.EVENT_ERROR, ( vError ) =>
+		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			console.log( `Received a message [${ _p2pConnectionDriver.EVENT_ERROR }] from server.` );
+			console.log( `Received a message [${ CP2pDriver.EVENT_ERROR }] from server.` );
 		}).startServer();
 	}
 
@@ -113,54 +117,6 @@ class CP2pServer extends CP2pRequest
 	{
 		return this.m_cConnectionServer.getClients();
 	}
-
-
-	/**
-	 *	start ping all clients
-	 *
-	 *	@private
-	 *	@returns {null|*}
-	 */
-	_startPingAllClients()
-	{
-		if ( null !== this.m_nIntervalHeartbeat )
-		{
-			return this.m_nIntervalHeartbeat;
-		}
-
-		//
-		//	if we have exactly same intervals on two clints,
-		//	they might send heartbeats to each other at the same time
-		//
-		this.m_nIntervalHeartbeat = setInterval
-		(
-			() =>
-			{
-				console.log( `HEARTBEAT [send ping to ${ this.getClients().length } clients.]` );
-				this.handlePingClients( this.getClients() );
-			},
-			_p2pConstants.HEARTBEAT_INTERVAL + _p2pUtils.getRandomInt( 0, 1000 )
-		);
-
-		//	...
-		return this.m_nIntervalHeartbeat;
-	}
-
-	/**
-	 * 	stop ping clients
-	 *
-	 *	@private
-	 *	@return {void}
-	 */
-	_stopPingAllClients()
-	{
-		if ( null !== this.m_nIntervalHeartbeat )
-		{
-			clearInterval( this.m_nIntervalHeartbeat );
-			this.m_nIntervalHeartbeat = null;
-		}
-	}
-
 
 }
 

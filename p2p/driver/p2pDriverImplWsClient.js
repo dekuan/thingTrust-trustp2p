@@ -10,7 +10,7 @@ const socks			= process.browser ? null : require( 'socks' + '' );
 /**
  *	@import class
  */
-const CP2pConnectionDriver	= require( './p2pConnectionDriver.js' );
+const CP2pDriver		= require( './p2pDriver.js' );
 const CP2pPersistence		= require( '../p2pPersistence.js' );
 const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
 const CP2pPackage		= require( '../p2pPackage.js' );
@@ -29,12 +29,12 @@ const _p2pMessage		= require( '../p2pMessage.js' );
 
 
 /**
- *	implementation of p2p connection client using Web Socket
+ *	implementation of p2p driver client using Web Socket
  *
- *	@module	CP2pConnectionImplWsClient
- *	@class	CP2pConnectionImplWsClient
+ *	@module	CP2pDriverImplWsClient
+ *	@class	CP2pDriverImplWsClient
  */
-class CP2pConnectionImplWsClient extends CP2pConnectionDriver
+class CP2pDriverImplWsClient extends CP2pDriver
 {
 	/**
 	 *	@constructor
@@ -91,7 +91,7 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 	}
 
 	/**
-	 *	disconnect connection
+	 *	disconnect driver
 	 *
 	 * 	@public
 	 *	@param	{string}	sUrl
@@ -128,7 +128,7 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 
 
 	/**
-	 *	create new connection
+	 *	create new driver
 	 *
 	 *	@private
 	 *	@param	{string}	sUrl
@@ -185,12 +185,12 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					if ( oWsAnotherToSameServer )
 					{
 						//
-						//	duplicate connection.
-						//	May happen if we abondoned a connection attempt after timeout
-						// 		but it still succeeded while we opened another connection
+						//	duplicate driver.
+						//	May happen if we abondoned a driver attempt after timeout
+						// 		but it still succeeded while we opened another driver
 						//
 						_p2pLog.warning( `already have a connection to ${ sUrl }, will keep the old one and close the duplicate` );
-						oWs.close( 1000, 'duplicate connection' );
+						oWs.close( 1000, 'duplicate driver' );
 
 						//
 						//	...
@@ -203,7 +203,7 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					//
 					oWs.peer	= sUrl;							//	peer
 					oWs.host	= this.m_cP2pPersistence.getHostByPeer( sUrl );		//	host
-					oWs.bOutbound	= true;							//	identify this connection as outbound connection
+					oWs.bOutbound	= true;							//	identify this driver as outbound driver
 					oWs.last_ts	= Date.now();						//	record the last timestamp while we connected to this peer
 
 					//	...
@@ -236,7 +236,7 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					//
 					//	emit a event to subscriber that we have connect to the server successfully.
 					//
-					this.emit( CP2pConnectionDriver.EVENT_OPEN, oWs );
+					this.emit( CP2pDriver.EVENT_OPEN, oWs );
 
 					//
 					//	...
@@ -253,11 +253,12 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					this.m_cP2pSocketHandleCache.removeHandle( oWs );
 
 					//	...
-					this.emit( CP2pConnectionDriver.EVENT_CLOSE, oWs );
+					this.emit( CP2pDriver.EVENT_CLOSE, oWs );
 
 					//	...
-					if ( oProxy.agent &&
-						oProxy.agent.destroy )
+					if ( _p2pUtils.isObject( oProxy ) &&
+						oProxy.hasOwnProperty( 'agent' ) &&
+						_p2pUtils.isFunction( oProxy.agent.destroy ) )
 					{
 						oProxy.agent.destroy();
 					}
@@ -276,15 +277,15 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					_p2pLog.error( `error from server ${ sUrl }: `, vError );
 
 					//	...
-					this.emit( CP2pConnectionDriver.EVENT_ERROR, vError );
+					this.emit( CP2pDriver.EVENT_ERROR, vError );
 
 					//
 					//	! ws.bOutbound means not connected yet.
-					//	This is to distinguish connection errors from later errors that occur on open connection
+					//	This is to distinguish driver errors from later errors that occur on open driver
 					//
 
 					//
-					//	this is not an outbound connection
+					//	this is not an outbound driver
 					//
 					if ( ! oWs.bOutbound )
 					{
@@ -315,7 +316,7 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 					//
 					//	emit a event about received message
 					//
-					return this.emit( CP2pConnectionDriver.EVENT_MESSAGE, oWs, vMessage );
+					return this.emit( CP2pDriver.EVENT_MESSAGE, oWs, vMessage );
 				}
 			);
 
@@ -378,6 +379,6 @@ class CP2pConnectionImplWsClient extends CP2pConnectionDriver
 /**
  *	exports
  *	@exports
- *	@type {CP2pConnectionImplWsClient}
+ *	@type {CP2pDriverImplWsClient}
  */
-module.exports	= CP2pConnectionImplWsClient;
+module.exports	= CP2pDriverImplWsClient;

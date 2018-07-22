@@ -23,8 +23,8 @@ module.exports.CONNECTION_ADAPTER_LIST		=
 	{
 		'ws'	:
 		{
-			'client'	: 'p2pConnectionImplWsClient.js',
-			'server'	: 'p2pConnectionImplWsServer.js',
+			'client'	: 'p2pDriverImplWsClient.js',
+			'server'	: 'p2pDriverImplWsServer.js',
 		}
 	};
 

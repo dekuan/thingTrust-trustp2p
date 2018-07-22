@@ -214,8 +214,8 @@ class CP2pPersistence
 			return false;
 		}
 
-		_db.query( "DELETE FROM watched_light_addresses WHERE peer = ?", [ sPeer ] );
-		_db.query( "DELETE FROM watched_light_units WHERE peer = ?", [ sPeer ] );
+		//## _db.query( "DELETE FROM watched_light_addresses WHERE peer = ?", [ sPeer ] );
+		//## _db.query( "DELETE FROM watched_light_units WHERE peer = ?", [ sPeer ] );
 		//_db.query( "DELETE FROM light_peer_witnesses WHERE peer = ?", [ sPeer ] );
 
 		return true;
@@ -228,6 +228,8 @@ class CP2pPersistence
 	 */
 	async isGoodPeer( sHost )
 	{
+		return true;
+
 		let bRet;
 
 		if ( ! _p2pUtils.isString( sHost ) || 0 === sHost.length )
