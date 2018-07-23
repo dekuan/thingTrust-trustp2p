@@ -1,9 +1,12 @@
 /*jslint node: true */
 "use strict";
 
-let _conf			= require( '../conf.js' );
+const _conf			= require( '../conf.js' );
 
-let _p2pConstants		= require( './p2pConstants.js' );
+const CP2pPackage		= require( './p2pPackage.js' );
+const CP2pLog			= require( './p2pLog.js' );
+const _p2pConstants		= require( './p2pConstants.js' );
+
 
 
 /**
@@ -13,8 +16,11 @@ class CP2pMessage
 {
 	constructor()
 	{
-
+		this.m_cP2pPackage	= new CP2pPackage();
+		this.m_cP2pLog		= new CP2pLog();
 	}
+
+
 
 	sendMessage( ws, type, content )
 	{

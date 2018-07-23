@@ -7,25 +7,34 @@ const _				= require( 'lodash' );
 
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pMessage		= require( './p2pMessage.js' );
+const CP2pRequest		= require( './p2pRequest.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
 const _object_hash		= require( '../object_hash.js' );
+const _network_peer		= require( './p2pPeer.js' );
 
 
 
 
 /**
- *	P2p Request
- *	@class	CP2pRequest
- *	@module	CP2pRequest
+ *	P2p Deliver
+ *	@class	CP2pDeliver
+ *	@module	CP2pDeliver
  */
-class CP2pRequest
+class CP2pDeliver extends CP2pMessage
 {
 	constructor()
 	{
+		super();
+
+		//	...
+		this.m_cP2pRequest			= new CP2pRequest();
+
+		//	...
 		this.m_cDriver				= null;
 		this.m_oAssocReroutedConnectionsByTag	= {};
+		this.m_nLastHeartbeatWakeTs		= Date.now();
 	}
 
 	/**
@@ -36,8 +45,125 @@ class CP2pRequest
 	 */
 	set cDriver( cDriver )
 	{
-		this.m_cDriver = cDriver;
+		this.m_cDriver			= cDriver;
+		this.m_cP2pRequest.cDriver	= cDriver;
 	}
+
+
+	broadcast()
+	{
+	}
+
+
+	/**
+	 * 	* HEARTBEAT
+	 *	ping all clients
+	 *
+	 *	@public
+	 *	@param	{array}	arrSockets
+	 *	@returns {boolean}
+	 *
+	 *	@description
+	 *	keep on sending heartbeat Ping from server to all clients
+	 *	about every 3 seconds we try to send ping command to all clients
+	 */
+	handlePingClients( arrSockets )
+	{
+		let bJustResumed;
+
+		if ( ! Array.isArray( arrSockets ) || 0 === arrSockets.length )
+		{
+			return false;
+		}
+
+		//
+		//	just resumed after sleeping
+		//
+		bJustResumed	= ( typeof window !== 'undefined' &&
+			window &&
+			window.cordova &&
+			Date.now() - this.m_nLastHeartbeatWakeTs > 2 * _p2pConstants.HEARTBEAT_TIMEOUT );
+		this.m_nLastHeartbeatWakeTs	= Date.now();
+
+		//
+		//	The concat() method is used to merge two or more arrays.
+		//	This method does not change the existing arrays, but instead returns a new array.
+		//
+		arrSockets.forEach( oSocket =>
+		{
+			let nElapsedSinceLastReceived;
+			let nElapsedSinceLastSentHeartbeat;
+
+			if ( oSocket.bSleeping ||
+				oSocket.readyState !== oSocket.OPEN )
+			{
+				//	web socket is not ready
+				return;
+			}
+
+			//	...
+			nElapsedSinceLastReceived	= Date.now() - oSocket.last_ts;
+			if ( nElapsedSinceLastReceived < _p2pConstants.HEARTBEAT_TIMEOUT )
+			{
+				return;
+			}
+
+			//	>= 10 seconds
+			if ( oSocket.last_sent_heartbeat_ts && ! bJustResumed )
+			{
+				nElapsedSinceLastSentHeartbeat	= Date.now() - oSocket.last_sent_heartbeat_ts;
+				if ( nElapsedSinceLastSentHeartbeat >= _p2pConstants.HEARTBEAT_RESPONSE_TIMEOUT )
+				{
+					//	>= 60 seconds
+					console.log( `will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
+					oSocket.close( 1000, 'lost driver' );
+				}
+			}
+			else
+			{
+				oSocket.last_sent_heartbeat_ts	= Date.now();
+				this.sendRequest
+				(
+					oSocket,
+					'heartbeat',
+					null,
+					false,
+					function( oNextSocket, request, response )
+					{
+						delete oNextSocket.last_sent_heartbeat_ts;
+						oNextSocket.last_sent_heartbeat_ts = null;
+
+						if ( 'sleep' === response )
+						{
+							//
+							//	the peer doesn't want to be bothered with heartbeats any more,
+							//	but still wants to keep the driver open
+							//
+							oNextSocket.bSleeping = true;
+						}
+
+						//
+						//	as soon as the peer sends a heartbeat himself,
+						//	we'll think he's woken up and resume our heartbeats too
+						//
+					}
+				);
+			}
+		});
+
+		return true;
+	}
+
+	/**
+	 * 	* HEARTBEAT
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 */
+	handlePongServer( oSocket )
+	{
+	}
+
 
 
 	/**
@@ -109,8 +235,8 @@ class CP2pRequest
 		sTag		= _object_hash.getBase64Hash( oJsonRequest );
 
 		//
-		//	will not send identical
-		//	ignore duplicate requests while still waiting for response from the same peer
+		//	if (oSocket.assocPendingRequests[sTag]) // ignore duplicate requests while still waiting for response from the same peer
+		//	return console.log("will not send identical "+sCommand+" oJsonRequest");
 		//
 		if ( oSocket.assocPendingRequests[ sTag ] )
 		{
@@ -150,7 +276,7 @@ class CP2pRequest
 
 				this.m_cP2pLog.info( `will try to reroute a ${ sCommand } request stalled at ${ oSocket.peer }` );
 
-				if ( ! sTag in oSocket.assocPendingRequests )
+				if ( ! oSocket.assocPendingRequests[ sTag ] )
 				{
 					return this.m_cP2pLog.error( `will not reroute - the request was already handled by another peer` );
 				}
@@ -164,14 +290,18 @@ class CP2pRequest
 					return this.m_cP2pLog.error( `will not reroute - can not find another peer` );
 				}
 
-				//	the callback may be called much later if .findNextServerSync has to wait for driver
-				if ( ! sTag in oSocket.assocPendingRequests )
+				//	the callback may be called much later if _network_peer.findNextPeer has to wait for driver
+				if ( ! oSocket.assocPendingRequests[ sTag ] )
 				{
 					return this.m_cP2pLog.error( `will not reroute after findNextPeer - the request was already handled by another peer` );
 				}
 
 				//	...
-				if ( this._isSameSocket( oSocket, oNextWs, sTag ) )
+				if ( oNextWs === oSocket ||
+					(
+						sTag in this.m_oAssocReroutedConnectionsByTag &&
+						this.m_oAssocReroutedConnectionsByTag[ sTag ].includes( oNextWs )
+					) )
 				{
 					// _event_bus.once
 					// (
@@ -249,7 +379,7 @@ class CP2pRequest
 						rh =>
 						{
 							//	rh	is pfnResponseHandler
-							rh( oSocket, oJsonContent, { error : "[internal] response timeout" } );
+							rh( oSocket, oJsonRequest, { error : "[internal] response timeout" } );
 						}
 					);
 					delete oSocket.assocPendingRequests[ sTag ];
@@ -262,7 +392,7 @@ class CP2pRequest
 		//
 		oSocket.assocPendingRequests[ sTag ] =
 			{
-				request			: oJsonContent,
+				request			: oJsonRequest,
 				responseHandlers	: [ pfnResponseHandler ],
 				reroute			: pfnReroute,
 				reroute_timer		: nRerouteTimer,
@@ -300,33 +430,19 @@ class CP2pRequest
 	}
 
 
-	/**
-	 *	check if the two sockets are the same
-	 *
-	 * 	@private
-	 *	@param	{object}	oSocket
-	 *	@param	{object}	oNextSocket
-	 *	@param	{string}	sTag
-	 *	@return	{boolean}
-	 */
-	_isSameSocket( oSocket, oNextSocket, sTag )
-	{
-		if ( ! oSocket || ! oNextSocket )
-		{
-			return false;
-		}
-		if ( ! _p2pUtils.isString( sTag ) || 0 === sTag.length )
-		{
-			return false;
-		}
 
-		return ( oNextSocket === oSocket ||
-			(
-				sTag in this.m_oAssocReroutedConnectionsByTag &&
-				this.m_oAssocReroutedConnectionsByTag[ sTag ].includes( oNextSocket )
-			) );
+	sendResponse( oSocket, sTag, response )
+	{
+		delete oSocket.assocInPreparingResponse[ sTag ];
+		this.sendMessage( oSocket, 'response', { tag : sTag, response : response } );
+	}
+
+	sendErrorResponse( oSocket, sTag, error )
+	{
+		this.sendResponse( oSocket, sTag, { error : error } );
 	}
 }
+
 
 
 
@@ -334,4 +450,4 @@ class CP2pRequest
 /**
  *	@exports
  */
-module.exports	= CP2pRequest;
+module.exports	= CP2pDeliver;

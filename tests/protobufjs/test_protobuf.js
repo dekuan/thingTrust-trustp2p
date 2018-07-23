@@ -13,7 +13,9 @@ _protobuf.load
 		}
 
 		// Obtain a message type
-		let TrustNoteP2pSaying = root.lookupType( "trust_note_p2p_saying_package.TrustNoteP2pSaying" );
+		let TrustNoteP2pSaying = root.lookupType( 'trust_note_p2p_package.TrustNoteP2p' );
+		let enumPackTypes	= root.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackType' );
+		let arrPackTypeValues	= Object.values( enumPackTypes.values );
 
 		//	Exemplary payload
 		let oPayloadNormal	=

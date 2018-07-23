@@ -2,7 +2,8 @@
 ```
 client
 server
-    Request
+    Deliver
+        Request, Response, Heartbeat
         Connection
             Adapters
                 Web Socket

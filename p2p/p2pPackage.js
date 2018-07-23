@@ -9,15 +9,18 @@ const socks			= process.browser ? null : require( 'socks' + '' );
 const _protobufjs		= require( 'protobufjs' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
+const _p2pUtils			= require( './p2pUtils.js' );
 const _p2pMessage		= require( './p2pMessage.js' );
 const _p2pRequest		= require( './p2pRequest.js' );
 const _p2pPeer			= require( './p2pPeer.js' );
 //const jsonDescriptor		= require( './p2p.proto' );
 
+
+
 /**
  * 	@constant
  */
-const PACKAGE_P2P_PROTO		= `${ __dirname }/p2p.proto`;
+const PACKAGE_P2P_PROTO		= `${ __dirname }/p2pPackage.proto`;
 
 
 
@@ -34,14 +37,28 @@ class CP2pPackage
 	 */
 	constructor()
 	{
-		this.m_oRoot	= this._loadProtocolBufferSync();
+		this.m_oRoot			= this._loadProtocolBufferSync();
+
+		this.m_oMessage			= root.lookupType( 'trust_note_p2p_package.TrustNoteP2p' );
+		this.m_enumPackType		= root.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackType' );
+		this.m_arrPackTypeValues	= Object.values( this.m_enumPackType.values );
+	}
+
+	/**
+	 *	check if the given package type is valid
+	 *	@param	{number}	nPackType
+	 *	@return	{boolean}
+	 */
+	isValidPackType( nPackType )
+	{
+		return Number.isInteger( nPackType ) && this.m_arrPackTypeValues.includes( nPackType );
 	}
 
 
 	/**
 	 *	load protocol buffer synchronously
 	 *	@private
-	 *	@returns {Promise<void>}
+	 *	@return {Promise<void>}
 	 */
 	async _loadProtocolBufferSync()
 	{

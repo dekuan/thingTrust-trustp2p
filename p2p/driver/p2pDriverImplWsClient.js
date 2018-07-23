@@ -13,7 +13,6 @@ const socks			= process.browser ? null : require( 'socks' + '' );
 const CP2pDriver		= require( './p2pDriver.js' );
 const CP2pPersistence		= require( '../p2pPersistence.js' );
 const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
-const CP2pPackage		= require( '../p2pPackage.js' );
 
 /**
  *	@import library
@@ -49,7 +48,6 @@ class CP2pDriverImplWsClient extends CP2pDriver
 		this.m_oOptions			= Object.assign( {}, super.oOptions, oOptions );
 		this.m_cP2pSocketHandleCache	= new CP2pSocketHandleCache();
 		this.m_cP2pPersistence		= new CP2pPersistence();
-		this.m_cP2pPackage		= new CP2pPackage();
 	}
 
 	/**

@@ -10,7 +10,6 @@ const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
 
 const _p2pMessage		= require( './p2pMessage.js' );
-const _p2pRequest		= require( './p2pRequest.js' );
 const _p2pPeer			= require( './p2pPeer.js' );
 
 
@@ -141,6 +140,8 @@ class CP2pHeartbeat
 		_p2pMessage.sendResponse( ws, tag );
 	}
 }
+
+
 
 
 

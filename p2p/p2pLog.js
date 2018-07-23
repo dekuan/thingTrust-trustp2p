@@ -7,17 +7,17 @@
  */
 class CP2pLog
 {
-	static info( ...args )
+	info( ...args )
 	{
 		console.log( ...args );
 	}
 
-	static error( ...args )
+	error( ...args )
 	{
 		console.log( ...args );
 	}
 
-	static warning( ...args )
+	warning( ...args )
 	{
 		console.log( ...args );
 	}

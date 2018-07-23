@@ -7,7 +7,7 @@
 const EventEmitter		= require( 'events' );
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
-const CP2pRequest		= require( './p2pRequest.js' );
+const CP2pDeliver		= require( './p2pDeliver.js' );
 
 const _crypto			= require( 'crypto' );
 
@@ -22,7 +22,7 @@ const _p2pUtils			= require( './p2pUtils.js' );
  *	@module	CP2pServer
  *	@class	CP2pServer
  */
-class CP2pServer extends CP2pRequest
+class CP2pServer extends CP2pDeliver
 {
 	/**
 	 *	@constructor
@@ -35,6 +35,8 @@ class CP2pServer extends CP2pRequest
 		this.m_oOptions		= Object.assign( {}, oOptions );
 		this.m_cDriverServer	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
 		this.m_cP2pHeartbeat	= new CP2pHeartbeat();
+
+		super.cDriver		= this.m_cDriverServer;
 	}
 
 

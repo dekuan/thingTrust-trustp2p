@@ -1,5 +1,5 @@
+syntax = "proto2";
 package trust_note_p2p_package;
-syntax = "proto3";
 
 
 message TrustNoteP2p
