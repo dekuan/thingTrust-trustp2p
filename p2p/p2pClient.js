@@ -62,6 +62,11 @@ class CP2pClient extends CP2pDeliver
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
 			console.log( `Received [${ CP2pDriver.EVENT_CLOSE }] from server.` );
+
+			//
+			//	handle things while a socket was closed
+			//
+			this.handleSocketClosed( oSocket );
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{

@@ -4676,46 +4676,7 @@ function _handleMessageRequest( ws, tag, command, params )
 	}
 }
 
-function _handleMessageResponse( ws, tag, response )
-{
-	var pendingRequest;
 
-	//	...
-	pendingRequest	= ws.assocPendingRequests[ tag ];
-
-	//	was canceled due to timeout or rerouted and answered by another peer
-	if ( ! pendingRequest )
-	{
-		//	throw "no req by tag "+tag;
-		return console.log( "no req by tag " + tag );
-	}
-
-	//	...
-	pendingRequest.responseHandlers.forEach
-	(
-		function( pfnResponseHandler )
-		{
-			process.nextTick( function()
-			{
-				pfnResponseHandler( ws, pendingRequest.request, response );
-			});
-		}
-	);
-
-	//
-	//	clear timers for
-	//	- request reroute timer
-	//	- response timer
-	//
-	clearTimeout( pendingRequest.reroute_timer );
-	clearTimeout( pendingRequest.cancel_timer );
-	delete ws.assocPendingRequests[ tag ];
-
-	//
-	//	...
-	//
-	_network_request.clearRequest( tag );
-}
 
 
 
@@ -4772,46 +4733,6 @@ function _onWebSocketMessage( message )
 			//	throw Error("unknown type: " + sMessageType);
 	}
 }
-
-function _onWebSocketClosed( ws )
-{
-	var tag;
-	var pendingRequest;
-
-	console.log( "websocket closed, will complete all outstanding requests" );
-
-	for ( tag in ws.assocPendingRequests )
-	{
-		//	...
-		pendingRequest	= ws.assocPendingRequests[ tag ];
-
-		//	...
-		clearTimeout( pendingRequest.reroute_timer );
-		clearTimeout( pendingRequest.cancel_timer );
-
-		//	reroute immediately, not waiting for _network_consts.STALLED_TIMEOUT
-		if ( pendingRequest.reroute )
-		{
-			if ( ! pendingRequest.bRerouted )
-			{
-				pendingRequest.reroute();
-			}
-			//	we still keep ws.assocPendingRequests[tag] because we'll need it when we find a peer to reroute to
-		}
-		else
-		{
-			pendingRequest.responseHandlers.forEach( function( rh )
-			{
-				rh( ws, pendingRequest.request, { error : "[internal] driver closed" } );
-			});
-
-			delete ws.assocPendingRequests[ tag ];
-			ws.assocPendingRequests[ tag ]	= null;
-		}
-	}
-}
-
-
 
 
 

@@ -42,6 +42,11 @@ class CP2pPackage
 		this.m_oMessage			= root.lookupType( 'trust_note_p2p_package.TrustNoteP2p' );
 		this.m_enumPackType		= root.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackType' );
 		this.m_arrPackTypeValues	= Object.values( this.m_enumPackType.values );
+
+		//
+		//	copy Enumerations( key => value ) to this object
+		//
+		Object.assign( this, {}, { PackType : this.m_enumPackType.values } );
 	}
 
 	/**

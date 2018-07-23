@@ -29,12 +29,11 @@ class CP2pDeliver extends CP2pMessage
 		super();
 
 		//	...
-		this.m_cP2pRequest			= new CP2pRequest();
+		this.m_cP2pRequest		= new CP2pRequest();
 
 		//	...
-		this.m_cDriver				= null;
-		this.m_oAssocReroutedConnectionsByTag	= {};
-		this.m_nLastHeartbeatWakeTs		= Date.now();
+		this.m_cDriver			= null;
+		this.m_nLastHeartbeatWakeTs	= Date.now();
 	}
 
 	/**
@@ -125,8 +124,9 @@ class CP2pDeliver extends CP2pMessage
 				this.sendRequest
 				(
 					oSocket,
+					this.m_cP2pPackage.PackType.PACKTYPE_HEARTBEAT,
 					'heartbeat',
-					null,
+					{ msg : 'ping' },
 					false,
 					function( oNextSocket, request, response )
 					{
@@ -169,266 +169,87 @@ class CP2pDeliver extends CP2pMessage
 	/**
 	 *	if a 2nd identical request is issued before we receive a response to the 1st request, then:
 	 *	1. its pfnResponseHandler will be called too but no second request will be sent to the wire
-	 *	2. bReRoute flag must be the same
+	 *	2. bReroute flag must be the same
 	 *
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackType
 	 *	@param	{string}	sCommand
 	 *	@param	{object}	oJsonBody
-	 *	@param	{boolean}	bReRoute
+	 *	@param	{boolean}	bReroute
 	 *	@param	{function}	pfnResponseHandler( ws, request, response ){ ... }
 	 */
-	sendRequest( oSocket, nPackType, sCommand, oJsonBody, bReRoute, pfnResponseHandler )
+	sendRequest( oSocket, nPackType, sCommand, oJsonBody, bReroute, pfnResponseHandler )
 	{
-		//
-		//	oJsonBody for 'catchup'
-		// 	{
-		// 		witnesses	: arrWitnesses,		//	12 addresses of witnesses
-		// 		last_stable_mci	: last_stable_mci,	//	stable last mci
-		// 		last_known_mci	: last_known_mci	//	known last mci
-		// 	};
-		//
-		let oJsonRequest;
-		let oJsonContent;
+		return this.m_cP2pRequest.sendRequest( oSocket, nPackType, sCommand, oJsonBody, bReroute, pfnResponseHandler );
+	}
+
+
+	/**
+	 *	handle socket closed
+	 *
+	 * 	@public
+	 *	@param 	{object}	oSocket
+	 *	@return {boolean}
+	 */
+	handleSocketClosed( oSocket )
+	{
 		let sTag;
-		let pfnReroute;
-		let nRerouteTimer;
-		let nCancelTimer;
+		let oPendingRequest;
 
-		if ( ! oSocket )
+		if ( ! _p2pUtils.isObject( oSocket ) ||
+			! oSocket.hasOwnProperty( 'assocPendingRequests' ) ||
+			! _p2pUtils.isObject( oSocket.assocPendingRequests ) )
 		{
-			this.m_cP2pLog.error( `call sendRequest with invalid oSocket` );
-			return false;
-		}
-		if ( ! this.m_cP2pPackage.isValidPackType( nPackType ) )
-		{
-			this.m_cP2pLog.error( `call sendRequest with invalid nPackType` );
-			return false;
-		}
-		if ( ! _p2pUtils.isString( sCommand ) || 0 === sCommand.length )
-		{
-			this.m_cP2pLog.error( `call sendRequest with invalid sCommand` );
-			return false;
-		}
-		if ( ! _p2pUtils.isFunction( pfnResponseHandler ) )
-		{
-			this.m_cP2pLog.error( `call sendRequest with invalid pfnResponseHandler` );
+			this.m_cP2pLog.error( `handleSocketClosed with invalid oSocket` );
 			return false;
 		}
 
-		//
-		//	package format
-		//
-		oJsonRequest =
-			{
-				version	: String( _p2pConstants.version ),
-				alt	: String( _p2pConstants.alt ),
-				type	: nPackType,
-				command	: sCommand,
-				body	: oJsonBody ? oJsonBody : null
-			};
-
-		//
-		//	sTag like : w35dxwqyQ2CzqHkOG5q+gwagPtaPweD4LEwzC2RjQNo=
-		//
-		oJsonContent	= Object.assign( {}, oJsonRequest );
-		sTag		= _object_hash.getBase64Hash( oJsonRequest );
-
-		//
-		//	if (oSocket.assocPendingRequests[sTag]) // ignore duplicate requests while still waiting for response from the same peer
-		//	return console.log("will not send identical "+sCommand+" oJsonRequest");
-		//
-		if ( oSocket.assocPendingRequests[ sTag ] )
-		{
-			oSocket.assocPendingRequests[ sTag ].responseHandlers.push( pfnResponseHandler );
-			this.m_cP2pLog.error
-			(
-				`already sent a ${ sCommand } request to ${ oSocket.peer }, 
-				will add one more response handler rather than sending a duplicate request to the wire`
-			);
-			return false;
-		}
-
-		//
 		//	...
-		//
-		oJsonContent.tag	= sTag;
+		console.log( `Web Socket closed, will complete all outstanding requests` );
 
-		//
-		//	* re-route only for clients
-		//
-		if ( CP2pDriver.DRIVER_TYPE_CLIENT !== this.m_cDriver.sDriverType )
+		for ( sTag in oSocket.assocPendingRequests )
 		{
-			bReRoute	= false;
-		}
+			//	...
+			oPendingRequest	= oSocket.assocPendingRequests[ sTag ];
 
-		//
-		//	* RE-ROUTE TO THE NEXT PEER, NOT TO SAME PEER AGAIN
-		//
-		//	after _p2pConstants.STALLED_TIMEOUT, reroute the request to another peer
-		//	it'll work correctly even if the current peer is already disconnected when the timeout fires
-		//
-		//	THIS function will be called when the request is timeout
-		//
-		pfnReroute = bReRoute ? () =>
+			//	...
+			clearTimeout( oPendingRequest.reroute_timer );
+			clearTimeout( oPendingRequest.cancel_timer );
+			oPendingRequest.reroute_timer	= null;
+			oPendingRequest.cancel_timer	= null;
+
+			//
+			//	reroute immediately, not waiting for _network_consts.STALLED_TIMEOUT
+			//
+			if ( _p2pUtils.isFunction( oPendingRequest.reroute ) )
 			{
-				let oNextWs;
-
-				this.m_cP2pLog.info( `will try to reroute a ${ sCommand } request stalled at ${ oSocket.peer }` );
-
-				if ( ! oSocket.assocPendingRequests[ sTag ] )
+				if ( ! oPendingRequest.bRerouted )
 				{
-					return this.m_cP2pLog.error( `will not reroute - the request was already handled by another peer` );
+					oPendingRequest.reroute();
 				}
 
 				//
-				//	try to find the next server peer
+				//	***
+				//	we still keep ws.assocPendingRequests[tag] because we'll need it when we find a peer to reroute to
 				//
-				oNextWs	= this.m_cDriver.findNextServerSync( oSocket );
-				if ( ! oNextWs )
-				{
-					return this.m_cP2pLog.error( `will not reroute - can not find another peer` );
-				}
-
-				//	the callback may be called much later if _network_peer.findNextPeer has to wait for driver
-				if ( ! oSocket.assocPendingRequests[ sTag ] )
-				{
-					return this.m_cP2pLog.error( `will not reroute after findNextPeer - the request was already handled by another peer` );
-				}
-
-				//	...
-				if ( oNextWs === oSocket ||
-					(
-						sTag in this.m_oAssocReroutedConnectionsByTag &&
-						this.m_oAssocReroutedConnectionsByTag[ sTag ].includes( oNextWs )
-					) )
-				{
-					// _event_bus.once
-					// (
-					// 	'connected_to_source',
-					// 	() =>
-					// 	{
-					// 		//	try again
-					// 		console.log( 'got new driver, retrying reroute ' + sCommand );
-					// 		pfnReroute();
-					// 	}
-					// );
-					return this.m_cP2pLog.error( `will not reroute ${ sCommand } to the same peer, will rather wait for a new connection` );
-				}
-
-				//
-				//	RESEND Request, i.e. re-route
-				//	SEND REQUEST AGAIN FOR EVERY responseHandlers
-				//
-				this.m_cP2pLog.info( `rerouting ${ sCommand } from ${ oSocket.peer } to ${ oNextWs.peer }` );
-				oSocket.assocPendingRequests[ sTag ].bRerouted	= true;
-				oSocket.assocPendingRequests[ sTag ].responseHandlers.forEach
-				(
-					rh =>
-					{
-						//	rh	is pfnResponseHandler
-						this.sendRequest( oNextWs, nPackType, sCommand, oJsonBody, bReRoute, rh );
-					}
-				);
-
-				//
-				//	push to cache
-				//
-				if ( ! sTag in this.m_oAssocReroutedConnectionsByTag )
-				{
-					this.m_oAssocReroutedConnectionsByTag[ sTag ] = [ oSocket ];
-				}
-				this.m_oAssocReroutedConnectionsByTag[ sTag ].push( oNextWs );
 			}
-			: null;
-
-		//
-		//	timeout
-		//	in sending request
-		//
-		nRerouteTimer	= bReRoute
-			? setTimeout
-			(
-				() =>
-				{
-					//	callback handler while the request is TIMEOUT
-					this.m_cP2pLog.error( `request ${ sCommand }, send to ${ oSocket.peer } was overtime.` );
-					pfnReroute.apply( this, arguments );
-				},
-				_p2pConstants.STALLED_TIMEOUT
-			)
-			: null;
-
-		//
-		//	timeout
-		//	in receiving response
-		//
-		nCancelTimer	= bReRoute
-			? null
-			: setTimeout
-			(
-				() =>
-				{
-					this.m_cP2pLog.error( `request ${ sCommand }, response from ${ oSocket.peer } was overtime.` );
-
-					//
-					//	delete all overtime requests/connections in pending requests list
-					//
-					oSocket.assocPendingRequests[ sTag ].responseHandlers.forEach
-					(
-						rh =>
-						{
-							//	rh	is pfnResponseHandler
-							rh( oSocket, oJsonRequest, { error : "[internal] response timeout" } );
-						}
-					);
-					delete oSocket.assocPendingRequests[ sTag ];
-				},
-				_p2pConstants.RESPONSE_TIMEOUT
-			);
-
-		//
-		//	build pending request list
-		//
-		oSocket.assocPendingRequests[ sTag ] =
+			else
 			{
-				request			: oJsonRequest,
-				responseHandlers	: [ pfnResponseHandler ],
-				reroute			: pfnReroute,
-				reroute_timer		: nRerouteTimer,
-				cancel_timer		: nCancelTimer
-			};
-
-		//
-		//	...
-		//
-		this.sendMessage( oSocket, 'request', oJsonContent );
-	}
-
-
-	clearRequest( sTag )
-	{
-		//
-		//	if the request was rerouted, cancel all other pending requests
-		//
-		if ( sTag in this.m_oAssocReroutedConnectionsByTag )
-		{
-			this.m_oAssocReroutedConnectionsByTag[ sTag ].forEach
-			(
-				oSocket =>
+				//
+				//	respond all caller and then clear all pending requests
+				//
+				oPendingRequest.responseHandlers.forEach( function( rh )
 				{
-					if ( sTag in oSocket.assocPendingRequests )
-					{
-						clearTimeout( oSocket.assocPendingRequests[ sTag ].reroute_timer );
-						clearTimeout( oSocket.assocPendingRequests[ sTag ].cancel_timer );
-						delete oSocket.assocPendingRequests[ sTag ];
-					}
-				}
-			);
-			delete this.m_oAssocReroutedConnectionsByTag[ sTag ];
-		}
-	}
+					rh( oSocket, oPendingRequest.request, { error : "[internal] driver closed" } );
+				});
 
+				delete oSocket.assocPendingRequests[ sTag ];
+				oSocket.assocPendingRequests[ sTag ]	= null;
+			}
+		}
+
+		return true;
+	}
 
 
 	sendResponse( oSocket, sTag, response )
