@@ -6,16 +6,17 @@ message TrustNoteP2p
 {
 	enum PackageType
 	{
-		PACKAGE_HEARTBEAT	= 0;
-		PACKAGE_TALK		= 1;
-		PACKAGE_REQUEST		= 2;
-		PACKAGE_RESPONSE	= 3;
+		PACKAGE_HEARTBEAT_PING		= 0;
+		PACKAGE_HEARTBEAT_PONG		= 1;
+		PACKAGE_TALK			= 10;
+		PACKAGE_REQUEST			= 20;
+		PACKAGE_RESPONSE		= 21;
 	}
 
-	optional string	sVersion	= 1	[ default = '1.0' ];
-	optional string sAlt		= 2	[ default = '1' ];
-	optional PackageType nType	= 3	[ default = PACKAGE_HEARTBEAT ];
+	optional string	version		= 1	[ default = '1.0' ];
+	optional string alt		= 2	[ default = '1' ];
+	optional PackageType type	= 3	[ default = PACKAGE_HEARTBEAT_PING ];
 
-	required string sCommand	= 4	[ default = '' ];
-	required string sBody		= 5	[ default = '' ];
+	required string command		= 4	[ default = '' ];
+	required string body		= 5	[ default = '' ];
 }

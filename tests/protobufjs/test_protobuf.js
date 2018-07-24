@@ -20,9 +20,9 @@ _protobuf.load
 		//	Exemplary payload
 		let oPayloadNormal	=
 			{
-				type	: "saying",
-				subject	: "subscribe",
-				body	: "hello"
+				type	: 0,
+				command	: 'heartbeat',
+				body	: '{msg:"ping"}',
 			};
 		// let oPayloadWithOmitting	=
 		// 	{
@@ -31,6 +31,9 @@ _protobuf.load
 		// 	};
 		let oPayloadWithOmitting	=
 			{
+				type	: 0,
+				command	: 'heartbeat',
+				body	: '{msg:"ping"}',
 			};
 
 		//	Verify the oPayload if necessary (i.e. when possibly incomplete or invalid)

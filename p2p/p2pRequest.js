@@ -41,22 +41,37 @@ class CP2pRequest extends CP2pMessage
 
 
 	/**
+	 *	handle request message
+	 *	received message in client/server with PackageType .PACKAGE_REQUEST
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 *	@param	{string}	sCommand
+	 * 	@param	{string}	sBody
+	 */
+	handleRequest( oSocket, sCommand, sBody )
+	{
+	}
+
+
+	/**
 	 *	if a 2nd identical request is issued before we receive a response to the 1st request, then:
 	 *	1. its pfnResponseHandler will be called too but no second request will be sent to the wire
 	 *	2. bReroute flag must be the same
 	 *
 	 *	@param	{object}	oSocket
-	 *	@param	{number}	nPackType
-	 *					- PACKAGE_HEARTBEAT	= 0;
-	 *					- PACKAGE_TALK		= 1;
-	 *					- PACKAGE_REQUEST	= 2;
-	 *					- PACKTYPE_RESPONSE	= 3;
+	 *	@param	{number}	nPackageType
+	 *					- PACKAGE_HEARTBEAT_PING	= 0;
+	 *					- PACKAGE_HEARTBEAT_PONG	= 1;
+	 *					- PACKAGE_TALK			= 10;
+	 *					- PACKAGE_REQUEST		= 20;
+	 *					- PACKTYPE_RESPONSE		= 21;
 	 *	@param	{string}	sCommand
-	 *	@param	{object}	oJsonBody
+	 *	@param	{object}	oBody
 	 *	@param	{boolean}	bReroute
 	 *	@param	{function}	pfnResponseHandler( ws, request, response ){ ... }
 	 */
-	sendRequest( oSocket, nPackType, sCommand, oJsonBody, bReroute, pfnResponseHandler )
+	sendRequest( oSocket, nPackageType, sCommand, oBody, bReroute, pfnResponseHandler )
 	{
 		//
 		//	oJsonBody for 'catchup'
@@ -66,7 +81,6 @@ class CP2pRequest extends CP2pMessage
 		// 		last_known_mci	: last_known_mci	//	known last mci
 		// 	};
 		//
-		let oJsonRequest;
 		let oJsonContent;
 		let sTag;
 		let pfnReroute;
@@ -78,7 +92,7 @@ class CP2pRequest extends CP2pMessage
 			_p2pLog.error( `call sendRequest with invalid oSocket` );
 			return false;
 		}
-		if ( ! this.m_cP2pPackage.isValidPackageType( nPackType ) )
+		if ( ! this.m_cP2pPackage.isValidPackageType( nPackageType ) )
 		{
 			_p2pLog.error( `call sendRequest with invalid nPackType` );
 			return false;
@@ -88,6 +102,11 @@ class CP2pRequest extends CP2pMessage
 			_p2pLog.error( `call sendRequest with invalid sCommand` );
 			return false;
 		}
+		if ( ! _p2pUtils.isObject( oBody ) )
+		{
+			_p2pLog.error( `call sendRequest with invalid oBody` );
+			return false;
+		}
 		if ( ! _p2pUtils.isFunction( pfnResponseHandler ) )
 		{
 			_p2pLog.error( `call sendRequest with invalid pfnResponseHandler` );
@@ -95,22 +114,10 @@ class CP2pRequest extends CP2pMessage
 		}
 
 		//
-		//	package format
-		//
-		oJsonRequest =
-			{
-				version	: String( _p2pConstants.version ),
-				alt	: String( _p2pConstants.alt ),
-				type	: nPackType,
-				command	: sCommand,
-				body	: oJsonBody ? oJsonBody : null
-			};
-
-		//
 		//	sTag like : w35dxwqyQ2CzqHkOG5q+gwagPtaPweD4LEwzC2RjQNo=
 		//
-		oJsonContent	= Object.assign( {}, oJsonRequest );
-		sTag		= _object_hash.getBase64Hash( oJsonRequest );
+		oJsonContent	= Object.assign( {}, oBody );
+		sTag		= this.m_cP2pPackage.calculateTag( nPackageType, sCommand, oBody );
 
 		//
 		//	will not send identical
@@ -149,7 +156,7 @@ class CP2pRequest extends CP2pMessage
 		//	THIS function will be called when the request is timeout
 		//
 		pfnReroute = bReroute
-			? this._createRerouteExecutor( oSocket, nPackType, sCommand, oJsonBody, bReroute, sTag )
+			? this._createRerouteExecutor( oSocket, nPackageType, sCommand, oBody, bReroute, sTag )
 			: null;
 
 		//
@@ -157,7 +164,7 @@ class CP2pRequest extends CP2pMessage
 		//	in sending request
 		//
 		nRerouteTimer	= bReroute
-			? this._createRerouteTimer( oSocket, nPackType, sCommand, pfnReroute )
+			? this._createRerouteTimer( oSocket, nPackageType, sCommand, pfnReroute )
 			: null;
 
 		//
@@ -166,7 +173,7 @@ class CP2pRequest extends CP2pMessage
 		//
 		nCancelTimer	= bReroute
 			? null
-			: this._createCancelTimer( oSocket, nPackType, sCommand, sTag, oJsonContent );
+			: this._createCancelTimer( oSocket, nPackageType, sCommand, sTag, oJsonContent );
 
 		//
 		//	build pending request list
@@ -183,21 +190,7 @@ class CP2pRequest extends CP2pMessage
 		//
 		//	send message by socket handle
 		//
-		this.sendMessage( oSocket, _p2pConstants.PACKAGE_REQUEST, null, oJsonContent );
-	}
-
-
-	/**
-	 *	handle request message
-	 *	received message in client/server with PackageType .PACKAGE_REQUEST
-	 *
-	 * 	@public
-	 *	@param	{object}	oSocket
-	 *	@param	{string}	sCommand
-	 * 	@param	{string}	sBody
-	 */
-	handleRequest( oSocket, sCommand, sBody )
-	{
+		this.sendMessage( oSocket, nPackageType, sCommand, oJsonContent );
 	}
 
 

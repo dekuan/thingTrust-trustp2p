@@ -10,6 +10,7 @@ const _protobufjs		= require( 'protobufjs' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
+const _object_hash		= require( '../object_hash.js' );
 // const _p2pMessage		= require( './p2pMessage.js' );
 // const _p2pRequest		= require( './p2pRequest.js' );
 // const _p2pPeer			= require( './p2pPeer.js' );
@@ -58,19 +59,60 @@ class CP2pPackage
 
 
 	/**
+	 *	calculate tag
+	 *
+	 * 	@public
+	 *	@param	{number}	nPackageType
+	 *	@param	{string}	sCommand
+	 *	@param	{object}	oBody
+	 *	@return {string|null}
+	 */
+	calculateTag( nPackageType, sCommand, oBody )
+	{
+		let sBody;
+		let oPackage;
+
+		if ( ! this.isValidPackageType( nPackageType ) )
+		{
+			return null;
+		}
+		if ( ! _p2pUtils.isObject( oBody ) )
+		{
+			return null;
+		}
+
+		//
+		//	package format
+		//
+		sCommand	= String( sCommand );
+		sBody		= JSON.stringify( oBody );
+		oPackage	=
+			{
+				version	: String( _p2pConstants.version ),
+				alt	: String( _p2pConstants.alt ),
+				type	: nPackageType,
+				command	: sCommand,
+				body	: sBody
+			};
+
+		return _object_hash.getBase64Hash( oPackage );
+	}
+
+
+	/**
 	 *	encode a JavaScript plain object to binary p2p package
 	 *
 	 * 	@public
 	 *	@param	{number}	nPackageType
-	 *	@param	{string}	vCommand
-	 *	@param	{object | string}	vBody
-	 *	@return {binary | null}
+	 *	@param	{string}	sCommand
+	 *	@param	{object}	oBody
+	 *	@return {binary|null}
 	 */
-	encodePackage( nPackageType, vCommand, vBody )
+	encodePackage( nPackageType, sCommand, oBody )
 	{
 		let bufRet;
-		let sCommand;
 		let sBody;
+		let sTag;
 		let oMessageJson;
 		let oMessageObj;
 
@@ -82,11 +124,18 @@ class CP2pPackage
 		{
 			return null;
 		}
+		if ( ! _p2pUtils.isObject( oBody ) )
+		{
+			return null;
+		}
 
 		//	...
 		bufRet		= null;
-		sCommand	= String( vCommand );
-		sBody		= _p2pUtils.isObject( vBody ) ? JSON.stringify( vBody ) : String( vBody ).trim();
+		sCommand	= String( sCommand );
+		sTag		= oBody.tag;
+		delete oBody.tag;
+
+		sBody		= JSON.stringify( oBody );
 		oMessageJson	=
 			{
 				version	: _p2pConstants.version,
@@ -94,6 +143,7 @@ class CP2pPackage
 				type	: nPackageType,
 				command	: sCommand,
 				body	: sBody,
+				tag	: sTag,
 			};
 		if ( ! this.m_oMessage.verify( oMessageJson ) )
 		{
@@ -123,6 +173,37 @@ class CP2pPackage
 	 */
 	decodePackage( bufPackage )
 	{
+		let objRet;
+
+		if ( ! this.m_oMessage )
+		{
+			return null;
+		}
+
+		//	...
+		objRet	= null;
+
+		try
+		{
+			objRet = this.m_oMessage.decode( bufPackage );
+		}
+		catch ( oErr )
+		{
+		}
+
+		return objRet;
+	}
+
+
+	/**
+	 *	decode a p2p encoded binary package to JavaScript plain object
+	 *
+	 * 	@public
+	 *	@param	{binary}	bufPackage
+	 *	@return {object}
+	 */
+	decodePackageToJson( bufPackage )
+	{
 		let oRet;
 		let oMessageObj;
 
@@ -133,7 +214,7 @@ class CP2pPackage
 
 		//	...
 		oRet		= null;
-		oMessageObj	= this.m_oMessage.decode( bufPackage );
+		oMessageObj	= this.decodePackage( bufPackage );
 		if ( oMessageObj )
 		{
 			//
@@ -143,6 +224,24 @@ class CP2pPackage
 		}
 
 		return oRet;
+	}
+
+
+	/**
+	 * 	convert message object to JavaScript plain object
+	 *
+	 * 	@public
+	 *	@param	{any}	oMessageObj
+	 *	@return {object}
+	 */
+	getJsonByObject( oMessageObj )
+	{
+		if ( ! this.m_oMessage )
+		{
+			return null;
+		}
+
+		return this.m_oMessage.toObject( oMessageObj );
 	}
 
 

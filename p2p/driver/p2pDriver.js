@@ -14,12 +14,12 @@ const _p2pUtils		= require( '../p2pUtils.js' );
  * 	driver events
  *	@constant
  */
-const EVENT_START	= 'start';	//	( oSocket, sInfo )	| emitted while your implementation started.
-const EVENT_CONNECTION	= 'connection';	//	( oSocket )		| emitted while a new driver is made.
-const EVENT_OPEN	= 'open';	//	( oSocket )		| emitted after successfully connected to server.
-const EVENT_MESSAGE	= 'message';	//	( oSocket, vMessage )	| emitted while a new message was received.
-const EVENT_CLOSE	= 'close';	//	( oSocket )		| emitted while socket was closed.
-const EVENT_ERROR	= 'error';	//	( vError )		| emitted while a error was occurred.
+const EVENT_START		= 'start';	//	( oSocket, sInfo )	| emitted while your implementation started.
+const EVENT_CONNECTION		= 'connection';	//	( oSocket )		| emitted while a new driver is made.
+const EVENT_OPEN		= 'open';	//	( oSocket )		| emitted after successfully connected to server.
+const EVENT_MESSAGE		= 'message';	//	( oSocket, vMessage )	| emitted while a new message was received.
+const EVENT_CLOSE		= 'close';	//	( oSocket )		| emitted while socket was closed.
+const EVENT_ERROR		= 'error';	//	( vError )		| emitted while a error was occurred.
 
 const DRIVER_TYPE_SERVER	= 'server';
 const DRIVER_TYPE_CLIENT	= 'client';

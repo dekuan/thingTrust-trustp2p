@@ -7,6 +7,7 @@
 const EventEmitter		= require( 'events' );
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pDeliver		= require( './p2pDeliver.js' );
+const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pLog			= require( './p2pLog.js' );
@@ -34,6 +35,9 @@ class CP2pClient extends CP2pDeliver
 		 */
 		this.m_cDriverClient	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
 		super.cDriver		= this.m_cDriverClient;
+
+		//
+		this._init();
 	}
 
 
@@ -45,10 +49,30 @@ class CP2pClient extends CP2pDeliver
 	 */
 	async startClient()
 	{
-		return this.m_cDriverClient
+		this.m_cDriverClient.connectToServer( 'ws://127.0.0.1:1107' );
+	}
+
+
+	/**
+	 * 	initialize
+	 *	@private
+	 */
+	_init()
+	{
+		this.m_cP2pHeartbeat
+		.on( CP2pHeartbeat.EVENT_WANT_PONG, ( oSocket, objMessage, oBody ) =>
+		{
+			let oMessage	= this.m_cP2pPackage.getJsonByObject( objMessage );
+			return this.sendResponse( oSocket, _p2pConstants.PACKAGE_HEARTBEAT_PONG, oMessage.tag, oBody );
+		});
+
+		//
+		//	events for client
+		//
+		this.m_cDriverClient
 		.on( CP2pDriver.EVENT_OPEN, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CONNECTION }], new connection was opened.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_OPEN }], connect to server successfully.` );
 
 			//
 			//	send our version information to server peer
@@ -57,7 +81,14 @@ class CP2pClient extends CP2pDeliver
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
-			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ vMessage }]` );
+			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
+
+			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ objMessage }]` );
+			if ( objMessage &&
+				_p2pConstants.PACKAGE_HEARTBEAT_PING === objMessage.type )
+			{
+				this.m_cP2pHeartbeat.handlePong( oSocket, objMessage );
+			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
@@ -71,8 +102,7 @@ class CP2pClient extends CP2pDeliver
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
 			_p2pLog.info( `Received [${ CP2pDriver.EVENT_ERROR }] from server.` );
-		})
-		.connectToServer( 'ws://127.0.0.1:1107' );
+		});
 	}
 }
 

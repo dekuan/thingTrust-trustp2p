@@ -6,8 +6,8 @@
  */
 const EventEmitter		= require( 'events' );
 const CP2pDriver		= require( './driver/p2pDriver.js' );
-const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 const CP2pDeliver		= require( './p2pDeliver.js' );
+const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 
 const _crypto			= require( 'crypto' );
 
@@ -35,9 +35,11 @@ class CP2pServer extends CP2pDeliver
 
 		this.m_oOptions		= Object.assign( {}, oOptions );
 		this.m_cDriverServer	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
-		this.m_cP2pHeartbeat	= new CP2pHeartbeat();
 
 		super.cDriver		= this.m_cDriverServer;
+
+		//	...
+		this._init();
 	}
 
 
@@ -49,7 +51,47 @@ class CP2pServer extends CP2pDeliver
 	 */
 	async startServer()
 	{
-		return this.m_cDriverServer
+		this.m_cP2pHeartbeat.start( () => { return this.getClients(); } );
+		this.m_cDriverServer.startServer();
+	}
+
+	/**
+	 *	@public
+	 *	@returns {Array}
+	 */
+	getClients()
+	{
+		return this.m_cDriverServer.getClients();
+	}
+
+
+	/**
+	 *	initialize
+	 *	@private
+	 */
+	_init()
+	{
+		//
+		//	start heartbeat interval
+		//
+		this.m_cP2pHeartbeat.on( CP2pHeartbeat.EVENT_WANT_PING, ( oHbClientSocket, pfnHbResponse ) =>
+		{
+			_p2pLog.info( `SENDING heartbeat ping for client.` );
+			this.sendRequest
+			(
+				oHbClientSocket,
+				_p2pConstants.PACKAGE_HEARTBEAT_PING,
+				'heartbeat',
+				{ msg : CP2pHeartbeat.MESSAGE_PING },
+				false,
+				pfnHbResponse
+			);
+		});
+
+		//
+		//	events for server
+		//
+		this.m_cDriverServer
 		.on( CP2pDriver.EVENT_START, ( oSocket, sInfo ) =>
 		{
 			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_START }] from server.`, sInfo );
@@ -87,15 +129,6 @@ class CP2pServer extends CP2pDeliver
 			// 	//
 			// 	this.m_oOptions.subscribe( ws );
 			// }
-
-			//
-			//	start heartbeat
-			//
-			this.m_cP2pHeartbeat.startHeartbeat( () =>
-			{
-				_p2pLog.info( `HEARTBEAT for ${ this.getClients().length } clients.` );
-				this.handleHeartbeatPing( this.getClients() );
-			});
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
@@ -111,18 +144,8 @@ class CP2pServer extends CP2pDeliver
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
 			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_ERROR }] from server.` );
-		}).startServer();
+		});
 	}
-
-	/**
-	 *	@public
-	 *	@returns {Array}
-	 */
-	getClients()
-	{
-		return this.m_cDriverServer.getClients();
-	}
-
 }
 
 
