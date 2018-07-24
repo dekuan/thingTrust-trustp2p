@@ -202,7 +202,7 @@ class CP2pDriverImplWsServer extends CP2pDriver
 			'close',
 			async () =>
 			{
-				_p2pLog.warning( `client ${ oWs.peer } disconnected` );
+				_p2pLog.warn( `client ${ oWs.peer } disconnected` );
 
 				//
 				//	...

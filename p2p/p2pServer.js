@@ -13,6 +13,7 @@ const _crypto			= require( 'crypto' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
+const _p2pLog			= require( './p2pLog.js' );
 
 
 
@@ -51,12 +52,11 @@ class CP2pServer extends CP2pDeliver
 		return this.m_cDriverServer
 		.on( CP2pDriver.EVENT_START, ( oSocket, sInfo ) =>
 		{
-			console.log( `Received a message [${ CP2pDriver.EVENT_START }] from server.`, sInfo );
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_START }] from server.`, sInfo );
 		})
 		.on( CP2pDriver.EVENT_CONNECTION, ( oSocket ) =>
 		{
-			console.log( `Received a message [${ CP2pDriver.EVENT_CONNECTION }] from server.` );
-
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CONNECTION }] from server.` );
 
 			//
 			//	WELCOME THE NEW PEER
@@ -75,7 +75,7 @@ class CP2pServer extends CP2pDeliver
 				//	the new peer, I am a hub and I have ability to exchange data
 				//
 				oSocket.challenge = _crypto.randomBytes( 30 ).toString( "base64" );
-				this.sendJustSaying( oSocket, 'hub/challenge', oSocket.challenge );
+				this.sendTalk( oSocket, 'hub/challenge', oSocket.challenge );
 			}
 
 			// if ( ! this.m_oOptions.bLight )
@@ -93,21 +93,24 @@ class CP2pServer extends CP2pDeliver
 			//
 			this.m_cP2pHeartbeat.startHeartbeat( () =>
 			{
-				console.log( `HEARTBEAT for ${ this.getClients().length } clients.` );
-				this.handlePingClients( this.getClients() );
+				_p2pLog.info( `HEARTBEAT for ${ this.getClients().length } clients.` );
+				this.handleHeartbeatPing( this.getClients() );
 			});
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
-			console.log( `Received a message [${ CP2pDriver.EVENT_MESSAGE }] from server.` );
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_MESSAGE }] from server.` );
+
+			let oMessage	= this.m_cP2pPackage.decodePackage( vMessage );
+			console.log( oMessage );
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			console.log( `Received a message [${ CP2pDriver.EVENT_CLOSE }] from server.` );
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CLOSE }] from server.` );
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			console.log( `Received a message [${ CP2pDriver.EVENT_ERROR }] from server.` );
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_ERROR }] from server.` );
 		}).startServer();
 	}
 

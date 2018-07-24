@@ -9,7 +9,7 @@ const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pDeliver		= require( './p2pDeliver.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-
+const _p2pLog			= require( './p2pLog.js' );
 
 
 
@@ -48,7 +48,7 @@ class CP2pClient extends CP2pDeliver
 		return this.m_cDriverClient
 		.on( CP2pDriver.EVENT_OPEN, ( oSocket ) =>
 		{
-			console.log( `Received [${ CP2pDriver.EVENT_CONNECTION }], new connection was opened.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CONNECTION }], new connection was opened.` );
 
 			//
 			//	send our version information to server peer
@@ -57,20 +57,20 @@ class CP2pClient extends CP2pDeliver
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
-			console.log( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ vMessage }]` );
+			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ vMessage }]` );
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			console.log( `Received [${ CP2pDriver.EVENT_CLOSE }] from server.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CLOSE }] from server.` );
 
 			//
 			//	handle things while a socket was closed
 			//
-			this.handleSocketClosed( oSocket );
+			this.handleClosed( oSocket );
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			console.log( `Received [${ CP2pDriver.EVENT_ERROR }] from server.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_ERROR }] from server.` );
 		})
 		.connectToServer( 'ws://127.0.0.1:1107' );
 	}

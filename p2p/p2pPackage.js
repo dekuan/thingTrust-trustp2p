@@ -13,7 +13,6 @@ const _p2pUtils			= require( './p2pUtils.js' );
 const _p2pMessage		= require( './p2pMessage.js' );
 const _p2pRequest		= require( './p2pRequest.js' );
 const _p2pPeer			= require( './p2pPeer.js' );
-//const jsonDescriptor		= require( './p2p.proto' );
 
 
 
@@ -40,23 +39,98 @@ class CP2pPackage
 		this.m_oRoot			= this._loadProtocolBufferSync();
 
 		this.m_oMessage			= root.lookupType( 'trust_note_p2p_package.TrustNoteP2p' );
-		this.m_enumPackType		= root.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackType' );
-		this.m_arrPackTypeValues	= Object.values( this.m_enumPackType.values );
-
-		//
-		//	copy Enumerations( key => value ) to this object
-		//
-		Object.assign( this, {}, { PackType : this.m_enumPackType.values } );
+		this.m_enumPackageType		= root.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackageType' );
+		this.m_arrPackTypeValues	= Object.values( this.m_enumPackageType.values );
 	}
 
 	/**
 	 *	check if the given package type is valid
-	 *	@param	{number}	nPackType
+	 *	@param	{number}	nPackageType
 	 *	@return	{boolean}
 	 */
-	isValidPackType( nPackType )
+	isValidPackageType( nPackageType )
 	{
-		return Number.isInteger( nPackType ) && this.m_arrPackTypeValues.includes( nPackType );
+		return Number.isInteger( nPackageType ) && this.m_arrPackTypeValues.includes( nPackageType );
+	}
+
+
+	/**
+	 *	encode a JavaScript plain object to binary p2p package
+	 *
+	 * 	@public
+	 *	@param	{number}	nPackageType
+	 *	@param	{string}	vCommand
+	 *	@param	{object | string}	vBody
+	 *	@return {binary | null}
+	 */
+	encodePackage( nPackageType, vCommand, vBody )
+	{
+		let bufRet;
+		let sCommand;
+		let sBody;
+		let oMessageJson;
+		let oMessageObj;
+
+		if ( ! this.isValidPackageType( nPackageType ) )
+		{
+			return null;
+		}
+
+		//	...
+		bufRet		= null;
+		sCommand	= String( vCommand );
+		sBody		= _p2pUtils.isObject( vBody ) ? JSON.stringify( vBody ) : String( vBody ).trim();
+		oMessageJson	=
+			{
+				version	: _p2pConstants.version,
+				alt	: _p2pConstants.alt,
+				type	: nPackageType,
+				command	: sCommand,
+				body	: sBody,
+			};
+		if ( ! this.m_oMessage.verify( oMessageJson ) )
+		{
+			//
+			//	Create a new message
+			//	or use .fromObject if conversion is necessary
+			//
+			oMessageObj = this.m_oMessage.create( oMessageJson );
+			if ( oMessageObj )
+			{
+				//
+				//	encode a message to an Uint8Array (browser) or Buffer (node)
+				//
+				bufRet = this.m_oMessage.encode( oMessageObj ).finish();
+			}
+		}
+
+		return bufRet;
+	}
+
+	/**
+	 *	decode a p2p encoded binary package to JavaScript plain object
+	 *
+	 * 	@public
+	 *	@param	{binary}	bufPackage
+	 *	@return {object}
+	 */
+	decodePackage( bufPackage )
+	{
+		let oRet;
+		let oMessageObj;
+
+		//	...
+		oRet		= null;
+		oMessageObj	= this.m_oMessage.decode( bufPackage );
+		if ( oMessageObj )
+		{
+			//
+			//	convert the message back to a JavaScript plain object
+			//
+			oRet = this.m_oMessage.toObject( oMessageObj );
+		}
+
+		return oRet;
 	}
 
 

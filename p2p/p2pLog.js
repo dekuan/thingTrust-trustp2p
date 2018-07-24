@@ -7,19 +7,19 @@
  */
 class CP2pLog
 {
-	info( ...args )
+	static info( ...args )
 	{
 		console.log( ...args );
 	}
 
-	error( ...args )
+	static error( ...args )
 	{
-		console.log( ...args );
+		console.error( ...args );
 	}
 
-	warning( ...args )
+	static warn( ...args )
 	{
-		console.log( ...args );
+		console.warn( ...args );
 	}
 }
 

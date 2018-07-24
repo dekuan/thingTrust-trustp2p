@@ -1,14 +1,12 @@
 /*jslint node: true */
 "use strict";
 
-const EventEmitter		= require( 'events' );
-
-const _				= require( 'lodash' );
-
 const CP2pDriver		= require( './driver/p2pDriver.js' );
+const CP2pMessage		= require( './p2pMessage.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
+const _p2pLog			= require( './p2pLog.js' );
 const _object_hash		= require( '../object_hash.js' );
 
 
@@ -19,10 +17,13 @@ const _object_hash		= require( '../object_hash.js' );
  *	@class	CP2pRequest
  *	@module	CP2pRequest
  */
-class CP2pRequest
+class CP2pRequest extends CP2pMessage
 {
 	constructor()
 	{
+		super();
+
+		//	...
 		this.m_cDriver				= null;
 		this.m_oAssocReroutedConnectionsByTag	= {};
 	}
@@ -46,6 +47,10 @@ class CP2pRequest
 	 *
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackType
+	 *					- PACKAGE_HEARTBEAT	= 0;
+	 *					- PACKAGE_TALK		= 1;
+	 *					- PACKAGE_REQUEST	= 2;
+	 *					- PACKTYPE_RESPONSE	= 3;
 	 *	@param	{string}	sCommand
 	 *	@param	{object}	oJsonBody
 	 *	@param	{boolean}	bReroute
@@ -70,22 +75,22 @@ class CP2pRequest
 
 		if ( ! oSocket )
 		{
-			this.m_cP2pLog.error( `call sendRequest with invalid oSocket` );
+			_p2pLog.error( `call sendRequest with invalid oSocket` );
 			return false;
 		}
-		if ( ! this.m_cP2pPackage.isValidPackType( nPackType ) )
+		if ( ! this.m_cP2pPackage.isValidPackageType( nPackType ) )
 		{
-			this.m_cP2pLog.error( `call sendRequest with invalid nPackType` );
+			_p2pLog.error( `call sendRequest with invalid nPackType` );
 			return false;
 		}
 		if ( ! _p2pUtils.isString( sCommand ) || 0 === sCommand.length )
 		{
-			this.m_cP2pLog.error( `call sendRequest with invalid sCommand` );
+			_p2pLog.error( `call sendRequest with invalid sCommand` );
 			return false;
 		}
 		if ( ! _p2pUtils.isFunction( pfnResponseHandler ) )
 		{
-			this.m_cP2pLog.error( `call sendRequest with invalid pfnResponseHandler` );
+			_p2pLog.error( `call sendRequest with invalid pfnResponseHandler` );
 			return false;
 		}
 
@@ -114,7 +119,7 @@ class CP2pRequest
 		if ( oSocket.assocPendingRequests[ sTag ] )
 		{
 			oSocket.assocPendingRequests[ sTag ].responseHandlers.push( pfnResponseHandler );
-			this.m_cP2pLog.error
+			_p2pLog.error
 			(
 				`already sent a ${ sCommand } request to ${ oSocket.peer }, 
 				will add one more response handler rather than sending a duplicate request to the wire`
@@ -178,13 +183,13 @@ class CP2pRequest
 		//
 		//	send message by socket handle
 		//
-		this.sendMessage( oSocket, 'request', oJsonContent );
+		this.sendMessage( oSocket, _p2pConstants.PACKAGE_REQUEST, null, oJsonContent );
 	}
 
 
 	/**
 	 *	handle request message
-	 *	received message in client/server with PackType .PACKTYPE_REQUEST
+	 *	received message in client/server with PackageType .PACKAGE_REQUEST
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
@@ -198,7 +203,7 @@ class CP2pRequest
 
 	/**
 	 *	handle response message
-	 *	received message in client/server with PackType .PACKTYPE_RESPONSE
+	 *	received message in client/server with PackageType .PACKAGE_RESPONSE
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
@@ -217,6 +222,80 @@ class CP2pRequest
 		//
 		this._clearCacheReroutedConnectionsByTag( sTag );
 	}
+
+
+	/**
+	 *	handle socket closed
+	 *
+	 * 	@public
+	 *	@param 	{object}	oSocket
+	 *	@return {boolean}
+	 */
+	handleClosed( oSocket )
+	{
+		let sTag;
+		let oPendingRequest;
+
+		if ( ! _p2pUtils.isObject( oSocket ) ||
+			! oSocket.hasOwnProperty( 'assocPendingRequests' ) ||
+			! _p2pUtils.isObject( oSocket.assocPendingRequests ) )
+		{
+			_p2pLog.error( `handleClosed with invalid oSocket` );
+			return false;
+		}
+
+		//	...
+		console.log( `Web Socket closed, will complete all outstanding requests` );
+
+		for ( sTag in oSocket.assocPendingRequests )
+		{
+			//	...
+			oPendingRequest	= oSocket.assocPendingRequests[ sTag ];
+
+			//	...
+			clearTimeout( oPendingRequest.reroute_timer );
+			clearTimeout( oPendingRequest.cancel_timer );
+			oPendingRequest.reroute_timer	= null;
+			oPendingRequest.cancel_timer	= null;
+
+			//
+			//	reroute immediately, not waiting for _network_consts.STALLED_TIMEOUT
+			//
+			if ( _p2pUtils.isFunction( oPendingRequest.reroute ) )
+			{
+				if ( ! oPendingRequest.bRerouted )
+				{
+					oPendingRequest.reroute();
+				}
+
+				//
+				//	***
+				//	we still keep ws.assocPendingRequests[tag] because we'll need it when we find a peer to reroute to
+				//
+			}
+			else
+			{
+				//
+				//	respond all caller and then clear all pending requests
+				//
+				oPendingRequest.responseHandlers.forEach
+				(
+					rh =>
+					{
+						rh( oSocket, oPendingRequest.request, { error : "[internal] driver closed" } );
+					}
+				);
+
+				delete oSocket.assocPendingRequests[ sTag ];
+				oSocket.assocPendingRequests[ sTag ]	= null;
+			}
+		}
+
+		return true;
+	}
+
+
+
 
 
 	/**
@@ -281,7 +360,7 @@ class CP2pRequest
 				//
 				//	was canceled due to timeout or rerouted and answered by another peer
 				//
-				this.m_cP2pLog.error( `handleResponse with no request by tag ${ sTag }` );
+				_p2pLog.error( `handleResponse with no request by tag ${ sTag }` );
 			}
 
 			//
@@ -343,11 +422,11 @@ class CP2pRequest
 		{
 			let oNextSocket;
 
-			this.m_cP2pLog.info( `will try to reroute a ${ sCommand } request stalled at ${ oSocket.peer }` );
+			_p2pLog.info( `will try to reroute a ${ sCommand } request stalled at ${ oSocket.peer }` );
 
 			if ( ! sTag in oSocket.assocPendingRequests )
 			{
-				return this.m_cP2pLog.error( `will not reroute - the request was already handled by another peer` );
+				return _p2pLog.error( `will not reroute - the request was already handled by another peer` );
 			}
 
 			//
@@ -356,13 +435,13 @@ class CP2pRequest
 			oNextSocket	= this.m_cDriver.findNextServerSync( oSocket );
 			if ( ! oNextSocket )
 			{
-				return this.m_cP2pLog.error( `will not reroute - can not find another peer` );
+				return _p2pLog.error( `will not reroute - can not find another peer` );
 			}
 
 			//	the callback may be called much later if .findNextServerSync has to wait for driver
 			if ( ! sTag in oSocket.assocPendingRequests )
 			{
-				return this.m_cP2pLog.error( `will not reroute after findNextPeer - the request was already handled by another peer` );
+				return _p2pLog.error( `will not reroute after findNextPeer - the request was already handled by another peer` );
 			}
 
 			//	...
@@ -381,14 +460,14 @@ class CP2pRequest
 				// 		pfnReroute();
 				// 	}
 				// );
-				return this.m_cP2pLog.error( `will not reroute ${ sCommand } to the same peer, will rather wait for a new connection` );
+				return _p2pLog.error( `will not reroute ${ sCommand } to the same peer, will rather wait for a new connection` );
 			}
 
 			//
 			//	RESEND Request, i.e. re-route
 			//	SEND REQUEST AGAIN FOR EVERY responseHandlers
 			//
-			this.m_cP2pLog.info( `rerouting ${ sCommand } from ${ oSocket.peer } to ${ oNextSocket.peer }` );
+			_p2pLog.info( `rerouting ${ sCommand } from ${ oSocket.peer } to ${ oNextSocket.peer }` );
 			oSocket.assocPendingRequests[ sTag ].bRerouted = true;
 			oSocket.assocPendingRequests[ sTag ].responseHandlers.forEach
 			(
@@ -439,7 +518,7 @@ class CP2pRequest
 				//	trigger ReRoute
 				//	callback handler while the request is TIMEOUT
 				//
-				this.m_cP2pLog.error( `request ${ sCommand }, send to ${ oSocket.peer } was overtime.` );
+				_p2pLog.error( `request ${ sCommand }, send to ${ oSocket.peer } was overtime.` );
 				pfnRerouteExecutor.apply( this, arguments );
 			},
 			_p2pConstants.STALLED_TIMEOUT
@@ -463,7 +542,7 @@ class CP2pRequest
 		(
 			() =>
 			{
-				this.m_cP2pLog.error( `request ${ sCommand }, response from ${ oSocket.peer } was overtime.` );
+				_p2pLog.error( `request ${ sCommand }, response from ${ oSocket.peer } was overtime.` );
 
 				//
 				//	delete all overtime requests/connections in pending requests list

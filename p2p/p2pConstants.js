@@ -8,6 +8,15 @@
 module.exports.version                                 = '1.0';
 module.exports.alt                                     = '1';
 
+//
+//	PACKET TYPES
+//
+module.exports.PACKAGE_HEARTBEAT		= 0;
+module.exports.PACKAGE_TALK			= 1;
+module.exports.PACKAGE_REQUEST			= 2;
+module.exports.PACKAGE_RESPONSE			= 3;
+
+
 module.exports.FORWARDING_TIMEOUT		= 10 * 1000;		//	don't forward if the joint was received more than FORWARDING_TIMEOUT ms ago
 module.exports.STALLED_TIMEOUT			= 5000;			//	a request is treated as stalled if no response received within STALLED_TIMEOUT ms
 module.exports.RESPONSE_TIMEOUT			= 300 * 1000;		//	after this timeout, the request is abandoned

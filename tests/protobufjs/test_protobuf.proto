@@ -4,17 +4,17 @@ package trust_note_p2p_package;
 
 message TrustNoteP2p
 {
-	enum PackType
+	enum PackageType
 	{
-		PACKTYPE_HEARTBEAT	= 0;
-		PACKTYPE_TALK		= 1;
-		PACKTYPE_REQUEST	= 2;
-		PACKTYPE_RESPONSE	= 3;
+		PACKAGE_HEARTBEAT	= 0;
+		PACKAGE_TALK		= 1;
+		PACKAGE_REQUEST		= 2;
+		PACKAGE_RESPONSE	= 3;
 	}
 
 	optional string	sVersion	= 1	[ default = '1.0' ];
 	optional string sAlt		= 2	[ default = '1' ];
-	optional PackType enumPackType	= 3	[ default = PACKTYPE_HEARTBEAT ];
+	optional PackageType nType	= 3	[ default = PACKAGE_HEARTBEAT ];
 
 	required string sCommand	= 4	[ default = '' ];
 	required string sBody		= 5	[ default = '' ];

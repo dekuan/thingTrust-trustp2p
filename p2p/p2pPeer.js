@@ -485,7 +485,7 @@ function connectToPeer( url, onOpen )
 			//
 			if ( _conf.myUrl )
 			{
-				_network_message.sendJustSaying( ws, 'my_url', _conf.myUrl );
+				_network_message.sendTalk( ws, 'my_url', _conf.myUrl );
 			}
 
 			if ( ! _conf.bLight )
@@ -1168,7 +1168,7 @@ function startWebSocketServer( oOptions )
 						//
 						//	the new peer, I am a hub and I have ability to exchange data
 						//
-						_network_message.sendJustSaying( ws, 'hub/challenge', ws.challenge );
+						_network_message.sendTalk( ws, 'hub/challenge', ws.challenge );
 					}
 					if ( ! _conf.bLight )
 					{

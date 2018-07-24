@@ -1,11 +1,11 @@
 /*jslint node: true */
 "use strict";
 
-const _conf			= require( '../conf.js' );
-
 const CP2pPackage		= require( './p2pPackage.js' );
-const CP2pLog			= require( './p2pLog.js' );
+
+const _p2pLog			= require( './p2pLog.js' );
 const _p2pConstants		= require( './p2pConstants.js' );
+const _p2pUtils			= require( './p2pUtils.js' );
 
 
 
@@ -17,56 +17,89 @@ class CP2pMessage
 	constructor()
 	{
 		this.m_cP2pPackage	= new CP2pPackage();
-		this.m_cP2pLog		= new CP2pLog();
 	}
 
 
-
-	sendMessage( ws, type, content )
+	/**
+	 *	send message
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 *	@param	{number}	nPackageType
+	 *	@param	{string}	vCommand	null is okay
+	 *	@param	{object}	vBody		string, null are both okay
+	 *	@return	{boolean}
+	 */
+	sendMessage( oSocket, nPackageType, vCommand, vBody )
 	{
-		let message;
+		let bufMessage;
+		let sCommand;
+		let sBody;
 
-		//	...
-		message	= JSON.stringify( [ type, content ] );
-
-		if ( ws.readyState !== ws.OPEN )
+		if ( ! oSocket )
 		{
-			return console.log( `readyState=${ ws.readyState } on peer ${ ws.peer }, will not send ${ message }` );
+			_p2pLog.error( `call sendMessage with invalid oSocket.` );
+			return false;
+		}
+		if ( oSocket.readyState !== oSocket.OPEN )
+		{
+			_p2pLog.error( `readyState is ${ oSocket.readyState } on peer ${ oSocket.peer }, will not send ${ String( vCommand ) }.` );
+			return false;
+		}
+		if ( ! this.m_cP2pPackage.isValidPackageType( nPackageType ) )
+		{
+			return false;
 		}
 
-		console.log( `SENDING ${ message } to ${ ws.peer }` );
-		ws.send( message );
+		//	...
+		sCommand	= String( vCommand );
+		sBody		= _p2pUtils.isObject( vBody ) ? JSON.stringify( vBody ) : String( vBody );
+		_p2pLog.info( `SENDING ${ sCommand }, ${ sBody } to ${ oSocket.peer }` );
+
+		//	...
+		bufMessage	= this.m_cP2pPackage.encodePackage( nPackageType, vCommand, vBody );
+		oSocket.send( bufMessage );
+
+		//	...
+		return true;
 	}
 
 
-
-
-	sendJustSaying( ws, subject, body )
+	/**
+	 * 	send just saying
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 *	@param	{string}	sSubject
+	 *	@param 	{object}	oBody
+	 *	@return	{void}
+	 */
+	sendTalk( oSocket, sSubject, oBody )
 	{
-		this.sendMessage( ws, 'justsaying', { subject : subject, body : body } );
+		this.sendMessage( oSocket, _p2pConstants.PACKAGE_TALK, sSubject, oBody );
 	}
 
-	sendError( ws, error )
+	sendError( oSocket, sError )
 	{
-		this.sendJustSaying( ws, 'error', error );
+		this.sendTalk( oSocket, 'error', sError );
 	}
 
-	sendInfo( ws, content )
+	sendInfo( oSocket, sContent )
 	{
-		this.sendJustSaying( ws, 'info', content );
+		this.sendTalk( oSocket, 'info', sContent );
 	}
 
-	sendResult( ws, content )
+	sendResult( oSocket, sContent )
 	{
-		this.sendJustSaying( ws, 'result', content );
+		this.sendTalk( oSocket, 'result', sContent );
 	}
 
-	sendErrorResult( ws, unit, error )
+	sendErrorResult( oSocket, oUnit, sError )
 	{
-		this.sendResult( ws, { unit : unit, result : 'error', error : error } );
+		this.sendResult( oSocket, { unit : oUnit, result : 'error', error : sError } );
 	}
 
-	sendVersion( ws )
+	sendVersion( oSocket )
 	{
 		let libraryPackageJson;
 
@@ -74,17 +107,17 @@ class CP2pMessage
 		libraryPackageJson	= require( '../package.json' );
 
 		//	...
-		this.sendJustSaying
+		this.sendTalk
 		(
-			ws,
+			oSocket,
 			'version',
 			{
 				protocol_version	: _p2pConstants.version,
 				alt			: _p2pConstants.alt,
 				library			: libraryPackageJson.name,
 				library_version		: libraryPackageJson.version,
-				program			: _conf.program,
-				program_version		: _conf.program_version
+				program			: '_conf.program',
+				program_version		: '_conf.program_version'
 			}
 		);
 	}

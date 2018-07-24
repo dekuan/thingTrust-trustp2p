@@ -232,7 +232,7 @@ function _sendJoint( ws, objJoint, tag )
 		?
 		_network_message.sendResponse( ws, tag, { joint : objJoint } )
 		:
-		_network_message.sendJustSaying( ws, 'joint', objJoint );
+		_network_message.sendTalk( ws, 'joint', objJoint );
 }
 
 /**
@@ -263,7 +263,7 @@ function _sendFreeJoints( ws )
 		},
 		function()
 		{
-			_network_message.sendJustSaying( ws, 'free_joints_end', null );
+			_network_message.sendTalk( ws, 'free_joints_end', null );
 		}
 	);
 }
@@ -279,7 +279,7 @@ function _sendJointsSinceMci( ws, mci )
 		},
 		function()
 		{
-			_network_message.sendJustSaying( ws, 'free_joints_end', null );
+			_network_message.sendTalk( ws, 'free_joints_end', null );
 		}
 	);
 }
@@ -293,7 +293,7 @@ function _requestFreeJointsFromAllOutboundPeers()
 		//
 		//	send 'refresh' command
 		//
-		_network_message.sendJustSaying
+		_network_message.sendTalk
 		(
 			_network_peer.getOutboundPeers()[ i ],
 			'refresh',
@@ -311,7 +311,7 @@ function _requestNewJoints( ws )
 			//
 			//	send 'refresh' command
 			//
-			_network_message.sendJustSaying
+			_network_message.sendTalk
 			(
 				ws,
 				'refresh',
@@ -1555,7 +1555,7 @@ function _notifyLightClientsAboutStableJoints( from_mci, to_mci )
 					ws = _network_peer.getPeerWebSocket( row.peer );
 					if ( ws && ws.readyState === ws.OPEN )
 					{
-						_network_message.sendJustSaying( ws, 'light/have_updates' );
+						_network_message.sendTalk( ws, 'light/have_updates' );
 					}
 				}
 			);
@@ -1665,7 +1665,7 @@ function addLightWatchedAddress( address )
 			}
 
 			//	...
-			_network_message.sendJustSaying( ws, 'light/new_address_to_watch', address );
+			_network_message.sendTalk( ws, 'light/new_address_to_watch', address );
 		}
 	);
 }
@@ -2282,7 +2282,7 @@ function _sendPrivatePaymentToWs( ws, arrChains )
 	//	each chain is sent as separate ws message
 	arrChains.forEach( function( arrPrivateElements )
 	{
-		_network_message.sendJustSaying( ws, 'private_payment', arrPrivateElements );
+		_network_message.sendTalk( ws, 'private_payment', arrPrivateElements );
 	});
 }
 
@@ -3088,7 +3088,7 @@ function _sendStoredDeviceMessages( ws, device_address )
 		{
 			rows.forEach( function( row )
 			{
-				_network_message.sendJustSaying
+				_network_message.sendTalk
 				(
 					ws,
 					'hub/message',
@@ -3101,7 +3101,7 @@ function _sendStoredDeviceMessages( ws, device_address )
 
 			//	...
 			_network_message.sendInfo( ws, rows.length + " messages sent" );
-			_network_message.sendJustSaying( ws, 'hub/message_box_status', ( rows.length === 100 ) ? 'has_more' : 'empty' );
+			_network_message.sendTalk( ws, 'hub/message_box_status', ( rows.length === 100 ) ? 'has_more' : 'empty' );
 		}
 	);
 }
@@ -3433,7 +3433,7 @@ function _handleMessageJustSaying( ws, subject, body )
 								//
 								//	respond 'want_echo' subject
 								//
-								_network_message.sendJustSaying
+								_network_message.sendTalk
 								(
 									reverse_ws,
 									'want_echo',
@@ -3482,7 +3482,7 @@ function _handleMessageJustSaying( ws, subject, body )
 			}
 
 			//	...
-			_network_message.sendJustSaying( reverse_ws, 'your_echo', echo_string );
+			_network_message.sendTalk( reverse_ws, 'your_echo', echo_string );
 			break;
 
 		case 'your_echo':
@@ -3657,7 +3657,7 @@ function _handleMessageJustSaying( ws, subject, body )
 
 			if ( _conf.pushApiProjectNumber && _conf.pushApiKey )
 			{
-				_network_message.sendJustSaying
+				_network_message.sendTalk
 				(
 					ws,
 					'hub/push_project_number',
@@ -3668,7 +3668,7 @@ function _handleMessageJustSaying( ws, subject, body )
 			}
 			else
 			{
-				_network_message.sendJustSaying
+				_network_message.sendTalk
 				(
 					ws,
 					'hub/push_project_number',
@@ -3822,7 +3822,7 @@ function _handleMessageJustSaying( ws, subject, body )
 							}
 							if ( rows.length === 10 || rows.some( function( row ){ return row.is_stable; } ) )
 							{
-								_network_message.sendJustSaying( ws, 'light/have_updates' );
+								_network_message.sendTalk( ws, 'light/have_updates' );
 							}
 
 							//	...
@@ -3976,7 +3976,7 @@ function _handleMessageRequest( ws, tag, command, params )
 			}
 			if ( ws.old_core )
 			{
-				_network_message.sendJustSaying( ws, 'upgrade_required' );
+				_network_message.sendTalk( ws, 'upgrade_required' );
 				_network_message.sendErrorResponse( ws, tag, "old core" );
 				return ws.close( 1000, "old core" );
 			}
@@ -4267,7 +4267,7 @@ function _handleMessageRequest( ws, tag, command, params )
 								{
 									if ( client.device_address === objDeviceMessage.to )
 									{
-										_network_message.sendJustSaying
+										_network_message.sendTalk
 										(
 											client,
 											'hub/message',
@@ -5034,7 +5034,7 @@ exports.postJointToLightVendor				= postJointToLightVendor;
 exports.broadcastJoint					= broadcastJoint;
 exports.sendPrivatePayment				= sendPrivatePayment;
 
-exports.sendJustSaying					= _network_message.sendJustSaying;
+exports.sendTalk					= _network_message.sendTalk;
 exports.sendError					= _network_message.sendError;
 exports.sendAllInboundJustSaying			= sendAllInboundJustSaying;
 

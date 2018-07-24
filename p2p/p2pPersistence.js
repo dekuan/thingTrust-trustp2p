@@ -1,11 +1,14 @@
 /*jslint node: true */
 "use strict";
 
-let _db			= require( '../db.js' );
-let _p2pConstants	= require( './p2pConstants.js' );
-let _p2pUtils		= require( './p2pUtils.js' );
-let CP2pNerve		= require( './p2pNerve.js' );
+const _db		= require( '../db.js' );
+const CP2pNerve		= require( './p2pNerve.js' );
 const CP2pDriver	= require( './driver/p2pDriver.js' );
+
+const _p2pConstants	= require( './p2pConstants.js' );
+const _p2pUtils		= require( './p2pUtils.js' );
+
+
 
 
 /**

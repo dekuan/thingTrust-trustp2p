@@ -20,9 +20,6 @@ const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
 const _p2pConstants		= require( '../p2pConstants.js' );
 const _p2pUtils			= require( '../p2pUtils.js' );
 const _p2pLog			= require( '../p2pLog.js' );
-const _p2pMessage		= require( '../p2pMessage.js' );
-
-
 
 
 
@@ -225,7 +222,7 @@ class CP2pDriverImplWsClient extends CP2pDriver
 						//	May happen if we abondoned a driver attempt after timeout
 						// 		but it still succeeded while we opened another driver
 						//
-						_p2pLog.warning( `already have a connection to ${ sUrl }, will keep the old one and close the duplicate` );
+						_p2pLog.warn( `already have a connection to ${ sUrl }, will keep the old one and close the duplicate` );
 						oWs.close( 1000, 'duplicate driver' );
 
 						//
@@ -258,7 +255,7 @@ class CP2pDriverImplWsClient extends CP2pDriver
 					//
 					// if ( _conf.myUrl )
 					// {
-					// 	_network_message.sendJustSaying( ws, 'my_url', _conf.myUrl );
+					// 	_network_message.sendTalk( ws, 'my_url', _conf.myUrl );
 					// }
 
 					// if ( ! _conf.bLight )
