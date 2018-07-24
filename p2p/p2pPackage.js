@@ -2,7 +2,7 @@
 "use strict";
 
 /**
- *	@module	p2p heartbeat
+ *	@module	p2p package
  */
 const socks			= process.browser ? null : require( 'socks' + '' );
 
@@ -10,16 +10,17 @@ const _protobufjs		= require( 'protobufjs' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
-const _p2pMessage		= require( './p2pMessage.js' );
-const _p2pRequest		= require( './p2pRequest.js' );
-const _p2pPeer			= require( './p2pPeer.js' );
-
+// const _p2pMessage		= require( './p2pMessage.js' );
+// const _p2pRequest		= require( './p2pRequest.js' );
+// const _p2pPeer			= require( './p2pPeer.js' );
 
 
 /**
  * 	@constant
  */
 const PACKAGE_P2P_PROTO		= `${ __dirname }/p2pPackage.proto`;
+
+
 
 
 
@@ -36,11 +37,11 @@ class CP2pPackage
 	 */
 	constructor()
 	{
-		this.m_oRoot			= this._loadProtocolBufferSync();
-
-		this.m_oMessage			= root.lookupType( 'trust_note_p2p_package.TrustNoteP2p' );
-		this.m_enumPackageType		= root.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackageType' );
-		this.m_arrPackTypeValues	= Object.values( this.m_enumPackageType.values );
+		this.m_oRoot			= null;
+		this.m_oMessage			= null;
+		this.m_enumPackageType		= null;
+		this.m_arrPackTypeValues	= null;
+		this._loadProtocolBufferSync();
 	}
 
 	/**
@@ -50,7 +51,9 @@ class CP2pPackage
 	 */
 	isValidPackageType( nPackageType )
 	{
-		return Number.isInteger( nPackageType ) && this.m_arrPackTypeValues.includes( nPackageType );
+		return this.m_arrPackTypeValues &&
+			Number.isInteger( nPackageType ) &&
+			this.m_arrPackTypeValues.includes( nPackageType );
 	}
 
 
@@ -71,6 +74,10 @@ class CP2pPackage
 		let oMessageJson;
 		let oMessageObj;
 
+		if ( ! this.m_oMessage )
+		{
+			return null;
+		}
 		if ( ! this.isValidPackageType( nPackageType ) )
 		{
 			return null;
@@ -119,6 +126,11 @@ class CP2pPackage
 		let oRet;
 		let oMessageObj;
 
+		if ( ! this.m_oMessage )
+		{
+			return null;
+		}
+
 		//	...
 		oRet		= null;
 		oMessageObj	= this.m_oMessage.decode( bufPackage );
@@ -135,26 +147,25 @@ class CP2pPackage
 
 
 	/**
-	 *	load protocol buffer synchronously
+	 *	load protocol buffer and initialize member variables
+	 *
 	 *	@private
 	 *	@return {Promise<void>}
 	 */
 	async _loadProtocolBufferSync()
 	{
-		let oRet;
-
-		//	...
-		oRet	= null;
 		await this._loadProtocolBuffer()
 		.then( oRoot =>
 		{
-			oRet = oRoot;
+			this.m_oRoot			= oRoot;
+			this.m_oMessage			= oRoot.lookupType( 'trust_note_p2p_package.TrustNoteP2p' );
+			this.m_enumPackageType		= oRoot.lookupEnum( 'trust_note_p2p_package.TrustNoteP2p.PackageType' );
+			this.m_arrPackTypeValues	= Object.values( this.m_enumPackageType.values );
 		})
 		.catch( vError =>
 		{
+			throw new Error( vError );
 		});
-
-		return oRet;
 	}
 
 	/**
@@ -172,6 +183,7 @@ class CP2pPackage
 				{
 					if ( err )
 					{
+						//	rejected
 						return pfnReject( err );
 					}
 
