@@ -4,16 +4,15 @@
 /**
  *	@require	module: *
  */
-const EventEmitter		= require( 'events' );
+const _crypto			= require( 'crypto' );
+
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pDeliver		= require( './p2pDeliver.js' );
 const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 
-const _crypto			= require( 'crypto' );
-
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pUtils			= require( './p2pUtils.js' );
 const _p2pLog			= require( './p2pLog.js' );
+
 
 
 
@@ -147,8 +146,6 @@ class CP2pServer extends CP2pDeliver
 		});
 	}
 }
-
-
 
 
 

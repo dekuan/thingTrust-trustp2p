@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-const _db		= require( '../db.js' );
+const _db		= require( './common/db.js' );
 const CP2pNerve		= require( './p2pNerve.js' );
 const CP2pDriver	= require( './driver/p2pDriver.js' );
 

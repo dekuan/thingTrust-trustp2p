@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-var conf	= require( './conf.js' );
+var conf	= require( '../conf.js' );
 
 var mysql			= require( 'mysql' );
 var mysql_pool_constructor	= require( './mysql_pool.js' );

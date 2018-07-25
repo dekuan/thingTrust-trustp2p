@@ -10,7 +10,7 @@ const _protobufjs		= require( 'protobufjs' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './p2pUtils.js' );
-const _object_hash		= require( '../object_hash.js' );
+const _object_hash		= require( './common/object_hash.js' );
 // const _p2pMessage		= require( './p2pMessage.js' );
 // const _p2pRequest		= require( './p2pRequest.js' );
 // const _p2pPeer			= require( './p2pPeer.js' );

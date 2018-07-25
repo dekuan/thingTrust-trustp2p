@@ -75,14 +75,14 @@ if ( process.browser )
 
 
 
-
-function mergeExports( anotherModule )
-{
-	for ( let key in anotherModule )
-	{
-		exports[ key ] = anotherModule[ key ];
-	}
-}
+//
+// function mergeExports( anotherModule )
+// {
+// 	for ( let key in anotherModule )
+// 	{
+// 		exports[ key ] = anotherModule[ key ];
+// 	}
+// }
 
 
 /*

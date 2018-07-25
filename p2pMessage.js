@@ -105,7 +105,7 @@ class CP2pMessage
 		let libraryPackageJson;
 
 		//	...
-		libraryPackageJson	= require( '../package.json' );
+		libraryPackageJson	= require( './package.json' );
 
 		//	...
 		this.sendTalk

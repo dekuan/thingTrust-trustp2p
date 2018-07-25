@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-let _conf			= require( '../conf.js' );
+let _conf			= require( './conf.js' );
 
 let CP2pHeartbeat		= require( './p2pHeartbeat.js' );
 let _network_peer		= require( './p2pPeer.js' );

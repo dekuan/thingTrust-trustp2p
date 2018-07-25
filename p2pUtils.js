@@ -48,6 +48,45 @@ class CP2pUtils
 			Number.isSafeInteger( nPort ) &&
 			nPort >= 1024 && nPort < 65535 );
 	}
+
+	/**
+	 * 	get all methods from a class or its instance
+	 *
+	 * 	@public
+	 *	@param	{object}	objObject
+	 *	@return {array}
+	 */
+	getAllMethodsOfClass( objObject )
+	{
+		let setRet;
+		let arrKeys;
+
+		try
+		{
+			setRet = new Set();
+			while ( true )
+			{
+				objObject = Reflect.getPrototypeOf( objObject );
+				if ( ! objObject )
+				{
+					break;
+				}
+
+				//	...
+				arrKeys	= Reflect.ownKeys( objObject );
+				if ( Array.isArray( arrKeys ) && arrKeys.length > 0 )
+				{
+					arrKeys.forEach( sKey => setRet.add( sKey ) );
+				}
+			}
+		}
+		catch ( vError )
+		{
+		}
+
+		return Array.from( setRet );
+	}
+
 }
 
 

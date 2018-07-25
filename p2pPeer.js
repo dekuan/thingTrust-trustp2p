@@ -4,11 +4,11 @@
 let WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 let socks			= process.browser ? null : require( 'socks' + '' );
 
-let _conf			= require( '../conf.js' );
+let _conf			= require( './conf.js' );
 
 let _async			= require( 'async' );
-let _db				= require( '../db.js' );
-let _breadcrumbs		= require( '../breadcrumbs.js' );
+let _db				= require( './common/db.js' );
+let _breadcrumbs		= require( './common/breadcrumbs.js' );
 
 let _event_bus			= require( './p2pEvents' );
 let _network_message		= require( './p2pMessage.js' );

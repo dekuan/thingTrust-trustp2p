@@ -4,7 +4,6 @@
 /**
  *	@require	module: *
  */
-const EventEmitter		= require( 'events' );
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pDeliver		= require( './p2pDeliver.js' );
 const CP2pHeartbeat		= require( './p2pHeartbeat.js' );

@@ -31,7 +31,7 @@ class B extends A
 
 
 
-function getAllMethodNames( objObject )
+function getClassMethods( objObject )
 {
 	let setRet;
 	let arrKeys;
@@ -59,7 +59,7 @@ function getAllMethodNames( objObject )
 	{
 	}
 
-	return setRet;
+	return Array.from( setRet );
 }
 
 
@@ -68,7 +68,7 @@ function getAllMethodNames( objObject )
 console.log( `class A isExtensible = ${ Reflect.isExtensible( A ) }.` );
 console.log( `class B isExtensible = ${ Reflect.isExtensible( B ) }.` );
 console.log( `Reflect.getPrototypeOf A =`, Reflect.getPrototypeOf( A ) );
-console.log( `keys in class A =`, getAllMethodNames( new A() ) );
-console.log( `keys in class B =`, getAllMethodNames( new B() ) );
+console.log( `keys in class A =`, getClassMethods( new A() ) );
+console.log( `keys in class B =`, getClassMethods( new B() ) );
 console.log( proxy.time, proxy.name, proxy.title );
 
