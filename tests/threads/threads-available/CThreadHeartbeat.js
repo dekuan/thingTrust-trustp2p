@@ -3,14 +3,12 @@
 
 const EventEmitter		= require( 'events' );
 
-const CP2pServer		= require( '../p2pServer.js' );
-const CP2pClient		= require( '../p2pClient.js' );
+const CP2pServer		= require( '../../../p2pServer.js' );
+const CP2pClient		= require( '../../../p2pClient.js' );
 
-const _p2pConstants		= require( '../p2pConstants.js' );
-const _p2pUtils			= require( '../p2pUtils.js' );
-const _p2pLog			= require( '../p2pLog.js' );
-
-
+const _p2pConstants		= require( '../../../p2pConstants.js' );
+const _p2pUtils			= require( '../../../p2pUtils.js' );
+const _p2pLog			= require( '../../../p2pLog.js' );
 
 
 
@@ -77,10 +75,10 @@ class CThreadHeartbeat extends EventEmitter
 	{
 		return {
 			[ _p2pConstants.PACKAGE_HEARTBEAT_PING ]	:
-				{
-					[ MESSAGE_PING ]	: this.handleMessagePing,
-					[ MESSAGE_PONG ]	: this.handleMessagePong,
-				}
+			{
+				[ MESSAGE_PING ]	: this.handleMessagePing,
+				[ MESSAGE_PONG ]	: this.handleMessagePong,
+			}
 		}
 	}
 

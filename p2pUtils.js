@@ -56,7 +56,7 @@ class CP2pUtils
 	 *	@param	{object}	objObject
 	 *	@return {array}
 	 */
-	getAllMethodsOfClass( objObject )
+	static getAllMethodsOfClass( objObject )
 	{
 		let setRet;
 		let arrKeys;
