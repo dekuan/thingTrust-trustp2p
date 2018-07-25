@@ -21,7 +21,7 @@ _protobuf.load
 		let oPayloadNormal	=
 			{
 				type	: 0,
-				command	: 'heartbeat',
+				event	: 'heartbeat',
 				body	: '{msg:"ping"}',
 			};
 		// let oPayloadWithOmitting	=
@@ -32,7 +32,7 @@ _protobuf.load
 		let oPayloadWithOmitting	=
 			{
 				type	: 0,
-				command	: 'heartbeat',
+				event	: 'heartbeat',
 				body	: '{msg:"ping"}',
 			};
 

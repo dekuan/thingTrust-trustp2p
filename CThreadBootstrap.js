@@ -1,8 +1,10 @@
-const _fs		= require('fs');
-const _crypto		= require( 'crypto' );
+const EventEmitter		= require( 'events' );
 
-const _p2pUtils		= require( './CP2pUtils.js' );
+const _fs			= require( 'fs' );
+const _crypto			= require( 'crypto' );
 
+const _p2pUtils			= require( './CP2pUtils.js' );
+const _p2pLog			= require( './CP2pLog.js' );
 
 
 
@@ -22,30 +24,80 @@ class CThreadBootstrap
 	 * 	run bootstrap
 	 *
 	 * 	@public
-	 *	@param	{object}	cServerInstance
-	 *	@param	{object}	cClientInstance
+	 * 	@param	{object}	oNode
+	 * 	@param	{object}	oNode.server	null or undefined if this is not a server instance
+	 * 	@param	{object}	oNode.client	null or undefined if this is not a client instance
+	 * 	@param	{object}	oNode.log
 	 *	@return {void}
 	 */
-	async run( cServerInstance, cClientInstance )
+	async run( oNode )
 	{
-		await this._load( cServerInstance, cClientInstance );
+		oNode = {
+				server	: oNode.server,
+				client	: oNode.client,
+				log	: _p2pLog
+			};
+
+		await this._load( oNode );
 		await this._install();
 
-		console.log( `all threads loaded!` );
+		_p2pLog.info( `[${ this.constructor.name }] ${ this.m_mapThreadsMap.size } threads loaded!` );
 	}
 
 
+	/**
+	 *	transit a event to all listener
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 *	@param	{object}	objMessage
+	 */
+	transitEvent( oSocket, objMessage )
+	{
+		let arrEventItems;
+		let objClassInstance;
+		let sFullEventName;
+
+		//
+		//	setup event listener
+		//
+		if ( _p2pUtils.isObjectWithKeys( this.m_mapEventsMap, objMessage.type ) )
+		{
+			if ( _p2pUtils.isObjectWithKeys( this.m_mapEventsMap[ objMessage.type ], objMessage.event ) )
+			{
+				arrEventItems	= this.m_mapEventsMap[ objMessage.type ][ objMessage.event ];
+				arrEventItems.forEach( oItem =>
+				{
+					sFullEventName = `${ String( objMessage.type ) }-${ objMessage.event }`;
+					objClassInstance = this.m_mapThreadsMap.get( oItem.md5 );
+					objClassInstance.emit
+					(
+						sFullEventName,
+						oSocket,
+						objMessage
+					);
+				});
+			}
+		}
+	}
+
+
+	////////////////////////////////////////////////////////////////////////////////
+	//	Private
+	//
 
 
 	/**
 	 *	load all threads
 	 *
 	 *	@private
-	 *	@param	{object}	cServerInstance
-	 *	@param	{object}	cClientInstance
+	 * 	@param	{object}	oNode
+	 * 	@param	{object}	oNode.client	null or undefined if this is not a client instance
+	 * 	@param	{object}	oNode.server	null or undefined if this is not a server instance
+	 * 	@param	{object}	oNode.log
 	 *	@return {Promise<any>}
 	 */
-	async _load( cServerInstance, cClientInstance )
+	async _load( oNode )
 	{
 		return new Promise( ( pfnResolve, pfnReject ) =>
 		{
@@ -70,14 +122,30 @@ class CThreadBootstrap
 				let arrAllMethods;
 
 				//	...
-				console.log( `[${ this.constructor.name }] load thread from file ${ sFile }` );
+				_p2pLog.info( `[${ this.constructor.name }] load thread from file ${ sFile }` );
 
 				//	...
 				sFullFilename	= `${ sDirectory }${ sFile }`;
 				sFileMd5	= String( _crypto.createHash( 'md5' ).update( sFullFilename ).digest( 'hex' ) ).toLocaleLowerCase();
 				CTClass		= require( sFullFilename );
-				objTInstance	= new CTClass( cServerInstance, cClientInstance );
+				objTInstance	= new CTClass( oNode );
 				arrAllMethods	= _p2pUtils.getAllMethodsOfClass( objTInstance );
+
+				//
+				// if ( ! arrAllMethods.includes( 'on' ) || ! arrAllMethods.includes( 'emmit' ) )
+				// {
+				// 	let eee = new EventEmitter();
+				// 	for ( let key of Reflect.ownKeys( eee ) )
+				// 	{
+				// 		if ( key !== "constructor"
+				// 			&& key !== "prototype"
+				// 			&& key !== "name"
+				// 		) {
+				// 			let desc = Object.getOwnPropertyDescriptor( eee, key );
+				// 			Object.defineProperty( objTInstance.__proto__, key, desc );
+				// 		}
+				// 	}
+				// }
 
 				//
 				//	MUST throw a new Error and make process crashed while we loaded an invalid thread
@@ -91,6 +159,23 @@ class CThreadBootstrap
 				{
 					throw new Error( `invalid thread ${ sFile } with empty eventMap, please check the documentation.` );
 				}
+
+				//
+				//	set map with deep copying
+				//
+				//	this.m_mapThreadsMap = Map
+				//	{
+				//		md5	=> instance of dynamically loaded class,
+				//		md5	=> instance of dynamically loaded class,
+				//		...
+				// 	}
+				//
+				this.m_mapThreadsMap.set
+				(
+					sFileMd5,
+					Object.assign( Object.create( Object.getPrototypeOf( objTInstance ) ), objTInstance )
+				);
+
 
 				//
 				//	this.m_mapEventsMap =
@@ -156,22 +241,6 @@ class CThreadBootstrap
 						});
 					}
 				});
-
-				//
-				//	set map with deep copying
-				//
-				//	this.m_mapThreadsMap = Map
-				//	{
-				//		md5	=> instance of dynamically loaded class,
-				//		md5	=> instance of dynamically loaded class,
-				//		...
-				// 	}
-				//
-				this.m_mapThreadsMap.set
-				(
-					sFileMd5,
-					Object.assign( Object.create( Object.getPrototypeOf( objTInstance ) ), objTInstance )
-				);
 			});
 
 			//
@@ -191,15 +260,36 @@ class CThreadBootstrap
 	{
 		return new Promise( ( pfnResolve, pfnReject ) =>
 		{
+			let objClassInstance;
+			let sFullEventName;
 			let arrAllMethods;
 
+			//
+			//	setup event listener
+			//
+			for ( const [ nPackageType, oHandlerMap ] of this.m_mapEventsMap )
+			{
+				for ( const [ sEventName, arrEventItems ] of oHandlerMap )
+				{
+					sFullEventName = `${ String( nPackageType ) }-${ sEventName }`;
+					arrEventItems.forEach( oItem =>
+					{
+						objClassInstance = this.m_mapThreadsMap.get( oItem.md5 );
+						objClassInstance.on( sFullEventName, oItem.handler );
+					});
+				}
+			}
+
+			//
+			//	call start
+			//
 			for ( const [ sFileMd5, objInstance ] of this.m_mapThreadsMap )
 			{
 				arrAllMethods	= _p2pUtils.getAllMethodsOfClass( objInstance );
 				if ( arrAllMethods.includes( 'start' ) &&
 					_p2pUtils.isFunction( objInstance[ 'start' ] ) )
 				{
-					console.log( `[${ this.constructor.name }] install class * ${ objInstance.constructor.name }.` );
+					_p2pLog.info( `[${ this.constructor.name }] install class * ${ objInstance.constructor.name }.` );
 					objInstance[ 'start' ]();
 				}
 			}
@@ -218,7 +308,25 @@ class CThreadBootstrap
 	{
 		return new Promise( ( pfnResolve, pfnReject ) =>
 		{
+			let objClassInstance;
+			let sFullEventName;
 			let arrAllMethods;
+
+			//
+			//	removeListener
+			//
+			for ( const [ nPackageType, oHandlerMap ] of this.m_mapEventsMap )
+			{
+				for ( const [ sEventName, arrEventItems ] of oHandlerMap )
+				{
+					sFullEventName = `${ String( nPackageType ) }-${ sEventName }`;
+					arrEventItems.forEach( oItem =>
+					{
+						objClassInstance = this.m_mapThreadsMap.get( oItem.md5 );
+						objClassInstance.removeAllListeners( [ sFullEventName ] );
+					});
+				}
+			}
 
 			for ( const [ sFileMd5, objInstance ] of this.m_mapThreadsMap )
 			{

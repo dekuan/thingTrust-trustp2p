@@ -74,12 +74,12 @@ class CP2pDriverImplWsServer extends CP2pDriver
 			);
 
 			//	...
-			_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
+			//_p2pLog.info( `CONNECTION Server :: WSS running at port ${ this.m_oOptions.nPort }` );
 			this.emit
 			(
 				CP2pDriver.EVENT_START,
 				this.m_oWss,
-				`WSS running at port ${ this.m_oOptions.nPort }`
+				`Server implemented by WebSocket running at port ${ this.m_oOptions.nPort }`
 			);
 
 			//

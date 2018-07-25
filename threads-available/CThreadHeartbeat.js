@@ -3,25 +3,16 @@
 
 const EventEmitter		= require( 'events' );
 
-const CP2pServer		= require( '../CP2pServer.js' );
-const CP2pClient		= require( '../CP2pClient.js' );
-
 const _p2pConstants		= require( '../p2pConstants.js' );
 const _p2pUtils			= require( '../CP2pUtils.js' );
-const _p2pLog			= require( '../CP2pLog.js' );
-
-
-
 
 
 /**
  * 	@constant
  */
-const EVENT_WANT_PING		= 'want_ping';
-const EVENT_WANT_PONG		= 'want_pong';
-
 const MESSAGE_PING		= 'ping';
 const MESSAGE_PONG		= 'pong';
+
 
 
 
@@ -51,18 +42,22 @@ class CThreadHeartbeat extends EventEmitter
 	 * 	@constructor
 	 *
 	 * 	@public
-	 *	@param	{CP2pServer}	cServerInstance
-	 *	@param 	{CP2pClient}	cClientInstance
+	 * 	@param	{object}	oNode
+	 * 	@param	{object}	oNode.client	null or undefined if this is not a client instance
+	 * 	@param	{object}	oNode.server	null or undefined if this is not a server instance
+	 * 	@param	{object}	oNode.log
+	 * 	@return	{void}
 	 */
-	constructor( cServerInstance, cClientInstance )
+	constructor( oNode )
 	{
 		super();
 
-		//	...
-		this.m_cServer	= cServerInstance;
-		this.m_cClient	= cClientInstance;
+		if ( ! _p2pUtils.isObject( oNode ) )
+		{
+			throw new Error( `constructor ${ this.constructor.name } with an invalid parameter oNode.` );
+		}
 
-		//	...
+		this.m_oNode			= oNode;
 		this.m_nIntervalHeartbeat	= null;
 	}
 
@@ -78,8 +73,8 @@ class CThreadHeartbeat extends EventEmitter
 		return {
 			[ _p2pConstants.PACKAGE_HEARTBEAT_PING ]	:
 				{
-					[ MESSAGE_PING ]	: this.handleMessagePing,
-					[ MESSAGE_PONG ]	: this.handleMessagePong,
+					[ MESSAGE_PING ]	: this._handleMessagePing,
+					[ MESSAGE_PONG ]	: this._handleMessagePong,
 				}
 		}
 	}
@@ -90,6 +85,17 @@ class CThreadHeartbeat extends EventEmitter
 	 */
 	start()
 	{
+		if ( ! this.m_oNode.server )
+		{
+			//
+			//	if we have exactly same intervals on two clients,
+			//	they might send heartbeats to each other at the same time
+			//
+			this.m_oNode.log.error( `heartbeat start only at server end.` );
+			return null;
+		}
+
+
 		if ( null !== this.m_nIntervalHeartbeat )
 		{
 			//
@@ -106,7 +112,10 @@ class CThreadHeartbeat extends EventEmitter
 		//
 		this.m_nIntervalHeartbeat = setInterval
 		(
-			this._handlePingInterval,
+			() =>
+			{
+				this._handlePingInterval();
+			},
 			_p2pConstants.HEARTBEAT_INTERVAL + _p2pUtils.getRandomInt( 0, 1000 )
 		);
 
@@ -127,6 +136,15 @@ class CThreadHeartbeat extends EventEmitter
 		}
 	}
 
+	onSocketClose( oSocket )
+	{
+	}
+
+	onSocketError( vError )
+	{
+	}
+
+
 
 	/**
 	 *	handle received heartbeat message ping
@@ -136,7 +154,7 @@ class CThreadHeartbeat extends EventEmitter
 	 *	@param	{object}	objMessage
 	 *	@return	{boolean}
 	 */
-	handleMessagePing( oSocket, objMessage )
+	_handleMessagePing( oSocket, objMessage )
 	{
 		let bSleep;
 
@@ -182,7 +200,7 @@ class CThreadHeartbeat extends EventEmitter
 	 *	@param	{string}	sResponse		socket message transmitted
 	 *	@return	{void}
 	 */
-	handleMessagePong( oSocket, oRequestContent, sResponse )
+	_handleMessagePong( oSocket, oRequestContent, sResponse )
 	{
 		delete oSocket.last_sent_heartbeat_ts;
 		oSocket.last_sent_heartbeat_ts = null;
@@ -215,21 +233,22 @@ class CThreadHeartbeat extends EventEmitter
 	 *	@return	{boolean}
 	 *
 	 *	@description
-	 *	keep on sending heartbeat PING command from server to all its clients about every 3 seconds.
+	 *	keep on sending heartbeat PING event from server to all its clients about every 3 seconds.
 	 */
 	_handlePingInterval()
 	{
 		let bJustResumed;
 		let arrSockets;
 
-		_p2pLog.info( `will ping all clients from server.` );
+		this.m_oNode.log.info( `will ping all clients from server.` );
 
 		//
 		//	get all clients
 		//
-		arrSockets	= this.m_cServer.getClients();
+		arrSockets	= this.m_oNode.server.getClients();
 		if ( ! Array.isArray( arrSockets ) || 0 === arrSockets.length )
 		{
+			this.m_oNode.log.info( `no client connected in, so we cancel ping` );
 			return false;
 		}
 
@@ -275,7 +294,7 @@ class CThreadHeartbeat extends EventEmitter
 				if ( nElapsedSinceLastSentHeartbeat >= _p2pConstants.HEARTBEAT_RESPONSE_TIMEOUT )
 				{
 					//	>= 60 seconds
-					_p2pLog.info( `will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
+					this.m_oNode.log.info( `will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
 					oSocket.close( 1000, 'lost driver' );
 				}
 			}
@@ -287,17 +306,17 @@ class CThreadHeartbeat extends EventEmitter
 				oSocket.last_sent_heartbeat_ts	= Date.now();
 
 				//
-				//	send a ping command to this client
+				//	send a ping event to this client
 				//
-				_p2pLog.info( `SENDING heartbeat ping for client.` );
-				this.m_cServer.sendRequest
+				this.m_oNode.log.info( `SENDING heartbeat ping for client.` );
+				this.m_oNode.server.sendRequest
 				(
 					oSocket,
 					_p2pConstants.PACKAGE_HEARTBEAT_PING,
-					'heartbeat',
-					{ msg : MESSAGE_PING },
+					MESSAGE_PING,
+					{},
 					false,
-					this.handleMessagePong
+					this._handleMessagePong
 				);
 			}
 		});
@@ -310,7 +329,16 @@ class CThreadHeartbeat extends EventEmitter
 
 
 
+
 /**
  *	@exports	CThreadHeartbeat
  */
 module.exports	= CThreadHeartbeat;
+
+
+
+
+
+
+
+

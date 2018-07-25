@@ -17,7 +17,7 @@ message TrustNoteP2p
 	optional string alt		= 2	[ default = '1' ];
 	optional PackageType type	= 3	[ default = PACKAGE_HEARTBEAT_PING ];
 
-	required string command		= 4	[ default = '' ];
+	required string event		= 4	[ default = '' ];
 	required string body		= 5	[ default = '' ];
 	required string tag		= 6	[ default = '' ];
 }

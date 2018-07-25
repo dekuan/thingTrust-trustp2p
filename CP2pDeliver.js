@@ -3,7 +3,6 @@
 
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pRequest		= require( './CP2pRequest.js' );
-const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './CP2pUtils.js' );
@@ -25,7 +24,6 @@ class CP2pDeliver extends CP2pRequest
 
 		//	...
 		this.m_cDriver			= null;
-		this.m_cThreadBootstrap		= new CThreadBootstrap();
 	}
 
 

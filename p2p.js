@@ -3,11 +3,11 @@
 
 let _conf			= require( './conf.js' );
 
-let CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
+//let CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
 let _network_peer		= require( './p2pPeer.js' );
 
 
-let m_cHeartbeat		= new CP2pHeartbeat();
+//let m_cHeartbeat		= new CP2pHeartbeat();
 
 
 /**
@@ -114,7 +114,7 @@ function startClient()
 	//
 	//	start heartbeat
 	//
-	m_cHeartbeat.start();
+	//m_cHeartbeat.start();
 }
 
 /**
@@ -139,7 +139,7 @@ function startServer( oOptions )
 	//
 	//	start heartbeat
 	//
-	m_cHeartbeat.start();
+	//m_cHeartbeat.start();
 }
 
 

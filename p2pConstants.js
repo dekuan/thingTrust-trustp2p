@@ -31,12 +31,15 @@ module.exports.EVENTEMITTER_MAX_LISTENERS	= 20;
 
 module.exports.CONNECTION_MAX_INBOUND		= 100;
 
+module.exports.DRIVER_TYPE_CLIENT		= 'client';
+module.exports.DRIVER_TYPE_SERVER		= 'server';
+
 module.exports.CONNECTION_DRIVER		= 'ws';		//	web socket
 module.exports.CONNECTION_ADAPTER_LIST		=
 	{
 		'ws'	:
 		{
-			'client'	: 'p2pDriverImplWsClient.js',
-			'server'	: 'p2pDriverImplWsServer.js',
+			[ module.exports.DRIVER_TYPE_CLIENT ]	: 'p2pDriverImplWsClient.js',
+			[ module.exports.DRIVER_TYPE_SERVER ]	: 'p2pDriverImplWsServer.js',
 		}
 	};

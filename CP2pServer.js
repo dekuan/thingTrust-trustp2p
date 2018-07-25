@@ -8,7 +8,7 @@ const _crypto			= require( 'crypto' );
 
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pDeliver		= require( './CP2pDeliver.js' );
-//const CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
+const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pLog			= require( './CP2pLog.js' );
@@ -32,10 +32,12 @@ class CP2pServer extends CP2pDeliver
 	{
 		super();
 
-		this.m_oOptions		= Object.assign( {}, oOptions );
-		this.m_cDriverServer	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
+		this.m_oOptions			= Object.assign( {}, oOptions );
+		this.m_cDriverServer		= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
+		super.cDriver			= this.m_cDriverServer;
 
-		super.cDriver		= this.m_cDriverServer;
+		//	...
+		this.m_cThreadBootstrap		= new CThreadBootstrap();
 
 		//	...
 		this._init();
@@ -50,8 +52,13 @@ class CP2pServer extends CP2pDeliver
 	 */
 	async startServer()
 	{
-		// this.m_cP2pHeartbeat.start( () => { return this.getClients(); } );
-		this.m_cDriverServer.startServer();
+		setImmediate
+		(
+			() =>
+			{
+				this.m_cDriverServer.startServer();
+			}
+		);
 	}
 
 	/**
@@ -68,36 +75,19 @@ class CP2pServer extends CP2pDeliver
 	 *	initialize
 	 *	@private
 	 */
-	_init()
+	async _init()
 	{
-		// //
-		// //	start heartbeat interval
-		// //
-		// this.m_cP2pHeartbeat.on( CP2pHeartbeat.EVENT_WANT_PING, ( oHbClientSocket, pfnHbResponse ) =>
-		// {
-		// 	_p2pLog.info( `SENDING heartbeat ping for client.` );
-		// 	this.sendRequest
-		// 	(
-		// 		oHbClientSocket,
-		// 		_p2pConstants.PACKAGE_HEARTBEAT_PING,
-		// 		'heartbeat',
-		// 		{ msg : CP2pHeartbeat.MESSAGE_PING },
-		// 		false,
-		// 		pfnHbResponse
-		// 	);
-		// });
-
 		//
-		//	events for server
+		//	hook events for server
 		//
 		this.m_cDriverServer
 		.on( CP2pDriver.EVENT_START, ( oSocket, sInfo ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_START }] from server.`, sInfo );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_START }].`, sInfo );
 		})
 		.on( CP2pDriver.EVENT_CONNECTION, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CONNECTION }] from server.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CONNECTION }].` );
 
 			//
 			//	WELCOME THE NEW PEER
@@ -131,18 +121,33 @@ class CP2pServer extends CP2pDeliver
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_MESSAGE }] from server.` );
+			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
 
-			let oMessage	= this.m_cP2pPackage.decodePackage( vMessage );
-			console.log( oMessage );
+			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ objMessage }]` );
+			if ( objMessage )
+			{
+				//
+				//	transit event to all threads
+				//
+				this.m_cThreadBootstrap.transitEvent( oSocket, objMessage );
+			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CLOSE }] from server.` );
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CLOSE }].` );
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_ERROR }] from server.` );
+			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_ERROR }].` );
+		});
+
+
+		//
+		//	load threads
+		//
+		await this.m_cThreadBootstrap.run({
+			server	: this,
+			client	: null,
 		});
 	}
 }

@@ -6,7 +6,7 @@
  */
 const CP2pDriver		= require( './driver/p2pDriver.js' );
 const CP2pDeliver		= require( './CP2pDeliver.js' );
-//const CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
+const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pLog			= require( './CP2pLog.js' );
@@ -32,8 +32,11 @@ class CP2pClient extends CP2pDeliver
 		/**
 		 *	create client instance
 		 */
-		this.m_cDriverClient	= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
-		super.cDriver		= this.m_cDriverClient;
+		this.m_cDriverClient		= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
+		super.cDriver			= this.m_cDriverClient;
+
+		//	...
+		this.m_cThreadBootstrap		= new CThreadBootstrap();
 
 		//
 		this._init();
@@ -56,14 +59,15 @@ class CP2pClient extends CP2pDeliver
 	 * 	initialize
 	 *	@private
 	 */
-	_init()
+	async _init()
 	{
-		// this.m_cP2pHeartbeat
-		// .on( CP2pHeartbeat.EVENT_WANT_PONG, ( oSocket, objMessage, oBody ) =>
-		// {
-		// 	let oMessage	= this.m_cP2pPackage.getJsonByObject( objMessage );
-		// 	return this.sendResponse( oSocket, _p2pConstants.PACKAGE_HEARTBEAT_PONG, oMessage.tag, oBody );
-		// });
+		//
+		//	load threads
+		//
+		await this.m_cThreadBootstrap.run({
+			server	: null,
+			client	: this,
+		});
 
 		//
 		//	events for client
@@ -83,11 +87,13 @@ class CP2pClient extends CP2pDeliver
 			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
 
 			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ objMessage }]` );
-			// if ( objMessage &&
-			// 	_p2pConstants.PACKAGE_HEARTBEAT_PING === objMessage.type )
-			// {
-			// 	this.m_cP2pHeartbeat.handlePong( oSocket, objMessage );
-			// }
+			if ( objMessage )
+			{
+				//
+				//	transit event to all threads
+				//
+				this.m_cThreadBootstrap.transitEvent( oSocket, objMessage );
+			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{

@@ -22,6 +22,44 @@ class CP2pUtils
 		return ( vValue && 'object' === typeof vValue );
 	}
 
+	static isObjectWithKeys( vValue, arrKeys = null )
+	{
+		let bRet;
+		let sKey;
+
+		if ( ! this.isObject( vValue ) )
+		{
+			return false;
+		}
+
+		//	...
+		bRet	= false;
+
+		if ( this.isString( arrKeys ) || Number.isInteger( arrKeys ) )
+		{
+			arrKeys	= [ arrKeys ];
+		}
+
+		if ( Array.isArray( arrKeys ) && arrKeys.length > 0 )
+		{
+			bRet	= true;
+			for ( sKey of arrKeys )
+			{
+				if ( ! vValue.hasOwnProperty( sKey ) )
+				{
+					bRet	= false;
+					break;
+				}
+			}
+		}
+		else
+		{
+			bRet = true;
+		}
+
+		return bRet;
+	}
+
 
 	/**
 	 *	get random integer

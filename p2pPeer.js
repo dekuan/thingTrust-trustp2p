@@ -8,7 +8,7 @@ let _conf			= require( './conf.js' );
 
 let _async			= require( 'async' );
 let _db				= require( './common/db.js' );
-let _breadcrumbs		= require( './common/breadcrumbs.js' );
+let _breadcrumbs		= require( './olds/breadcrumbs.js' );
 
 let _event_bus			= require( './p2pEvents' );
 let _network_message		= require( './CP2pMessage.js' );
@@ -244,7 +244,7 @@ function tryFindNextPeer( ws, handleNextPeer )
 	//
 	//	bSource == true
 	//	means:
-	//		I connected to source after sending a 'subscribe' command to hub/server
+	//		I connected to source after sending a 'subscribe' event to hub/server
 	//
 	arrOutboundSources	= m_arrOutboundPeers.filter( function( outbound_ws ) { return outbound_ws.bSource; } );
 	len			= arrOutboundSources.length;

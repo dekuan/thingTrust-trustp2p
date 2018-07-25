@@ -26,11 +26,11 @@ class CP2pMessage
 	 * 	@public
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackageType
-	 *	@param	{string}	sCommand	null is okay
+	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody		string, null are both okay
 	 *	@return	{boolean}
 	 */
-	sendMessage( oSocket, nPackageType, sCommand, oBody )
+	sendMessage( oSocket, nPackageType, sEvent, oBody )
 	{
 		let bufMessage;
 
@@ -56,10 +56,10 @@ class CP2pMessage
 		}
 
 		//	...
-		bufMessage	= this.m_cP2pPackage.encodePackage( nPackageType, sCommand, oBody );
+		bufMessage	= this.m_cP2pPackage.encodePackage( nPackageType, sEvent, oBody );
 		oSocket.send( bufMessage );
 
-		_p2pLog.info( `SENT ${ sCommand }, ${ JSON.stringify( oBody ) } to ${ oSocket.peer }` );
+		_p2pLog.info( `SENT ${ sEvent }, ${ JSON.stringify( oBody ) } to ${ oSocket.peer }` );
 
 		//	...
 		return true;

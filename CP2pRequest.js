@@ -46,10 +46,10 @@ class CP2pRequest extends CP2pMessage
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 * 	@param	{string}	sBody
 	 */
-	handleRequest( oSocket, sCommand, sBody )
+	handleRequest( oSocket, sEvent, sBody )
 	{
 	}
 
@@ -66,12 +66,12 @@ class CP2pRequest extends CP2pMessage
 	 *					- PACKAGE_TALK			= 10;
 	 *					- PACKAGE_REQUEST		= 20;
 	 *					- PACKTYPE_RESPONSE		= 21;
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody
 	 *	@param	{boolean}	bReroute
 	 *	@param	{function}	pfnResponseHandler( ws, request, response ){ ... }
 	 */
-	sendRequest( oSocket, nPackageType, sCommand, oBody, bReroute, pfnResponseHandler )
+	sendRequest( oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
 	{
 		//
 		//	oJsonBody for 'catchup'
@@ -97,9 +97,9 @@ class CP2pRequest extends CP2pMessage
 			_p2pLog.error( `call sendRequest with invalid nPackType` );
 			return false;
 		}
-		if ( ! _p2pUtils.isString( sCommand ) || 0 === sCommand.length )
+		if ( ! _p2pUtils.isString( sEvent ) || 0 === sEvent.length )
 		{
-			_p2pLog.error( `call sendRequest with invalid sCommand` );
+			_p2pLog.error( `call sendRequest with invalid sEvent` );
 			return false;
 		}
 		if ( ! _p2pUtils.isObject( oBody ) )
@@ -117,7 +117,7 @@ class CP2pRequest extends CP2pMessage
 		//	sTag like : w35dxwqyQ2CzqHkOG5q+gwagPtaPweD4LEwzC2RjQNo=
 		//
 		oJsonContent	= Object.assign( {}, oBody );
-		sTag		= this.m_cP2pPackage.calculateTag( nPackageType, sCommand, oBody );
+		sTag		= this.m_cP2pPackage.calculateTag( nPackageType, sEvent, oBody );
 
 		//
 		//	will not send identical
@@ -128,7 +128,7 @@ class CP2pRequest extends CP2pMessage
 			oSocket.assocPendingRequests[ sTag ].responseHandlers.push( pfnResponseHandler );
 			_p2pLog.error
 			(
-				`already sent a ${ sCommand } request to ${ oSocket.peer }, 
+				`already sent a ${ sEvent } request to ${ oSocket.peer }, 
 				will add one more response handler rather than sending a duplicate request to the wire`
 			);
 			return false;
@@ -156,7 +156,7 @@ class CP2pRequest extends CP2pMessage
 		//	THIS function will be called when the request is timeout
 		//
 		pfnReroute = bReroute
-			? this._createRerouteExecutor( oSocket, nPackageType, sCommand, oBody, bReroute, sTag )
+			? this._createRerouteExecutor( oSocket, nPackageType, sEvent, oBody, bReroute, sTag )
 			: null;
 
 		//
@@ -164,7 +164,7 @@ class CP2pRequest extends CP2pMessage
 		//	in sending request
 		//
 		nRerouteTimer	= bReroute
-			? this._createRerouteTimer( oSocket, nPackageType, sCommand, pfnReroute )
+			? this._createRerouteTimer( oSocket, nPackageType, sEvent, pfnReroute )
 			: null;
 
 		//
@@ -173,7 +173,7 @@ class CP2pRequest extends CP2pMessage
 		//
 		nCancelTimer	= bReroute
 			? null
-			: this._createCancelTimer( oSocket, nPackageType, sCommand, sTag, oJsonContent );
+			: this._createCancelTimer( oSocket, nPackageType, sEvent, sTag, oJsonContent );
 
 		//
 		//	build pending request list
@@ -190,7 +190,7 @@ class CP2pRequest extends CP2pMessage
 		//
 		//	send message by socket handle
 		//
-		this.sendMessage( oSocket, nPackageType, sCommand, oJsonContent );
+		this.sendMessage( oSocket, nPackageType, sEvent, oJsonContent );
 	}
 
 
@@ -403,19 +403,19 @@ class CP2pRequest extends CP2pMessage
 	 *	@private
 	 *	@param	{object}	oSocket
 	 *	@param 	{number}	nPackType
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 *	@param	{object}	oJsonBody
 	 *	@param	{boolean}	bReroute
 	 *	@param	{string}	sTag
 	 *	@return {Function}
 	 */
-	_createRerouteExecutor( oSocket, nPackType, sCommand, oJsonBody, bReroute, sTag )
+	_createRerouteExecutor( oSocket, nPackType, sEvent, oJsonBody, bReroute, sTag )
 	{
 		return () =>
 		{
 			let oNextSocket;
 
-			_p2pLog.info( `will try to reroute a ${ sCommand } request stalled at ${ oSocket.peer }` );
+			_p2pLog.info( `will try to reroute a ${ sEvent } request stalled at ${ oSocket.peer }` );
 
 			if ( ! sTag in oSocket.assocPendingRequests )
 			{
@@ -449,18 +449,18 @@ class CP2pRequest extends CP2pMessage
 				// 	() =>
 				// 	{
 				// 		//	try again
-				// 		console.log( 'got new driver, retrying reroute ' + sCommand );
+				// 		console.log( 'got new driver, retrying reroute ' + sEvent );
 				// 		pfnReroute();
 				// 	}
 				// );
-				return _p2pLog.error( `will not reroute ${ sCommand } to the same peer, will rather wait for a new connection` );
+				return _p2pLog.error( `will not reroute ${ sEvent } to the same peer, will rather wait for a new connection` );
 			}
 
 			//
 			//	RESEND Request, i.e. re-route
 			//	SEND REQUEST AGAIN FOR EVERY responseHandlers
 			//
-			_p2pLog.info( `rerouting ${ sCommand } from ${ oSocket.peer } to ${ oNextSocket.peer }` );
+			_p2pLog.info( `rerouting ${ sEvent } from ${ oSocket.peer } to ${ oNextSocket.peer }` );
 			oSocket.assocPendingRequests[ sTag ].bRerouted = true;
 			oSocket.assocPendingRequests[ sTag ].responseHandlers.forEach
 			(
@@ -471,7 +471,7 @@ class CP2pRequest extends CP2pMessage
 					//	this will send only once by tag cache assocPendingRequests
 					//	Amazing!!!
 					//
-					this.sendRequest( oNextSocket, nPackType, sCommand, oJsonBody, bReroute, rh );
+					this.sendRequest( oNextSocket, nPackType, sEvent, oJsonBody, bReroute, rh );
 				}
 			);
 
@@ -492,11 +492,11 @@ class CP2pRequest extends CP2pMessage
 	 *	@private
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackType
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 *	@param	{function}	pfnRerouteExecutor
 	 *	@return {*}
 	 */
-	_createRerouteTimer( oSocket, nPackType, sCommand, pfnRerouteExecutor )
+	_createRerouteTimer( oSocket, nPackType, sEvent, pfnRerouteExecutor )
 	{
 		if ( ! _p2pUtils.isFunction( pfnRerouteExecutor ) )
 		{
@@ -511,7 +511,7 @@ class CP2pRequest extends CP2pMessage
 				//	trigger ReRoute
 				//	callback handler while the request is TIMEOUT
 				//
-				_p2pLog.error( `request ${ sCommand }, send to ${ oSocket.peer } was overtime.` );
+				_p2pLog.error( `request ${ sEvent }, send to ${ oSocket.peer } was overtime.` );
 				pfnRerouteExecutor.apply( this, arguments );
 			},
 			_p2pConstants.STALLED_TIMEOUT
@@ -524,18 +524,18 @@ class CP2pRequest extends CP2pMessage
 	 * 	@private
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackType
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 *	@param	{string}	sTag
 	 *	@param	{object}	oJsonContent
 	 *	@return {number | Object}
 	 */
-	_createCancelTimer( oSocket, nPackType, sCommand, sTag, oJsonContent )
+	_createCancelTimer( oSocket, nPackType, sEvent, sTag, oJsonContent )
 	{
 		return setTimeout
 		(
 			() =>
 			{
-				_p2pLog.error( `request ${ sCommand }, response from ${ oSocket.peer } was overtime.` );
+				_p2pLog.error( `request ${ sEvent }, response from ${ oSocket.peer } was overtime.` );
 
 				//
 				//	delete all overtime requests/connections in pending requests list

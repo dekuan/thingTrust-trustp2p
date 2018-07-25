@@ -7,9 +7,9 @@
 const socks			= process.browser ? null : require( 'socks' + '' );
 const EventEmitter		= require( 'events' );
 
-const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pUtils			= require( './CP2pUtils.js' );
-const _p2pLog			= require( './CP2pLog.js' );
+const _p2pConstants		= require( '../p2pConstants.js' );
+const _p2pUtils			= require( '../CP2pUtils.js' );
+const _p2pLog			= require( '../CP2pLog.js' );
 
 
 /**
@@ -59,7 +59,7 @@ class CP2pHeartbeat extends EventEmitter
 	}
 
 	/**
-	 *	start heartbeat from server by sending ping command
+	 *	start heartbeat from server by sending ping event
 	 *
 	 *	@public
 	 */
@@ -97,7 +97,7 @@ class CP2pHeartbeat extends EventEmitter
 	}
 
 	/**
-	 * 	stop sending ping command from server
+	 * 	stop sending ping event from server
 	 *
 	 *	@public
 	 */
@@ -121,7 +121,7 @@ class CP2pHeartbeat extends EventEmitter
 	 *	@return	{boolean}
 	 *
 	 *	@description
-	 *	keep on sending heartbeat PING command from server to all its clients about every 3 seconds.
+	 *	keep on sending heartbeat PING event from server to all its clients about every 3 seconds.
 	 */
 	_handlePing( arrSockets )
 	{
@@ -186,7 +186,7 @@ class CP2pHeartbeat extends EventEmitter
 				oSocket.last_sent_heartbeat_ts	= Date.now();
 
 				//
-				//	emit a event about we want to send a ping command
+				//	emit a event about we want to send a ping event
 				//
 				this.emit
 				(

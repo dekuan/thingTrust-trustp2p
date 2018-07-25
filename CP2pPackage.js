@@ -63,11 +63,11 @@ class CP2pPackage
 	 *
 	 * 	@public
 	 *	@param	{number}	nPackageType
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody
 	 *	@return {string|null}
 	 */
-	calculateTag( nPackageType, sCommand, oBody )
+	calculateTag( nPackageType, sEvent, oBody )
 	{
 		let sBody;
 		let oPackage;
@@ -84,14 +84,14 @@ class CP2pPackage
 		//
 		//	package format
 		//
-		sCommand	= String( sCommand );
+		sEvent		= String( sEvent );
 		sBody		= JSON.stringify( oBody );
 		oPackage	=
 			{
 				version	: String( _p2pConstants.version ),
 				alt	: String( _p2pConstants.alt ),
 				type	: nPackageType,
-				command	: sCommand,
+				event	: sEvent,
 				body	: sBody
 			};
 
@@ -104,11 +104,11 @@ class CP2pPackage
 	 *
 	 * 	@public
 	 *	@param	{number}	nPackageType
-	 *	@param	{string}	sCommand
+	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody
 	 *	@return {binary|null}
 	 */
-	encodePackage( nPackageType, sCommand, oBody )
+	encodePackage( nPackageType, sEvent, oBody )
 	{
 		let bufRet;
 		let sBody;
@@ -131,7 +131,7 @@ class CP2pPackage
 
 		//	...
 		bufRet		= null;
-		sCommand	= String( sCommand );
+		sEvent		= String( sEvent );
 		sTag		= oBody.tag;
 		delete oBody.tag;
 
@@ -141,7 +141,7 @@ class CP2pPackage
 				version	: _p2pConstants.version,
 				alt	: _p2pConstants.alt,
 				type	: nPackageType,
-				command	: sCommand,
+				event	: sEvent,
 				body	: sBody,
 				tag	: sTag,
 			};
