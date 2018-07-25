@@ -52,7 +52,7 @@ class CThreadHeartbeat extends EventEmitter
 	 *	@param	{classes}	cServerInstance
 	 *	@param 	{classes}	cClientInstance
 	 */
-	constructor( cServerInstance = null, cClientInstance = null )
+	constructor( cServerInstance, cClientInstance )
 	{
 		super();
 
