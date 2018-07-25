@@ -3,7 +3,7 @@
 
 let _conf			= require( './conf.js' );
 
-let CP2pHeartbeat		= require( './p2pHeartbeat.js' );
+let CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
 let _network_peer		= require( './p2pPeer.js' );
 
 

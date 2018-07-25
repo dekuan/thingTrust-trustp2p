@@ -3,7 +3,7 @@
 
 const _redis		= require( 'redis' );
 
-const _p2pUtils		= require( './p2pUtils.js' );
+const _p2pUtils		= require( './CP2pUtils.js' );
 
 
 

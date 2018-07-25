@@ -11,15 +11,15 @@ const socks			= process.browser ? null : require( 'socks' + '' );
  *	@import class
  */
 const CP2pDriver		= require( './p2pDriver.js' );
-const CP2pPersistence		= require( '../p2pPersistence.js' );
+const CP2pPersistence		= require( '../CP2pPersistence.js' );
 const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
 
 /**
  *	@import library
  */
 const _p2pConstants		= require( '../p2pConstants.js' );
-const _p2pUtils			= require( '../p2pUtils.js' );
-const _p2pLog			= require( '../p2pLog.js' );
+const _p2pUtils			= require( '../CP2pUtils.js' );
+const _p2pLog			= require( '../CP2pLog.js' );
 
 
 

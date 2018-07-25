@@ -6,11 +6,11 @@
  */
 const WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
 const CP2pDriver		= require( './p2pDriver.js' );
-const CP2pPersistence		= require( '../p2pPersistence.js' );
+const CP2pPersistence		= require( '../CP2pPersistence.js' );
 
 const _p2pConstants		= require( '../p2pConstants.js' );
-const _p2pUtils			= require( '../p2pUtils.js' );
-const _p2pLog			= require( '../p2pLog.js' );
+const _p2pUtils			= require( '../CP2pUtils.js' );
+const _p2pLog			= require( '../CP2pLog.js' );
 
 
 

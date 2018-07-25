@@ -2,12 +2,12 @@
 "use strict";
 
 const CP2pDriver		= require( './driver/p2pDriver.js' );
-const CP2pRequest		= require( './p2pRequest.js' );
-const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
+const CP2pRequest		= require( './CP2pRequest.js' );
+const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pUtils			= require( './p2pUtils.js' );
-const _p2pLog			= require( './p2pLog.js' );
+const _p2pUtils			= require( './CP2pUtils.js' );
+const _p2pLog			= require( './CP2pLog.js' );
 
 
 
@@ -25,8 +25,7 @@ class CP2pDeliver extends CP2pRequest
 
 		//	...
 		this.m_cDriver			= null;
-		this.m_nLastHeartbeatWakeTs	= Date.now();
-		this.m_cP2pHeartbeat		= new CP2pHeartbeat();
+		this.m_cThreadBootstrap		= new CThreadBootstrap();
 	}
 
 

@@ -2,11 +2,11 @@
 "use strict";
 
 const CP2pDriver		= require( './driver/p2pDriver.js' );
-const CP2pMessage		= require( './p2pMessage.js' );
+const CP2pMessage		= require( './CP2pMessage.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pUtils			= require( './p2pUtils.js' );
-const _p2pLog			= require( './p2pLog.js' );
+const _p2pUtils			= require( './CP2pUtils.js' );
+const _p2pLog			= require( './CP2pLog.js' );
 const _object_hash		= require( './common/object_hash.js' );
 
 

@@ -1,11 +1,11 @@
 /*jslint node: true */
 "use strict";
 
-const CP2pPackage		= require( './p2pPackage.js' );
+const CP2pPackage		= require( './CP2pPackage.js' );
 
-const _p2pLog			= require( './p2pLog.js' );
+const _p2pLog			= require( './CP2pLog.js' );
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pUtils			= require( './p2pUtils.js' );
+const _p2pUtils			= require( './CP2pUtils.js' );
 
 
 

@@ -1,7 +1,7 @@
 const _fs		= require('fs');
 const _crypto		= require( 'crypto' );
 
-const _p2pUtils		= require( './p2pUtils.js' );
+const _p2pUtils		= require( './CP2pUtils.js' );
 
 
 

@@ -7,11 +7,11 @@
 const _crypto			= require( 'crypto' );
 
 const CP2pDriver		= require( './driver/p2pDriver.js' );
-const CP2pDeliver		= require( './p2pDeliver.js' );
-const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
+const CP2pDeliver		= require( './CP2pDeliver.js' );
+//const CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pLog			= require( './p2pLog.js' );
+const _p2pLog			= require( './CP2pLog.js' );
 
 
 
@@ -50,7 +50,7 @@ class CP2pServer extends CP2pDeliver
 	 */
 	async startServer()
 	{
-		this.m_cP2pHeartbeat.start( () => { return this.getClients(); } );
+		// this.m_cP2pHeartbeat.start( () => { return this.getClients(); } );
 		this.m_cDriverServer.startServer();
 	}
 
@@ -70,22 +70,22 @@ class CP2pServer extends CP2pDeliver
 	 */
 	_init()
 	{
-		//
-		//	start heartbeat interval
-		//
-		this.m_cP2pHeartbeat.on( CP2pHeartbeat.EVENT_WANT_PING, ( oHbClientSocket, pfnHbResponse ) =>
-		{
-			_p2pLog.info( `SENDING heartbeat ping for client.` );
-			this.sendRequest
-			(
-				oHbClientSocket,
-				_p2pConstants.PACKAGE_HEARTBEAT_PING,
-				'heartbeat',
-				{ msg : CP2pHeartbeat.MESSAGE_PING },
-				false,
-				pfnHbResponse
-			);
-		});
+		// //
+		// //	start heartbeat interval
+		// //
+		// this.m_cP2pHeartbeat.on( CP2pHeartbeat.EVENT_WANT_PING, ( oHbClientSocket, pfnHbResponse ) =>
+		// {
+		// 	_p2pLog.info( `SENDING heartbeat ping for client.` );
+		// 	this.sendRequest
+		// 	(
+		// 		oHbClientSocket,
+		// 		_p2pConstants.PACKAGE_HEARTBEAT_PING,
+		// 		'heartbeat',
+		// 		{ msg : CP2pHeartbeat.MESSAGE_PING },
+		// 		false,
+		// 		pfnHbResponse
+		// 	);
+		// });
 
 		//
 		//	events for server

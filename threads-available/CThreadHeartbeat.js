@@ -3,12 +3,12 @@
 
 const EventEmitter		= require( 'events' );
 
-const CP2pServer		= require( '../p2pServer.js' );
-const CP2pClient		= require( '../p2pClient.js' );
+const CP2pServer		= require( '../CP2pServer.js' );
+const CP2pClient		= require( '../CP2pClient.js' );
 
 const _p2pConstants		= require( '../p2pConstants.js' );
-const _p2pUtils			= require( '../p2pUtils.js' );
-const _p2pLog			= require( '../p2pLog.js' );
+const _p2pUtils			= require( '../CP2pUtils.js' );
+const _p2pLog			= require( '../CP2pLog.js' );
 
 
 

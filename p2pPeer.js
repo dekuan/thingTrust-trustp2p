@@ -11,8 +11,8 @@ let _db				= require( './common/db.js' );
 let _breadcrumbs		= require( './common/breadcrumbs.js' );
 
 let _event_bus			= require( './p2pEvents' );
-let _network_message		= require( './p2pMessage.js' );
-let _network_request		= require( './p2pRequest.js' );
+let _network_message		= require( './CP2pMessage.js' );
+let _network_request		= require( './CP2pRequest.js' );
 
 
 let m_oWss;

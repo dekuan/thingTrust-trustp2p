@@ -5,11 +5,11 @@
  *	@require	module: *
  */
 const CP2pDriver		= require( './driver/p2pDriver.js' );
-const CP2pDeliver		= require( './p2pDeliver.js' );
-const CP2pHeartbeat		= require( './p2pHeartbeat.js' );
+const CP2pDeliver		= require( './CP2pDeliver.js' );
+//const CP2pHeartbeat		= require( './CP2pHeartbeat.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
-const _p2pLog			= require( './p2pLog.js' );
+const _p2pLog			= require( './CP2pLog.js' );
 
 
 
@@ -58,12 +58,12 @@ class CP2pClient extends CP2pDeliver
 	 */
 	_init()
 	{
-		this.m_cP2pHeartbeat
-		.on( CP2pHeartbeat.EVENT_WANT_PONG, ( oSocket, objMessage, oBody ) =>
-		{
-			let oMessage	= this.m_cP2pPackage.getJsonByObject( objMessage );
-			return this.sendResponse( oSocket, _p2pConstants.PACKAGE_HEARTBEAT_PONG, oMessage.tag, oBody );
-		});
+		// this.m_cP2pHeartbeat
+		// .on( CP2pHeartbeat.EVENT_WANT_PONG, ( oSocket, objMessage, oBody ) =>
+		// {
+		// 	let oMessage	= this.m_cP2pPackage.getJsonByObject( objMessage );
+		// 	return this.sendResponse( oSocket, _p2pConstants.PACKAGE_HEARTBEAT_PONG, oMessage.tag, oBody );
+		// });
 
 		//
 		//	events for client
@@ -83,11 +83,11 @@ class CP2pClient extends CP2pDeliver
 			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
 
 			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ objMessage }]` );
-			if ( objMessage &&
-				_p2pConstants.PACKAGE_HEARTBEAT_PING === objMessage.type )
-			{
-				this.m_cP2pHeartbeat.handlePong( oSocket, objMessage );
-			}
+			// if ( objMessage &&
+			// 	_p2pConstants.PACKAGE_HEARTBEAT_PING === objMessage.type )
+			// {
+			// 	this.m_cP2pHeartbeat.handlePong( oSocket, objMessage );
+			// }
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{

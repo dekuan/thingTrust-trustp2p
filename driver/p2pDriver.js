@@ -6,7 +6,7 @@ const EventEmitter	= require( 'events' );
 const _fs		= require( 'fs' );
 
 const _p2pConstants	= require( '../p2pConstants.js' );
-const _p2pUtils		= require( '../p2pUtils.js' );
+const _p2pUtils		= require( '../CP2pUtils.js' );
 
 
 
