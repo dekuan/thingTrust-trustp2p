@@ -51,8 +51,8 @@ class CThreadHeartbeat extends EventEmitter
 	 * 	@constructor
 	 *
 	 * 	@public
-	 *	@param	{classes}	cServerInstance
-	 *	@param 	{classes}	cClientInstance
+	 *	@param	{CP2pServer}	cServerInstance
+	 *	@param 	{CP2pClient}	cClientInstance
 	 */
 	constructor( cServerInstance, cClientInstance )
 	{
