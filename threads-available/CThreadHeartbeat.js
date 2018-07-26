@@ -73,8 +73,8 @@ class CThreadHeartbeat extends EventEmitter
 		return {
 			[ _p2pConstants.PACKAGE_HEARTBEAT_PING ]	:
 				{
-					[ MESSAGE_PING ]	: this._handleMessagePing,
-					[ MESSAGE_PONG ]	: this._handleMessagePong,
+					[ MESSAGE_PING ]	: this._handleMessagePing,	//	ping by server
+					[ MESSAGE_PONG ]	: this._handleMessagePong,	//	pong by client
 				}
 		}
 	}
@@ -194,48 +194,16 @@ class CThreadHeartbeat extends EventEmitter
 			Date.now() - this.m_nLastHeartbeatWakeTs > _p2pConstants.HEARTBEAT_PAUSE_TIMEOUT
 		);
 
-		//	...
+		//
+		//	respond a 'pong'
+		//
 		this.sendResponse
 		(
 			oSocket,
 			_p2pConstants.PACKAGE_HEARTBEAT_PONG,
-			objMessage.tag,
-			{ sleep : bSleep }
+			MESSAGE_PONG,
+			{ tag : objMessage.tag, sleep : bSleep }
 		);
-	}
-
-
-	/**
-	 *	handle received heartbeat message ping
-	 *
-	 * 	@public
-	 *	@param	{object}	oSocket
-	 *	@param 	{object}	oRequestContent		original plain JavaScript object of body of socket message
-	 *	@param	{string}	sResponse		socket message transmitted
-	 *	@return	{void}
-	 */
-	_handleMessagePong( oSocket, oRequestContent, sResponse )
-	{
-		delete oSocket.last_sent_heartbeat_ts;
-		oSocket.last_sent_heartbeat_ts = null;
-
-		//
-		//	TODO
-		//	parse sResponse to JSON object and do ...
-		//
-		if ( 'sleep' === sResponse )
-		{
-			//
-			//	the peer doesn't want to be bothered with heartbeats any more,
-			//	but still wants to keep the driver open
-			//
-			oSocket.bSleeping = true;
-		}
-
-		//
-		//	as soon as the peer sends a heartbeat himself,
-		//	we'll think he's woken up and resume our heartbeats too
-		//
 	}
 
 
@@ -254,7 +222,7 @@ class CThreadHeartbeat extends EventEmitter
 		let bJustResumed;
 		let arrSockets;
 
-		this.m_oNode.log.info( `will ping all clients from server.` );
+		//this.m_oNode.log.info( `will ping all clients from server.` );
 
 		//
 		//	get all clients
@@ -262,7 +230,7 @@ class CThreadHeartbeat extends EventEmitter
 		arrSockets	= this.m_oNode.server.getClients();
 		if ( ! Array.isArray( arrSockets ) || 0 === arrSockets.length )
 		{
-			this.m_oNode.log.info( `no client connected in, so we cancel ping` );
+			//this.m_oNode.log.info( `no client connected in, so we cancel ping` );
 			return false;
 		}
 
@@ -284,13 +252,20 @@ class CThreadHeartbeat extends EventEmitter
 			let nElapsedSinceLastReceived;
 			let nElapsedSinceLastSentHeartbeat;
 
-			if ( oSocket.bSleeping ||
-				oSocket.readyState !== oSocket.OPEN )
+			if ( oSocket.bSleeping )
 			{
 				//
 				//	sleeping status is for light Wallet only
+				//
+				this.m_oNode.log.info( `cancel ping because ${ oSocket.peer } is sleeping.` );
+				return;
+			}
+			if ( oSocket.readyState !== oSocket.OPEN )
+			{
+				//
 				//	web socket is not ready
 				//
+				this.m_oNode.log.info( `cancel ping because ${ oSocket.peer }'s readyState ${ oSocket.readyState } !== OPEN.` );
 				return;
 			}
 
@@ -298,6 +273,7 @@ class CThreadHeartbeat extends EventEmitter
 			nElapsedSinceLastReceived	= Date.now() - oSocket.last_ts;
 			if ( nElapsedSinceLastReceived < _p2pConstants.HEARTBEAT_TIMEOUT )
 			{
+				this.m_oNode.log.info( `cancel ping because ${ oSocket.peer } is active in ${ nElapsedSinceLastReceived } seconds.` );
 				return;
 			}
 
@@ -330,13 +306,47 @@ class CThreadHeartbeat extends EventEmitter
 					MESSAGE_PING,
 					{},
 					false,
-					this._handleMessagePong
+					this._handlePingResponse
 				);
 			}
 		});
 
 		return true;
 	}
+
+	/**
+	 *	handle received heartbeat message ping
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 *	@param 	{object}	oRequestContent		original plain JavaScript object of body of socket message
+	 *	@param	{string}	sResponse		socket message transmitted
+	 *	@return	{void}
+	 */
+	_handlePingResponse( oSocket, oRequestContent, sResponse )
+	{
+		delete oSocket.last_sent_heartbeat_ts;
+		oSocket.last_sent_heartbeat_ts = null;
+
+		//
+		//	TODO
+		//	parse sResponse to JSON object and do ...
+		//
+		if ( 'sleep' === sResponse )
+		{
+			//
+			//	the peer doesn't want to be bothered with heartbeats any more,
+			//	but still wants to keep the driver open
+			//
+			oSocket.bSleeping = true;
+		}
+
+		//
+		//	as soon as the peer sends a heartbeat himself,
+		//	we'll think he's woken up and resume our heartbeats too
+		//
+	}
+
 }
 
 

@@ -94,6 +94,10 @@ class CP2pClient extends CP2pDeliver
 			{
 				//
 				//	transit event to all threads
+				//	TODO
+				//	PackageType:
+				//		REQUEST
+				//		RESPONSE
 				//
 				this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
 			}

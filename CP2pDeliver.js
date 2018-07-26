@@ -56,11 +56,11 @@ class CP2pDeliver extends CP2pRequest
 	 *	@public
 	 * 	@param	{object}	oSocket
 	 * 	@param	{number}	nPackageType
-	 *	@param	{string}	sTag
+	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody
 	 *	@return	{boolean}
 	 */
-	sendResponse( oSocket, nPackageType, sTag, oBody )
+	sendResponse( oSocket, nPackageType, sEvent, oBody )
 	{
 		if ( ! _p2pUtils.isObject( oSocket ) )
 		{
@@ -72,9 +72,13 @@ class CP2pDeliver extends CP2pRequest
 		}
 
 		//	...
-		delete oSocket.assocInPreparingResponse[ sTag ];
+		if ( _p2pUtils.isObjectWithKeys( oBody, 'tag' ) )
+		{
+			delete oSocket.assocInPreparingResponse[ oBody.tag ];
+		}
 
-		this.sendMessage( oSocket, nPackageType, '', { tag : sTag, response : oBody } );
+		//	...
+		this.sendMessage( oSocket, nPackageType, sEvent, oBody );
 		return true;
 	}
 
@@ -85,13 +89,14 @@ class CP2pDeliver extends CP2pRequest
 	 *	@public
 	 * 	@param	{object}	oSocket
 	 * 	@param	{number}	nPackageType
+	 *	@param	{string}	sEvent
 	 *	@param	{string}	sTag
 	 *	@param	{string}	sError
 	 *	@return	{void}
 	 */
-	sendErrorResponse( oSocket, nPackageType, sTag, sError )
+	sendErrorResponse( oSocket, nPackageType, sEvent, sTag, sError )
 	{
-		this.sendResponse( oSocket, nPackageType, sTag, { error : sError } );
+		this.sendResponse( oSocket, nPackageType, sEvent, { tag : sTag, error : sError } );
 	}
 
 }

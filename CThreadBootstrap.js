@@ -346,8 +346,11 @@ class CThreadBootstrap extends EventEmitter
 					_p2pUtils.isFunction( oThread.instance[ 'onSocketClose' ] ) )
 				{
 					sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_CLOSE }`;
-					_p2pLog.info( `[${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketClose().` );
-					this.on( sFullEventName, oThread.instance[ 'onSocketClose' ] );
+					_p2pLog.info( `[${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketClose.` );
+					this.on( sFullEventName, ( ... args ) =>
+					{
+						oThread.instance[ 'onSocketClose' ]( args );
+					});
 				}
 
 				//
@@ -357,8 +360,11 @@ class CThreadBootstrap extends EventEmitter
 					_p2pUtils.isFunction( oThread.instance[ 'onSocketError' ] ) )
 				{
 					sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_ERROR }`;
-					_p2pLog.info( `[${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketError().` );
-					this.on( sFullEventName, oThread.instance[ 'onSocketError' ] );
+					_p2pLog.info( `[${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketError.` );
+					this.on( sFullEventName, ( ... args ) =>
+					{
+						oThread.instance[ 'onSocketError' ]( args );
+					});
 				}
 			}
 

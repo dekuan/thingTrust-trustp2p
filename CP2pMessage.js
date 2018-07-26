@@ -106,8 +106,6 @@ class CP2pMessage
 
 		//	...
 		libraryPackageJson	= require( './package.json' );
-
-		//	...
 		this.sendTalk
 		(
 			oSocket,
