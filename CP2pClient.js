@@ -5,11 +5,14 @@
  *	@require	module: *
  */
 const CP2pDriver		= require( './driver/CP2pDriver.js' );
+const CP2pPackage		= require( './CP2pPackage.js' );
 const CP2pDeliver		= require( './CP2pDeliver.js' );
 const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pLog			= require( './CP2pLog.js' );
+
+
 
 
 
@@ -88,18 +91,25 @@ class CP2pClient extends CP2pDeliver
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
 			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
-
-			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ objMessage }]` );
 			if ( objMessage )
 			{
-				//
-				//	transit event to all threads
-				//	TODO
-				//	PackageType:
-				//		REQUEST
-				//		RESPONSE
-				//
-				this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
+				_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
+				switch ( objMessage.type )
+				{
+					case CP2pPackage.PACKAGE_HEARTBEAT_PING:
+					case CP2pPackage.PACKAGE_REQUEST:
+						this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
+						break;
+					case CP2pPackage.PACKAGE_RESPONSE:
+						this.onRequestResponded( oSocket, objMessage );
+						break;
+					case CP2pPackage.PACKAGE_TALK:
+						break;
+				}
+			}
+			else
+			{
+				_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: # abandon invalid message.` );
 			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>

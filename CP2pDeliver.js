@@ -39,66 +39,6 @@ class CP2pDeliver extends CP2pRequest
 		super.cDriver	= cDriver;
 	}
 
-
-	broadcast()
-	{
-		if ( CP2pDriver.DRIVER_TYPE_CLIENT !== this.m_cDriver.sDriverType )
-		{
-			_p2pLog.error( `will broadcast nothing, only client instance broadcast.` );
-			return false;
-		}
-	}
-
-
-	/**
-	 *	send response
-	 *
-	 *	@public
-	 * 	@param	{object}	oSocket
-	 * 	@param	{number}	nPackageType
-	 *	@param	{string}	sEvent
-	 *	@param	{object}	oBody
-	 *	@return	{boolean}
-	 */
-	sendResponse( oSocket, nPackageType, sEvent, oBody )
-	{
-		if ( ! _p2pUtils.isObject( oSocket ) )
-		{
-			return false;
-		}
-		if ( ! this.m_cP2pPackage.isValidPackageType( nPackageType ) )
-		{
-			return false;
-		}
-
-		//	...
-		if ( _p2pUtils.isObjectWithKeys( oBody, 'tag' ) )
-		{
-			delete oSocket.assocInPreparingResponse[ oBody.tag ];
-		}
-
-		//	...
-		this.sendMessage( oSocket, nPackageType, sEvent, oBody );
-		return true;
-	}
-
-
-	/**
-	 *	send response
-	 *
-	 *	@public
-	 * 	@param	{object}	oSocket
-	 * 	@param	{number}	nPackageType
-	 *	@param	{string}	sEvent
-	 *	@param	{string}	sTag
-	 *	@param	{string}	sError
-	 *	@return	{void}
-	 */
-	sendErrorResponse( oSocket, nPackageType, sEvent, sTag, sError )
-	{
-		this.sendResponse( oSocket, nPackageType, sEvent, { tag : sTag, error : sError } );
-	}
-
 }
 
 

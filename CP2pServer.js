@@ -7,6 +7,7 @@
 const _crypto			= require( 'crypto' );
 
 const CP2pDriver		= require( './driver/CP2pDriver.js' );
+const CP2pPackage		= require( './CP2pPackage.js' );
 const CP2pDeliver		= require( './CP2pDeliver.js' );
 const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
@@ -122,15 +123,23 @@ class CP2pServer extends CP2pDeliver
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{
 			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
-
-			_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: [${ objMessage }]` );
 			if ( objMessage )
 			{
-				//
-				//	transit event to all threads
-				//
-				this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
+				_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
+				switch ( objMessage.type )
+				{
+					case CP2pPackage.PACKAGE_REQUEST:
+						this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
+						break;
+					case CP2pPackage.PACKAGE_HEARTBEAT_PONG:
+					case CP2pPackage.PACKAGE_RESPONSE:
+						this.onRequestResponded( oSocket, objMessage );
+						break;
+					case CP2pPackage.PACKAGE_TALK:
+						break;
+				}
 			}
+
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{

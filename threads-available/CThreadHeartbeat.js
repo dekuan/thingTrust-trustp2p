@@ -3,6 +3,7 @@
 
 const EventEmitter		= require( 'events' );
 
+const CP2pPackage		= require( './../CP2pPackage.js' );
 const _p2pConstants		= require( '../p2pConstants.js' );
 const _p2pUtils			= require( '../CP2pUtils.js' );
 
@@ -71,10 +72,10 @@ class CThreadHeartbeat extends EventEmitter
 	get eventMap()
 	{
 		return {
-			[ _p2pConstants.PACKAGE_HEARTBEAT_PING ]	:
+			[ CP2pPackage.PACKAGE_HEARTBEAT_PING ]	:
 				{
 					[ MESSAGE_PING ]	: this._handleMessagePing,	//	ping by server
-					[ MESSAGE_PONG ]	: this._handleMessagePong,	//	pong by client
+					// [ MESSAGE_PONG ]	: this._handleMessagePong,	//	pong by client
 				}
 		}
 	}
@@ -161,7 +162,7 @@ class CThreadHeartbeat extends EventEmitter
 
 
 	/**
-	 *	handle received heartbeat message ping
+	 *	received ping message coming from server
 	 *
 	 *	@public
 	 *	@param	{object}	oSocket
@@ -171,6 +172,20 @@ class CThreadHeartbeat extends EventEmitter
 	_handleMessagePing( oSocket, objMessage )
 	{
 		let bSleep;
+
+		if ( ! _p2pUtils.isObject( oSocket ) )
+		{
+			this.m_oNode.log.info( `[${ this.constructor.name }]::_handleMessagePing, call with invalid oSocket` );
+			return false;
+		}
+		if ( ! objMessage )
+		{
+			this.m_oNode.log.info( `[${ this.constructor.name }]::_handleMessagePing, call with invalid objMessage` );
+			return false;
+		}
+
+		//	...
+		this.m_oNode.log.info( `[${ this.constructor.name }]::_handleMessagePing, received message( type : ${ objMessage.type }, event : ${ objMessage.event } )` );
 
 		//
 		//	the peer is sending heartbeats, therefore he is awake
@@ -195,12 +210,12 @@ class CThreadHeartbeat extends EventEmitter
 		);
 
 		//
-		//	respond a 'pong'
+		//	respond a pong message
 		//
-		this.sendResponse
+		return this.m_oNode.client.sendResponse
 		(
 			oSocket,
-			_p2pConstants.PACKAGE_HEARTBEAT_PONG,
+			CP2pPackage.PACKAGE_HEARTBEAT_PONG,
 			MESSAGE_PONG,
 			{ tag : objMessage.tag, sleep : bSleep }
 		);
@@ -257,7 +272,7 @@ class CThreadHeartbeat extends EventEmitter
 				//
 				//	sleeping status is for light Wallet only
 				//
-				this.m_oNode.log.info( `cancel ping because ${ oSocket.peer } is sleeping.` );
+				this.m_oNode.log.info( `[${ this.constructor.name }] cancel ping because ${ oSocket.peer } is sleeping.` );
 				return;
 			}
 			if ( oSocket.readyState !== oSocket.OPEN )
@@ -265,7 +280,7 @@ class CThreadHeartbeat extends EventEmitter
 				//
 				//	web socket is not ready
 				//
-				this.m_oNode.log.info( `cancel ping because ${ oSocket.peer }'s readyState ${ oSocket.readyState } !== OPEN.` );
+				this.m_oNode.log.info( `[${ this.constructor.name }] cancel ping because ${ oSocket.peer }'s readyState ${ oSocket.readyState } !== OPEN.` );
 				return;
 			}
 
@@ -273,7 +288,7 @@ class CThreadHeartbeat extends EventEmitter
 			nElapsedSinceLastReceived	= Date.now() - oSocket.last_ts;
 			if ( nElapsedSinceLastReceived < _p2pConstants.HEARTBEAT_TIMEOUT )
 			{
-				this.m_oNode.log.info( `cancel ping because ${ oSocket.peer } is active in ${ nElapsedSinceLastReceived } seconds.` );
+				this.m_oNode.log.info( `[${ this.constructor.name }] cancel ping because ${ oSocket.peer } is active in ${ nElapsedSinceLastReceived } seconds.` );
 				return;
 			}
 
@@ -284,7 +299,7 @@ class CThreadHeartbeat extends EventEmitter
 				if ( nElapsedSinceLastSentHeartbeat >= _p2pConstants.HEARTBEAT_RESPONSE_TIMEOUT )
 				{
 					//	>= 60 seconds
-					this.m_oNode.log.info( `will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
+					this.m_oNode.log.info( `[${ this.constructor.name }] will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
 					oSocket.close( 1000, 'lost driver' );
 				}
 			}
@@ -298,11 +313,11 @@ class CThreadHeartbeat extends EventEmitter
 				//
 				//	send a ping event to this client
 				//
-				this.m_oNode.log.info( `SENDING heartbeat ping for client.` );
+				this.m_oNode.log.info( `[${ this.constructor.name }] send heartbeat ping.` );
 				this.m_oNode.server.sendRequest
 				(
 					oSocket,
-					_p2pConstants.PACKAGE_HEARTBEAT_PING,
+					CP2pPackage.PACKAGE_HEARTBEAT_PING,
 					MESSAGE_PING,
 					{},
 					false,
@@ -315,7 +330,7 @@ class CThreadHeartbeat extends EventEmitter
 	}
 
 	/**
-	 *	handle received heartbeat message ping
+	 *	handle received response sent before with message ping
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
@@ -327,6 +342,8 @@ class CThreadHeartbeat extends EventEmitter
 	{
 		delete oSocket.last_sent_heartbeat_ts;
 		oSocket.last_sent_heartbeat_ts = null;
+
+		this.m_oNode.log.info( `[${ this.constructor.name }], received response sent before with message ping.` );
 
 		//
 		//	TODO

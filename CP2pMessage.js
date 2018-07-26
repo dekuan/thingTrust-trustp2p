@@ -77,7 +77,7 @@ class CP2pMessage
 	 */
 	sendTalk( oSocket, sSubject, oBody )
 	{
-		this.sendMessage( oSocket, _p2pConstants.PACKAGE_TALK, sSubject, oBody );
+		this.sendMessage( oSocket, CP2pPackage.PACKAGE_TALK, sSubject, oBody );
 	}
 
 	sendError( oSocket, sError )

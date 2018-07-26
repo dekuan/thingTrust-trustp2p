@@ -7,7 +7,6 @@ const CP2pMessage		= require( './CP2pMessage.js' );
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './CP2pUtils.js' );
 const _p2pLog			= require( './CP2pLog.js' );
-const _object_hash		= require( './common/object_hash.js' );
 
 
 
@@ -41,23 +40,47 @@ class CP2pRequest extends CP2pMessage
 
 
 	/**
-	 *	handle request message
-	 *	received message in client/server with PackageType .PACKAGE_REQUEST
+	 *	send request to all connected outbounds
 	 *
-	 * 	@public
-	 *	@param	{object}	oSocket
+	 *	@param	{array}		arrSockets
+	 *	@param	{number}	nPackageType
+	 *					- PACKAGE_SYSTEM		= 0;
+	 *					- PACKAGE_HEARTBEAT_PING	= 0;
+	 *					- PACKAGE_HEARTBEAT_PONG	= 1;
+	 *					- PACKAGE_TALK			= 10;
+	 *					- PACKAGE_REQUEST		= 20;
+	 *					- PACKTYPE_RESPONSE		= 21;
 	 *	@param	{string}	sEvent
-	 * 	@param	{string}	sBody
+	 *	@param	{object}	oBody
+	 *	@param	{boolean}	bReroute
+	 *	@param	{function}	pfnResponseHandler( ws, request, response ){ ... }
+	 *	@return {boolean}
 	 */
-	handleRequest( oSocket, sEvent, sBody )
+	sendBroadcast( arrSockets, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
 	{
+		if ( CP2pDriver.DRIVER_TYPE_CLIENT !== this.m_cDriver.sDriverType )
+		{
+			_p2pLog.error( `will broadcast nothing, only client instance can send broadcast.` );
+			return false;
+		}
+		if ( ! Array.isArray( arrSockets ) )
+		{
+			_p2pLog.error( `call sendBroadcast with invalid parameter arrSockets` );
+			return false;
+		}
+
+		arrSockets.forEach
+		(
+			oSocket => this.sendRequest( oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
+		);
+
+		return true;
 	}
 
 
+
 	/**
-	 *	if a 2nd identical request is issued before we receive a response to the 1st request, then:
-	 *	1. its pfnResponseHandler will be called too but no second request will be sent to the wire
-	 *	2. bReroute flag must be the same
+	 *	send request with re-route ability supported
 	 *
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackageType
@@ -71,6 +94,13 @@ class CP2pRequest extends CP2pMessage
 	 *	@param	{object}	oBody
 	 *	@param	{boolean}	bReroute
 	 *	@param	{function}	pfnResponseHandler( ws, request, response ){ ... }
+	 *
+	 * 	@description
+	 *
+	 *	if a 2nd identical request is issued before we receive a response to the 1st request, then:
+	 *	1, its pfnResponseHandler will be called too but no second request will be sent to the wire
+	 *	2, bReroute flag must be the same
+	 *
 	 */
 	sendRequest( oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
 	{
@@ -136,16 +166,16 @@ class CP2pRequest extends CP2pMessage
 		}
 
 		//
-		//	...
+		//	append tag
 		//
 		oJsonContent.tag	= sTag;
 
 		//
-		//	* re-route only for clients
+		//	* RE-ROUTE ONLY FOR CLIENTS TO SEND REQUEST TO ALL OUTBOUND SERVERS
 		//
 		if ( CP2pDriver.DRIVER_TYPE_CLIENT !== this.m_cDriver.sDriverType )
 		{
-			bReroute	= false;
+			bReroute = false;
 		}
 
 		//
@@ -191,31 +221,92 @@ class CP2pRequest extends CP2pMessage
 		//
 		//	send message by socket handle
 		//
-		this.sendMessage( oSocket, nPackageType, sEvent, oJsonContent );
+		return this.sendMessage( oSocket, nPackageType, sEvent, oJsonContent );
 	}
 
-
 	/**
-	 *	handle response message
-	 *	received message in client/server with PackageType .PACKAGE_RESPONSE
+	 *	received response message by calling .sendRequest
+	 *	with PackageType .PACKAGE_RESPONSE
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
-	 *	@param	{string}	sTag
-	 * 	@param	{string}	sResponse
+	 *	@param	{object}	objMessage
 	 */
-	handleResponse( oSocket, sTag, sResponse )
+	onRequestResponded( oSocket, objMessage )
 	{
+		if ( ! _p2pUtils.isObject( oSocket ) )
+		{
+			return false;
+		}
+		if ( ! objMessage )
+		{
+			return false;
+		}
+
 		//
 		//	execute all pending requests
 		//
-		this._executePendingRequestsByTag( oSocket, sTag, sResponse );
+		this._executePendingRequestsByTag( oSocket, objMessage.tag, objMessage.body );
 
 		//
 		//	clear cache
 		//
-		this._clearCacheReroutedConnectionsByTag( sTag );
+		this._clearCacheReroutedConnectionsByTag( objMessage.tag );
 	}
+
+
+
+	/**
+	 *	respond to the request sent by this.sendRequest
+	 *
+	 *	@public
+	 * 	@param	{object}	oSocket
+	 * 	@param	{number}	nPackageType
+	 *	@param	{string}	sEvent
+	 *	@param	{object}	oBody
+	 *	@return	{boolean}
+	 */
+	sendResponse( oSocket, nPackageType, sEvent, oBody )
+	{
+		if ( ! _p2pUtils.isObject( oSocket ) )
+		{
+			return false;
+		}
+		if ( ! this.m_cP2pPackage.isValidPackageType( nPackageType ) )
+		{
+			return false;
+		}
+
+		//	...
+		if ( _p2pUtils.isObjectWithKeys( oBody, 'tag' ) &&
+			_p2pUtils.isObjectWithKeys( oSocket, 'assocInPreparingResponse' ) &&
+			_p2pUtils.isObjectWithKeys( oSocket.assocInPreparingResponse, oBody.tag ) )
+		{
+			_p2pLog.info( `will delete oSocket.assocInPreparingResponse[ ${ oBody.tag } ] while .sendResponse` );
+			delete oSocket.assocInPreparingResponse[ oBody.tag ];
+		}
+
+		//	...
+		this.sendMessage( oSocket, nPackageType, sEvent, oBody );
+		return true;
+	}
+
+	/**
+	 *	respond error to the request sent by this.sendRequest
+	 *
+	 *	@public
+	 * 	@param	{object}	oSocket
+	 * 	@param	{number}	nPackageType
+	 *	@param	{string}	sEvent
+	 *	@param	{string}	sTag
+	 *	@param	{string}	sError
+	 *	@return	{void}
+	 */
+	sendErrorResponse( oSocket, nPackageType, sEvent, sTag, sError )
+	{
+		this.sendResponse( oSocket, nPackageType, sEvent, { tag : sTag, error : sError } );
+	}
+
 
 
 	/**
@@ -315,7 +406,7 @@ class CP2pRequest extends CP2pMessage
 		}
 
 		//	...
-		if ( oSocket.hasOwnProperty( assocPendingRequests ) &&
+		if ( oSocket.hasOwnProperty( 'assocPendingRequests' ) &&
 			_p2pUtils.isObject( oSocket.assocPendingRequests ) &&
 			oSocket.assocPendingRequests.hasOwnProperty( sTag ) )
 		{
@@ -328,16 +419,13 @@ class CP2pRequest extends CP2pMessage
 				//
 				//	call all responseHandlers next tick
 				//
-				oPendingRequest.responseHandlers.forEach
-				(
-					pfnResponseHandler =>
+				for ( const [ nHandlerIndex, pfnResponseHandler ] of oPendingRequest.responseHandlers.entries() )
+				{
+					process.nextTick( function()
 					{
-						process.nextTick( function()
-						{
-							pfnResponseHandler( oSocket, oPendingRequest.request, sResponse );
-						});
-					}
-				);
+						pfnResponseHandler( oSocket, oPendingRequest.request, sResponse );
+					});
+				}
 
 				//
 				//	clear timers for
