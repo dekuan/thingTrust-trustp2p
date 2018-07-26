@@ -5,7 +5,7 @@
  *	@require	module: *
  */
 const WebSocket			= process.browser ? global.WebSocket : require( 'ws' );
-const CP2pDriver		= require( './p2pDriver.js' );
+const CP2pDriver		= require( './CP2pDriver.js' );
 const CP2pPersistence		= require( '../CP2pPersistence.js' );
 
 const _p2pConstants		= require( '../p2pConstants.js' );

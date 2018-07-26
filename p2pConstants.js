@@ -11,11 +11,12 @@ module.exports.alt                                     = '1';
 //
 //	PACKET TYPES
 //
-module.exports.PACKAGE_HEARTBEAT_PING		= 0;
-module.exports.PACKAGE_HEARTBEAT_PONG		= 1;
-module.exports.PACKAGE_TALK			= 10;
-module.exports.PACKAGE_REQUEST			= 20;
-module.exports.PACKAGE_RESPONSE			= 21;
+module.exports.PACKAGE_SYSTEM			= 0;
+module.exports.PACKAGE_HEARTBEAT_PING		= 10;
+module.exports.PACKAGE_HEARTBEAT_PONG		= 11;
+module.exports.PACKAGE_TALK			= 20;
+module.exports.PACKAGE_REQUEST			= 30;
+module.exports.PACKAGE_RESPONSE			= 31;
 
 
 module.exports.FORWARDING_TIMEOUT		= 10 * 1000;		//	don't forward if the joint was received more than FORWARDING_TIMEOUT ms ago

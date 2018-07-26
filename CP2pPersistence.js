@@ -3,7 +3,7 @@
 
 const _db		= require( './common/db.js' );
 const CP2pNerve		= require( './CP2pNerve.js' );
-const CP2pDriver	= require( './driver/p2pDriver.js' );
+const CP2pDriver	= require( './driver/CP2pDriver.js' );
 
 const _p2pConstants	= require( './p2pConstants.js' );
 const _p2pUtils		= require( './CP2pUtils.js' );

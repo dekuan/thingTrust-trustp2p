@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-const CP2pDriver		= require( './driver/p2pDriver.js' );
+const CP2pDriver		= require( './driver/CP2pDriver.js' );
 const CP2pRequest		= require( './CP2pRequest.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );

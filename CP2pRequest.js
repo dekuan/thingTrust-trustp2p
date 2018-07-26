@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-const CP2pDriver		= require( './driver/p2pDriver.js' );
+const CP2pDriver		= require( './driver/CP2pDriver.js' );
 const CP2pMessage		= require( './CP2pMessage.js' );
 
 const _p2pConstants		= require( './p2pConstants.js' );
@@ -61,6 +61,7 @@ class CP2pRequest extends CP2pMessage
 	 *
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackageType
+	 *					- PACKAGE_SYSTEM		= 0;
 	 *					- PACKAGE_HEARTBEAT_PING	= 0;
 	 *					- PACKAGE_HEARTBEAT_PONG	= 1;
 	 *					- PACKAGE_TALK			= 10;

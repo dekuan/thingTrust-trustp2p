@@ -3,6 +3,9 @@ const EventEmitter		= require( 'events' );
 const _fs			= require( 'fs' );
 const _crypto			= require( 'crypto' );
 
+const CP2pDriver		= require( './driver/CP2pDriver.js' );
+
+const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './CP2pUtils.js' );
 const _p2pLog			= require( './CP2pLog.js' );
 
@@ -12,10 +15,12 @@ const _p2pLog			= require( './CP2pLog.js' );
 /**
  * 	@class	CThreadBootstrap
  */
-class CThreadBootstrap
+class CThreadBootstrap extends EventEmitter
 {
 	constructor()
 	{
+		super();
+
 		this.m_mapThreadsMap	= new Map();
 		this.m_mapEventsMap	= new Map();
 	}
@@ -69,7 +74,7 @@ class CThreadBootstrap
 				arrEventItems.forEach( oItem =>
 				{
 					sFullEventName = `${ String( objMessage.type ) }-${ objMessage.event }`;
-					objClassInstance = this.m_mapThreadsMap.get( oItem.md5 );
+					objClassInstance = this.m_mapThreadsMap.get( oItem.md5 ).instance;
 					objClassInstance.emit
 					(
 						sFullEventName,
@@ -165,15 +170,25 @@ class CThreadBootstrap
 				//
 				//	this.m_mapThreadsMap = Map
 				//	{
-				//		md5	=> instance of dynamically loaded class,
-				//		md5	=> instance of dynamically loaded class,
-				//		...
+				//		md5	=>
+				// 		{
+				//			instance	: instance of dynamically loaded class,
+				//			methods		: [ ... ],
+				// 		}
+				//		md5	=>
+				// 		{
+				//			instance	: instance of dynamically loaded class,
+				//			methods		: [ ... ],
+				// 		}
 				// 	}
 				//
 				this.m_mapThreadsMap.set
 				(
 					sFileMd5,
-					Object.assign( Object.create( Object.getPrototypeOf( objTInstance ) ), objTInstance )
+					{
+						instance	: Object.assign( Object.create( Object.getPrototypeOf( objTInstance ) ), objTInstance )
+						methods		: arrAllMethods,
+					}
 				);
 
 
@@ -262,7 +277,6 @@ class CThreadBootstrap
 		{
 			let objClassInstance;
 			let sFullEventName;
-			let arrAllMethods;
 
 			//
 			//	setup event listener
@@ -274,26 +288,37 @@ class CThreadBootstrap
 					sFullEventName = `${ String( nPackageType ) }-${ sEventName }`;
 					arrEventItems.forEach( oItem =>
 					{
-						objClassInstance = this.m_mapThreadsMap.get( oItem.md5 );
+						objClassInstance = this.m_mapThreadsMap.get( oItem.md5 ).instance;
 						objClassInstance.on( sFullEventName, oItem.handler );
 					});
 				}
 			}
 
 			//
-			//	call start
+			//	1, call .start
+			//	2, set listener for listening events :
+			//		- socket close
+			//		- socket error
 			//
-			for ( const [ sFileMd5, objInstance ] of this.m_mapThreadsMap )
+			for ( const [ sFileMd5, oThread ] of this.m_mapThreadsMap )
 			{
-				arrAllMethods	= _p2pUtils.getAllMethodsOfClass( objInstance );
-				if ( arrAllMethods.includes( 'start' ) &&
-					_p2pUtils.isFunction( objInstance[ 'start' ] ) )
+				if ( oThread.methods.includes( 'start' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'start' ] ) )
 				{
-					_p2pLog.info( `[${ this.constructor.name }] install class * ${ objInstance.constructor.name }.` );
-					objInstance[ 'start' ]();
+					_p2pLog.info( `[${ this.constructor.name }] install class, call ${ oThread.instance.constructor.name }.start().` );
+					oThread.instance[ 'start' ]();
+				}
+
+				if ( oThread.methods.includes( 'onSocketClose' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'onSocketClose' ] ) )
+				{
+					sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_CLOSE }`;
+					_p2pLog.info( `[${ this.constructor.name }] install class, hook event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketClose().` );
+					this.on( sFullEventName, oThread.instance[ 'onSocketClose' ] );
 				}
 			}
 
+			//	...
 			pfnResolve();
 		});
 	}
@@ -310,7 +335,6 @@ class CThreadBootstrap
 		{
 			let objClassInstance;
 			let sFullEventName;
-			let arrAllMethods;
 
 			//
 			//	removeListener
@@ -322,19 +346,18 @@ class CThreadBootstrap
 					sFullEventName = `${ String( nPackageType ) }-${ sEventName }`;
 					arrEventItems.forEach( oItem =>
 					{
-						objClassInstance = this.m_mapThreadsMap.get( oItem.md5 );
+						objClassInstance = this.m_mapThreadsMap.get( oItem.md5 ).instance;
 						objClassInstance.removeAllListeners( [ sFullEventName ] );
 					});
 				}
 			}
 
-			for ( const [ sFileMd5, objInstance ] of this.m_mapThreadsMap )
+			for ( const [ sFileMd5, oThread ] of this.m_mapThreadsMap )
 			{
-				arrAllMethods	= _p2pUtils.getAllMethodsOfClass( objInstance );
-				if ( arrAllMethods.includes( 'stop' ) &&
-					_p2pUtils.isFunction( objInstance[ 'stop' ] ) )
+				if ( oThread.methods.includes( 'stop' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'stop' ] ) )
 				{
-					objInstance[ 'stop' ]();
+					oThread.instance[ 'stop' ]();
 				}
 			}
 

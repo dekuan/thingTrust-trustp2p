@@ -10,9 +10,9 @@ const socks			= process.browser ? null : require( 'socks' + '' );
 /**
  *	@import class
  */
-const CP2pDriver		= require( './p2pDriver.js' );
+const CP2pDriver		= require( './CP2pDriver.js' );
 const CP2pPersistence		= require( '../CP2pPersistence.js' );
-const CP2pSocketHandleCache	= require( './p2pSocketHandleCache.js' );
+const CP2pSocketHandleCache	= require( './CP2pSocketHandleCache.js' );
 
 /**
  *	@import library

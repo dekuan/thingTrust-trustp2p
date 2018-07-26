@@ -6,7 +6,7 @@
  */
 const _crypto			= require( 'crypto' );
 
-const CP2pDriver		= require( './driver/p2pDriver.js' );
+const CP2pDriver		= require( './driver/CP2pDriver.js' );
 const CP2pDeliver		= require( './CP2pDeliver.js' );
 const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 

@@ -4,7 +4,7 @@
 /**
  *	@require	module: *
  */
-const CP2pDriver		= require( './driver/p2pDriver.js' );
+const CP2pDriver		= require( './driver/CP2pDriver.js' );
 const CP2pDeliver		= require( './CP2pDeliver.js' );
 const CThreadBootstrap		= require( './CThreadBootstrap.js' );
 
@@ -51,7 +51,10 @@ class CP2pClient extends CP2pDeliver
 	 */
 	async startClient()
 	{
-		this.m_cDriverClient.connectToServer( 'ws://127.0.0.1:1107' );
+		setImmediate( () =>
+		{
+			this.m_cDriverClient.connectToServer( 'ws://127.0.0.1:1107' );
+		});
 	}
 
 
