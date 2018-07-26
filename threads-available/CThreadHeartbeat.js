@@ -136,12 +136,26 @@ class CThreadHeartbeat extends EventEmitter
 		}
 	}
 
+	/**
+	 *	callee for listening event about a socket was closed
+	 *
+	 * 	@public
+	 *	@param oSocket
+	 */
 	onSocketClose( oSocket )
 	{
+		this.m_oNode.log.info( `[${ this.constructor.name }] received a close message about socket.` );
 	}
 
+	/**
+	 *	callee for listening event about error of a socket
+	 *
+	 * 	@public
+	 *	@param vError
+	 */
 	onSocketError( vError )
 	{
+		this.m_oNode.log.info( `[${ this.constructor.name }] received a error message about socket.` );
 	}
 
 

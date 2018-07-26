@@ -32,7 +32,7 @@ class CP2pClient extends CP2pDeliver
 		/**
 		 *	create client instance
 		 */
-		this.m_cDriverClient		= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'client', oOptions );
+		this.m_cDriverClient		= CP2pDriver.createInstance( 'client', oOptions );
 		super.cDriver			= this.m_cDriverClient;
 
 		//	...
@@ -95,21 +95,26 @@ class CP2pClient extends CP2pDeliver
 				//
 				//	transit event to all threads
 				//
-				this.m_cThreadBootstrap.transitEvent( oSocket, objMessage );
+				this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
 			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CLOSE }] from server.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CLOSE }].` );
 
 			//
 			//	handle things while a socket was closed
 			//
 			this.handleClosed( oSocket );
+			setImmediate( () =>
+			{
+				this.m_cThreadBootstrap.transitSocketClose( oSocket );
+			});
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_ERROR }] from server.` );
+			_p2pLog.info( `Received [${ CP2pDriver.EVENT_ERROR }].` );
+			this.m_cThreadBootstrap.transitSocketError( vError );
 		});
 	}
 }

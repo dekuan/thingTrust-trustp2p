@@ -51,13 +51,13 @@ class CThreadBootstrap extends EventEmitter
 
 
 	/**
-	 *	transit a event to all listener
+	 *	transit a socket message to all listeners
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
 	 *	@param	{object}	objMessage
 	 */
-	transitEvent( oSocket, objMessage )
+	transitSocketMessage( oSocket, objMessage )
 	{
 		let arrEventItems;
 		let objClassInstance;
@@ -85,6 +85,36 @@ class CThreadBootstrap extends EventEmitter
 			}
 		}
 	}
+
+	/**
+	 *	transit a socket close event to all listeners
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 */
+	transitSocketClose( oSocket )
+	{
+		let sFullEventName;
+
+		sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_CLOSE }`;
+		this.emit( sFullEventName, oSocket );
+	}
+
+	/**
+	 *	transit a socket error event to all listeners
+	 *
+	 * 	@public
+	 *	@param	{string}	vError
+	 */
+	transitSocketError( vError )
+	{
+		let sFullEventName;
+
+		sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_ERROR }`;
+		this.emit( sFullEventName, vError );
+	}
+
+
 
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +216,7 @@ class CThreadBootstrap extends EventEmitter
 				(
 					sFileMd5,
 					{
-						instance	: Object.assign( Object.create( Object.getPrototypeOf( objTInstance ) ), objTInstance )
+						instance	: Object.assign( Object.create( Object.getPrototypeOf( objTInstance ) ), objTInstance ),
 						methods		: arrAllMethods,
 					}
 				);
@@ -295,13 +325,13 @@ class CThreadBootstrap extends EventEmitter
 			}
 
 			//
-			//	1, call .start
-			//	2, set listener for listening events :
-			//		- socket close
-			//		- socket error
+			//	...
 			//
 			for ( const [ sFileMd5, oThread ] of this.m_mapThreadsMap )
 			{
+				//
+				//	call start
+				//
 				if ( oThread.methods.includes( 'start' ) &&
 					_p2pUtils.isFunction( oThread.instance[ 'start' ] ) )
 				{
@@ -309,12 +339,26 @@ class CThreadBootstrap extends EventEmitter
 					oThread.instance[ 'start' ]();
 				}
 
+				//
+				//	set hook for events : socket close
+				//
 				if ( oThread.methods.includes( 'onSocketClose' ) &&
 					_p2pUtils.isFunction( oThread.instance[ 'onSocketClose' ] ) )
 				{
 					sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_CLOSE }`;
-					_p2pLog.info( `[${ this.constructor.name }] install class, hook event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketClose().` );
+					_p2pLog.info( `[${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketClose().` );
 					this.on( sFullEventName, oThread.instance[ 'onSocketClose' ] );
+				}
+
+				//
+				//	set hook for events : socket error
+				//
+				if ( oThread.methods.includes( 'onSocketError' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'onSocketError' ] ) )
+				{
+					sFullEventName = `${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_ERROR }`;
+					_p2pLog.info( `[${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketError().` );
+					this.on( sFullEventName, oThread.instance[ 'onSocketError' ] );
 				}
 			}
 
@@ -337,7 +381,16 @@ class CThreadBootstrap extends EventEmitter
 			let sFullEventName;
 
 			//
-			//	removeListener
+			//	remove listener from this
+			//
+			this.removeAllListeners
+			([
+				`${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_CLOSE }`,
+				`${ String( _p2pConstants.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_ERROR }`
+			]);
+
+			//
+			//	remove listener from all instances
 			//
 			for ( const [ nPackageType, oHandlerMap ] of this.m_mapEventsMap )
 			{
@@ -352,6 +405,9 @@ class CThreadBootstrap extends EventEmitter
 				}
 			}
 
+			//
+			//	call .stop()
+			//
 			for ( const [ sFileMd5, oThread ] of this.m_mapThreadsMap )
 			{
 				if ( oThread.methods.includes( 'stop' ) &&

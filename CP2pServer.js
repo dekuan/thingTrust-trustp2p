@@ -33,7 +33,7 @@ class CP2pServer extends CP2pDeliver
 		super();
 
 		this.m_oOptions			= Object.assign( {}, oOptions );
-		this.m_cDriverServer		= CP2pDriver.createInstance( _p2pConstants.CONNECTION_DRIVER, 'server', oOptions );
+		this.m_cDriverServer		= CP2pDriver.createInstance( 'server', oOptions );
 		super.cDriver			= this.m_cDriverServer;
 
 		//	...
@@ -129,16 +129,18 @@ class CP2pServer extends CP2pDeliver
 				//
 				//	transit event to all threads
 				//
-				this.m_cThreadBootstrap.transitEvent( oSocket, objMessage );
+				this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
 			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
 			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CLOSE }].` );
+			this.m_cThreadBootstrap.transitSocketClose( oSocket );
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
 			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_ERROR }].` );
+			this.m_cThreadBootstrap.transitSocketError( vError );
 		});
 
 

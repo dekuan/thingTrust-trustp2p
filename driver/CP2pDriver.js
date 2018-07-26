@@ -24,6 +24,15 @@ const EVENT_ERROR		= 'error';	//	( vError )		| emitted while a error was occurre
 const DRIVER_TYPE_SERVER	= 'server';
 const DRIVER_TYPE_CLIENT	= 'client';
 
+const CONNECTION_DRIVER		= 'ws';		//	implemented by web socket
+const CONNECTION_ADAPTER_LIST	=
+	{
+		'ws'	:
+		{
+			[ DRIVER_TYPE_CLIENT ]	: 'CP2pDriverImplWsClient.js',
+			[ DRIVER_TYPE_SERVER ]	: 'CP2pDriverImplWsServer.js',
+		}
+	};
 
 
 
@@ -84,21 +93,17 @@ class CP2pDriver extends EventEmitter
 	/**
 	 *	create new instance
 	 *
-	 *	@param	{string}	sDriver
 	 *	@param	{string}	sType
 	 *	@param	{object}	oOptions
 	 *	@returns {instance}
 	 */
-	static createInstance( sDriver, sType, oOptions )
+	static createInstance( sType, oOptions )
 	{
 		let cRet;
+		let sDriver;
 		let sFullFilename;
 		let CClassName;
 
-		if ( ! _p2pUtils.isString( sDriver ) || 0 === sDriver.length )
-		{
-			return null;
-		}
 		if ( ! _p2pUtils.isString( sType ) || 0 === sType.length )
 		{
 			return null;
@@ -106,7 +111,8 @@ class CP2pDriver extends EventEmitter
 
 		//	...
 		cRet		= null;
-		sFullFilename	= `${ __dirname }/${ _p2pConstants.CONNECTION_ADAPTER_LIST[ sDriver ][ sType ] }`;
+		sDriver		= CONNECTION_DRIVER;
+		sFullFilename	= `${ __dirname }/${ CONNECTION_ADAPTER_LIST[ sDriver ][ sType ] }`;
 		if ( _fs.existsSync( sFullFilename ) )
 		{
 			CClassName		= require( sFullFilename );
@@ -141,3 +147,6 @@ module.exports.EVENT_ERROR		= EVENT_ERROR;
 
 module.exports.DRIVER_TYPE_SERVER	= DRIVER_TYPE_SERVER;
 module.exports.DRIVER_TYPE_CLIENT	= DRIVER_TYPE_CLIENT;
+
+module.exports.CONNECTION_DRIVER	= CONNECTION_DRIVER;
+module.exports.CONNECTION_ADAPTER_LIST	= CONNECTION_ADAPTER_LIST;
