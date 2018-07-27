@@ -81,7 +81,7 @@ class CP2pClient extends CP2pDeliver
 		this.m_cDriverClient
 		.on( CP2pDriver.EVENT_OPEN, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_OPEN }], connect to server successfully.` );
+			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_OPEN }], connect to server successfully.` );
 
 			//
 			//	send our version information to server peer
@@ -93,7 +93,7 @@ class CP2pClient extends CP2pDeliver
 			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
 			if ( objMessage )
 			{
-				_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
+				_p2pLog.info( `* ${ this.constructor.name } Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
 				switch ( objMessage.type )
 				{
 					case CP2pPackage.PACKAGE_HEARTBEAT_PING:
@@ -109,12 +109,12 @@ class CP2pClient extends CP2pDeliver
 			}
 			else
 			{
-				_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: # abandon invalid message.` );
+				_p2pLog.info( `* ${ this.constructor.name } Received ${ CP2pDriver.EVENT_MESSAGE } :: # abandon invalid message.` );
 			}
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CLOSE }].` );
+			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_CLOSE }].` );
 
 			//
 			//	handle things while a socket was closed
@@ -127,7 +127,7 @@ class CP2pClient extends CP2pDeliver
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_ERROR }].` );
+			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_ERROR }].` );
 			this.m_cThreadBootstrap.transitSocketError( vError );
 		});
 	}

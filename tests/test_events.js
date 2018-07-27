@@ -45,6 +45,24 @@ class A extends EventEmitter
 
 }
 
-let aaa = new A();
+//let aaa = new A();
 
 
+
+
+function loga( ... args )
+{
+	if ( Array.isArray( args ) )
+	{
+		args.unshift( `[${ ( new Date() ).toString() }]` );
+	}
+	else
+	{
+		args = `[${ ( new Date() ).toString() }]`;
+	}
+
+	console.log( ...args );
+}
+
+
+loga( "222222", [ 1, 2, 3, 4 ] );

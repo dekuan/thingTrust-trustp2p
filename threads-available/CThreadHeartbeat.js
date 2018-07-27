@@ -92,7 +92,7 @@ class CThreadHeartbeat extends EventEmitter
 			//	if we have exactly same intervals on two clients,
 			//	they might send heartbeats to each other at the same time
 			//
-			this.m_oNode.log.error( `heartbeat start only at server end.` );
+			this.m_oNode.log.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } heartbeat start only at server end.` );
 			return null;
 		}
 
@@ -115,7 +115,7 @@ class CThreadHeartbeat extends EventEmitter
 		(
 			() =>
 			{
-				this._handlePingInterval();
+				this._handleServerPingInterval();
 			},
 			_p2pConstants.HEARTBEAT_INTERVAL + _p2pUtils.getRandomInt( 0, 1000 )
 		);
@@ -145,7 +145,7 @@ class CThreadHeartbeat extends EventEmitter
 	 */
 	onSocketClose( oSocket )
 	{
-		this.m_oNode.log.info( `[${ this.constructor.name }] received a close message about socket.` );
+		this.m_oNode.log.info( `* ${ this.constructor.name } received a close message about socket.` );
 	}
 
 	/**
@@ -156,7 +156,7 @@ class CThreadHeartbeat extends EventEmitter
 	 */
 	onSocketError( vError )
 	{
-		this.m_oNode.log.info( `[${ this.constructor.name }] received a error message about socket.` );
+		this.m_oNode.log.info( `* ${ this.constructor.name } received a error message about socket.` );
 	}
 
 
@@ -175,17 +175,17 @@ class CThreadHeartbeat extends EventEmitter
 
 		if ( ! _p2pUtils.isObject( oSocket ) )
 		{
-			this.m_oNode.log.info( `[${ this.constructor.name }]::_handleMessagePing, call with invalid oSocket` );
+			this.m_oNode.log.info( `* ${ this.constructor.name } call _handleMessagePing with invalid oSocket` );
 			return false;
 		}
 		if ( ! objMessage )
 		{
-			this.m_oNode.log.info( `[${ this.constructor.name }]::_handleMessagePing, call with invalid objMessage` );
+			this.m_oNode.log.info( `* ${ this.constructor.name } call _handleMessagePing with invalid objMessage` );
 			return false;
 		}
 
 		//	...
-		this.m_oNode.log.info( `[${ this.constructor.name }]::_handleMessagePing, received message( type : ${ objMessage.type }, event : ${ objMessage.event } )` );
+		this.m_oNode.log.info( `* ${ this.constructor.name } received message( type:${ objMessage.type }, event:${ objMessage.event } )` );
 
 		//
 		//	the peer is sending heartbeats, therefore he is awake
@@ -232,7 +232,7 @@ class CThreadHeartbeat extends EventEmitter
 	 *	@description
 	 *	keep on sending heartbeat PING event from server to all its clients about every 3 seconds.
 	 */
-	_handlePingInterval()
+	_handleServerPingInterval()
 	{
 		let bJustResumed;
 		let arrSockets;
@@ -262,7 +262,7 @@ class CThreadHeartbeat extends EventEmitter
 		//	The concat() method is used to merge two or more arrays.
 		//	This method does not change the existing arrays, but instead returns a new array.
 		//
-		arrSockets.forEach( oSocket =>
+		for ( const [ nSocketIndex, oSocket ] of arrSockets.entries() )
 		{
 			let nElapsedSinceLastReceived;
 			let nElapsedSinceLastSentHeartbeat;
@@ -272,24 +272,24 @@ class CThreadHeartbeat extends EventEmitter
 				//
 				//	sleeping status is for light Wallet only
 				//
-				this.m_oNode.log.info( `[${ this.constructor.name }] cancel ping because ${ oSocket.peer } is sleeping.` );
-				return;
+				this.m_oNode.log.info( `* ${ this.constructor.name } cancel ping because ${ oSocket.peer } is sleeping.` );
+				break;
 			}
 			if ( oSocket.readyState !== oSocket.OPEN )
 			{
 				//
 				//	web socket is not ready
 				//
-				this.m_oNode.log.info( `[${ this.constructor.name }] cancel ping because ${ oSocket.peer }'s readyState ${ oSocket.readyState } !== OPEN.` );
-				return;
+				this.m_oNode.log.info( `* ${ this.constructor.name } cancel ping because ${ oSocket.peer }'s readyState ${ oSocket.readyState } !== OPEN.` );
+				break;
 			}
 
 			//	...
 			nElapsedSinceLastReceived	= Date.now() - oSocket.last_ts;
 			if ( nElapsedSinceLastReceived < _p2pConstants.HEARTBEAT_TIMEOUT )
 			{
-				this.m_oNode.log.info( `[${ this.constructor.name }] cancel ping because ${ oSocket.peer } is active in ${ nElapsedSinceLastReceived } seconds.` );
-				return;
+				this.m_oNode.log.info( `* ${ this.constructor.name } cancel ping because ${ oSocket.peer } is active in ${ nElapsedSinceLastReceived } seconds.` );
+				break;
 			}
 
 			//	>= 10 seconds
@@ -299,7 +299,7 @@ class CThreadHeartbeat extends EventEmitter
 				if ( nElapsedSinceLastSentHeartbeat >= _p2pConstants.HEARTBEAT_RESPONSE_TIMEOUT )
 				{
 					//	>= 60 seconds
-					this.m_oNode.log.info( `[${ this.constructor.name }] will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
+					this.m_oNode.log.info( `* ${ this.constructor.name } will disconnect peer ${ oSocket.peer } who was silent for ${ nElapsedSinceLastReceived }ms` );
 					oSocket.close( 1000, 'lost driver' );
 				}
 			}
@@ -313,9 +313,10 @@ class CThreadHeartbeat extends EventEmitter
 				//
 				//	send a ping event to this client
 				//
-				this.m_oNode.log.info( `[${ this.constructor.name }] send heartbeat ping.` );
+				this.m_oNode.log.info( `* ${ this.constructor.name } send heartbeat ping.` );
 				this.m_oNode.server.sendRequest
 				(
+					this,
 					oSocket,
 					CP2pPackage.PACKAGE_HEARTBEAT_PING,
 					MESSAGE_PING,
@@ -324,7 +325,7 @@ class CThreadHeartbeat extends EventEmitter
 					this._handlePingResponse
 				);
 			}
-		});
+		}
 
 		return true;
 	}
@@ -340,16 +341,24 @@ class CThreadHeartbeat extends EventEmitter
 	 */
 	_handlePingResponse( oSocket, oRequestContent, sResponse )
 	{
+		let oBody;
+
 		delete oSocket.last_sent_heartbeat_ts;
 		oSocket.last_sent_heartbeat_ts = null;
 
-		this.m_oNode.log.info( `[${ this.constructor.name }], received response sent before with message ping.` );
+		this.m_oNode.log.info( `* ${ this.constructor.name }, received response sent before with message ping.` );
 
-		//
-		//	TODO
-		//	parse sResponse to JSON object and do ...
-		//
-		if ( 'sleep' === sResponse )
+		try
+		{
+			oBody	= JSON.parse( sResponse );
+		}
+		catch( e )
+		{
+			oBody	= null;
+		}
+
+		if ( _p2pUtils.isObjectWithKeys( oBody, 'sleep' ) &&
+			true === oBody.sleep )
 		{
 			//
 			//	the peer doesn't want to be bothered with heartbeats any more,

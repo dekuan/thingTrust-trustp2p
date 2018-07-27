@@ -42,6 +42,7 @@ class CP2pRequest extends CP2pMessage
 	/**
 	 *	send request to all connected outbounds
 	 *
+	 *	@param	{object}	oInstance
 	 *	@param	{array}		arrSockets
 	 *	@param	{number}	nPackageType
 	 *					- PACKAGE_SYSTEM		= 0;
@@ -56,7 +57,7 @@ class CP2pRequest extends CP2pMessage
 	 *	@param	{function}	pfnResponseHandler( ws, request, response ){ ... }
 	 *	@return {boolean}
 	 */
-	sendBroadcast( arrSockets, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
+	sendBroadcast( oInstance, arrSockets, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
 	{
 		if ( CP2pDriver.DRIVER_TYPE_CLIENT !== this.m_cDriver.sDriverType )
 		{
@@ -71,7 +72,7 @@ class CP2pRequest extends CP2pMessage
 
 		arrSockets.forEach
 		(
-			oSocket => this.sendRequest( oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
+			oSocket => this.sendRequest( oInstance, oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
 		);
 
 		return true;
@@ -82,6 +83,7 @@ class CP2pRequest extends CP2pMessage
 	/**
 	 *	send request with re-route ability supported
 	 *
+	 *	@param	{object}	oInstance
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackageType
 	 *					- PACKAGE_SYSTEM		= 0;
@@ -102,7 +104,7 @@ class CP2pRequest extends CP2pMessage
 	 *	2, bReroute flag must be the same
 	 *
 	 */
-	sendRequest( oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
+	sendRequest( oInstance, oSocket, nPackageType, sEvent, oBody, bReroute, pfnResponseHandler )
 	{
 		//
 		//	oJsonBody for 'catchup'
@@ -156,7 +158,11 @@ class CP2pRequest extends CP2pMessage
 		//
 		if ( oSocket.assocPendingRequests[ sTag ] )
 		{
-			oSocket.assocPendingRequests[ sTag ].responseHandlers.push( pfnResponseHandler );
+			oSocket.assocPendingRequests[ sTag ].responseHandlers.push
+			({
+				instance	: oInstance,
+				handler		: pfnResponseHandler,
+			});
 			_p2pLog.error
 			(
 				`already sent a ${ sEvent } request to ${ oSocket.peer }, 
@@ -187,7 +193,7 @@ class CP2pRequest extends CP2pMessage
 		//	THIS function will be called when the request is timeout
 		//
 		pfnReroute = bReroute
-			? this._createRerouteExecutor( oSocket, nPackageType, sEvent, oBody, bReroute, sTag )
+			? this._createRerouteExecutor( oInstance, oSocket, nPackageType, sEvent, oBody, bReroute, sTag )
 			: null;
 
 		//
@@ -212,7 +218,12 @@ class CP2pRequest extends CP2pMessage
 		oSocket.assocPendingRequests[ sTag ] =
 			{
 				request			: oJsonContent,
-				responseHandlers	: [ pfnResponseHandler ],
+				responseHandlers	: [
+					{
+						instance	: oInstance,
+						handler		: pfnResponseHandler,
+					}
+				],
 				reroute			: pfnReroute,
 				reroute_timer		: nRerouteTimer,
 				cancel_timer		: nCancelTimer
@@ -365,9 +376,15 @@ class CP2pRequest extends CP2pMessage
 				//
 				oPendingRequest.responseHandlers.forEach
 				(
-					rh =>
+					oRh =>
 					{
-						rh( oSocket, oPendingRequest.request, { error : "[internal] driver closed" } );
+						oRh.handler.call
+						(
+							oRh.instance,
+							oSocket,
+							oPendingRequest.request,
+							{ error : "[internal] driver closed" }
+						);
 					}
 				);
 
@@ -419,11 +436,17 @@ class CP2pRequest extends CP2pMessage
 				//
 				//	call all responseHandlers next tick
 				//
-				for ( const [ nHandlerIndex, pfnResponseHandler ] of oPendingRequest.responseHandlers.entries() )
+				for ( const [ nHandlerIndex, oRh ] of oPendingRequest.responseHandlers.entries() )
 				{
-					process.nextTick( function()
+					process.nextTick( () =>
 					{
-						pfnResponseHandler( oSocket, oPendingRequest.request, sResponse );
+						oRh.handler.call
+						(
+							oRh.instance,
+							oSocket,
+							oPendingRequest.request,
+							sResponse
+						);
 					});
 				}
 
@@ -490,6 +513,7 @@ class CP2pRequest extends CP2pMessage
 	 *	create reroute executor
 	 *
 	 *	@private
+	 *	@param	{object}	oInstance
 	 *	@param	{object}	oSocket
 	 *	@param 	{number}	nPackType
 	 *	@param	{string}	sEvent
@@ -498,7 +522,7 @@ class CP2pRequest extends CP2pMessage
 	 *	@param	{string}	sTag
 	 *	@return {Function}
 	 */
-	_createRerouteExecutor( oSocket, nPackType, sEvent, oJsonBody, bReroute, sTag )
+	_createRerouteExecutor( oInstance, oSocket, nPackType, sEvent, oJsonBody, bReroute, sTag )
 	{
 		return () =>
 		{
@@ -553,14 +577,14 @@ class CP2pRequest extends CP2pMessage
 			oSocket.assocPendingRequests[ sTag ].bRerouted = true;
 			oSocket.assocPendingRequests[ sTag ].responseHandlers.forEach
 			(
-				rh =>
+				oRh =>
 				{
 					//
 					//	rh	is pfnResponseHandler
 					//	this will send only once by tag cache assocPendingRequests
 					//	Amazing!!!
 					//
-					this.sendRequest( oNextSocket, nPackType, sEvent, oJsonBody, bReroute, rh );
+					this.sendRequest( oInstance, oNextSocket, nPackType, sEvent, oJsonBody, bReroute, oRh );
 				}
 			);
 
@@ -631,10 +655,16 @@ class CP2pRequest extends CP2pMessage
 				//
 				oSocket.assocPendingRequests[ sTag ].responseHandlers.forEach
 				(
-					rh =>
+					oRh =>
 					{
 						//	rh	is pfnResponseHandler
-						rh( oSocket, oJsonContent, { error : "[internal] response timeout" } );
+						oRh.handler.call
+						(
+							oRh.instance,
+							oSocket,
+							oJsonContent,
+							{ error : "[internal] response timeout" }
+						);
 					}
 				);
 				delete oSocket.assocPendingRequests[ sTag ];

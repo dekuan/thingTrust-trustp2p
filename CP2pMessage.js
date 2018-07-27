@@ -6,6 +6,8 @@ const CP2pPackage		= require( './CP2pPackage.js' );
 const _p2pLog			= require( './CP2pLog.js' );
 const _p2pConstants		= require( './p2pConstants.js' );
 const _p2pUtils			= require( './CP2pUtils.js' );
+const _package			= require( './package.json' );
+
 
 
 
@@ -36,22 +38,22 @@ class CP2pMessage
 
 		if ( ! oSocket )
 		{
-			_p2pLog.error( `sendMessage with invalid oSocket.` );
+			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } sendMessage with invalid oSocket.` );
 			return false;
 		}
 		if ( oSocket.readyState !== oSocket.OPEN )
 		{
-			_p2pLog.error( `readyState is ${ oSocket.readyState } on peer ${ oSocket.peer }, will not send ${ String( vCommand ) }.` );
+			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } readyState is ${ oSocket.readyState } on peer ${ oSocket.peer }, will not send ${ String( vCommand ) }.` );
 			return false;
 		}
 		if ( ! this.m_cP2pPackage.isValidPackageType( nPackageType ) )
 		{
-			_p2pLog.error( `sendMessage with invalid nPackageType.` );
+			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } sendMessage with invalid nPackageType.` );
 			return false;
 		}
 		if ( ! _p2pUtils.isObject( oBody ) )
 		{
-			_p2pLog.error( `sendMessage with invalid oBody.` );
+			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } sendMessage with invalid oBody.` );
 			return false;
 		}
 
@@ -59,7 +61,8 @@ class CP2pMessage
 		bufMessage	= this.m_cP2pPackage.encodePackage( nPackageType, sEvent, oBody );
 		oSocket.send( bufMessage );
 
-		_p2pLog.info( `SENT ${ sEvent }, ${ JSON.stringify( oBody ) } to ${ oSocket.peer }` );
+		//	...
+		_p2pLog.info( `* ${ this.constructor.name } SENT ${ sEvent }, ${ JSON.stringify( oBody ) } to ${ oSocket.peer }` );
 
 		//	...
 		return true;
@@ -102,10 +105,6 @@ class CP2pMessage
 
 	sendVersion( oSocket )
 	{
-		let libraryPackageJson;
-
-		//	...
-		libraryPackageJson	= require( './package.json' );
 		this.sendTalk
 		(
 			oSocket,
@@ -113,8 +112,8 @@ class CP2pMessage
 			{
 				protocol_version	: _p2pConstants.version,
 				alt			: _p2pConstants.alt,
-				library			: libraryPackageJson.name,
-				library_version		: libraryPackageJson.version,
+				library			: _package.name,
+				library_version		: _package.version,
 				program			: '_conf.program',
 				program_version		: '_conf.program_version'
 			}

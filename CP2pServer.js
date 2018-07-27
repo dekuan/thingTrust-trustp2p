@@ -84,15 +84,14 @@ class CP2pServer extends CP2pDeliver
 		this.m_cDriverServer
 		.on( CP2pDriver.EVENT_START, ( oSocket, sInfo ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_START }].`, sInfo );
+			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_START }].`, sInfo );
 		})
 		.on( CP2pDriver.EVENT_CONNECTION, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received [${ CP2pDriver.EVENT_CONNECTION }].` );
+			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_CONNECTION }].` );
 
 			//
-			//	WELCOME THE NEW PEER
-			//
+			//	WELCOME THE NEW CLIENT
 			//	so, we respond our version to the new client
 			//
 			this.sendVersion( oSocket );
@@ -125,7 +124,7 @@ class CP2pServer extends CP2pDeliver
 			let objMessage	= this.m_cP2pPackage.decodePackage( vMessage );
 			if ( objMessage )
 			{
-				_p2pLog.info( `Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
+				_p2pLog.info( `* ${ this.constructor.name } Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
 				switch ( objMessage.type )
 				{
 					case CP2pPackage.PACKAGE_REQUEST:
@@ -143,12 +142,12 @@ class CP2pServer extends CP2pDeliver
 		})
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_CLOSE }].` );
+			_p2pLog.info( `* ${ this.constructor.name } Received a message [${ CP2pDriver.EVENT_CLOSE }].` );
 			this.m_cThreadBootstrap.transitSocketClose( oSocket );
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
-			_p2pLog.info( `Received a message [${ CP2pDriver.EVENT_ERROR }].` );
+			_p2pLog.info( `* ${ this.constructor.name } Received a message [${ CP2pDriver.EVENT_ERROR }].` );
 			this.m_cThreadBootstrap.transitSocketError( vError );
 		});
 
