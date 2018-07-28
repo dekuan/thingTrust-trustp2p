@@ -137,6 +137,29 @@ class CThreadHeartbeat extends EventEmitter
 		}
 	}
 
+
+	/**
+	 *	callee for listening event about a new client connected in
+	 *
+	 * 	@public
+	 *	@param oSocket
+	 */
+	onSocketConnection( oSocket )
+	{
+		this.m_oNode.log.info( `> ${ this.constructor.name } a new client connected in.` );
+	}
+
+	/**
+	 *	callee for listening event about a outbound connection was opened
+	 *
+	 * 	@public
+	 *	@param oSocket
+	 */
+	onSocketOpen( oSocket )
+	{
+		this.m_oNode.log.info( `> ${ this.constructor.name } a new outbound connection was opened.` );
+	}
+
 	/**
 	 *	callee for listening event about a socket was closed
 	 *
@@ -145,7 +168,7 @@ class CThreadHeartbeat extends EventEmitter
 	 */
 	onSocketClose( oSocket )
 	{
-		this.m_oNode.log.info( `* ${ this.constructor.name } received a close message about socket.` );
+		this.m_oNode.log.info( `> ${ this.constructor.name } received a close message about socket.` );
 	}
 
 	/**
@@ -156,7 +179,7 @@ class CThreadHeartbeat extends EventEmitter
 	 */
 	onSocketError( vError )
 	{
-		this.m_oNode.log.info( `* ${ this.constructor.name } received a error message about socket.` );
+		this.m_oNode.log.info( `> ${ this.constructor.name } received a error message about socket.` );
 	}
 
 
