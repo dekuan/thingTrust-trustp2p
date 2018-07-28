@@ -64,7 +64,7 @@ class CThreadBootstrap extends EventEmitter
 	}
 
 	/**
-	 *	transit a socket message to all listeners
+	 *	transit socket message to all listeners
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
@@ -101,25 +101,59 @@ class CThreadBootstrap extends EventEmitter
 	}
 
 	/**
-	 *	transit a socket close event to all listeners
+	 *	transit socket connection event to all listeners
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 */
+	transitSocketConnection( oSocket )
+	{
+		Object.values( this.m_oThreadsMap ).forEach( oThread =>
+		{
+			oThread.instance.emit( this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CONNECTION ), oSocket );
+		});
+	}
+
+	/**
+	 *	transit socket open event to all listeners
+	 *
+	 * 	@public
+	 *	@param	{object}	oSocket
+	 */
+	transitSocketOpen( oSocket )
+	{
+		Object.values( this.m_oThreadsMap ).forEach( oThread =>
+		{
+			oThread.instance.emit( this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_OPEN ), oSocket );
+		});
+	}
+
+	/**
+	 *	transit socket close event to all listeners
 	 *
 	 * 	@public
 	 *	@param	{object}	oSocket
 	 */
 	transitSocketClose( oSocket )
 	{
-		this.emit( this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CLOSE ), oSocket );
+		Object.values( this.m_oThreadsMap ).forEach( oThread =>
+		{
+			oThread.instance.emit( this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CLOSE ), oSocket );
+		});
 	}
 
 	/**
-	 *	transit a socket error event to all listeners
+	 *	transit socket error event to all listeners
 	 *
 	 * 	@public
 	 *	@param	{string}	vError
 	 */
 	transitSocketError( vError )
 	{
-		this.emit( this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_ERROR ), vError );
+		Object.values( this.m_oThreadsMap ).forEach( oThread =>
+		{
+			oThread.instance.emit( this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_ERROR ), vError );
+		});
 	}
 
 
@@ -139,6 +173,10 @@ class CThreadBootstrap extends EventEmitter
 	 * 	@param	{object}	oNode.server	null or undefined if this is not a server instance
 	 * 	@param	{object}	oNode.log
 	 *	@return {Promise<any>}
+	 *
+	 * 	@description
+	 * 	DO NOT USE forEach
+	 *
 	 */
 	async _load( oNode )
 	{
@@ -318,6 +356,10 @@ class CThreadBootstrap extends EventEmitter
 	 *
 	 *	@public
 	 *	@return {Promise<void>}
+	 *
+	 * 	@description
+	 * 	DO NOT USE forEach
+	 *
 	 */
 	async _install()
 	{
@@ -325,11 +367,9 @@ class CThreadBootstrap extends EventEmitter
 		{
 			let objClassInstance;
 			let sFullEventName;
-			let nCalleeIndex;
-			let sCalleeName;
 
 			//
-			//	setup event listener
+			//	set hook for all event to listeners
 			//
 			_p2pLog.info( `* [${ this.constructor.name }] install class, this.m_oEventsMap size = ${ Object.keys( this.m_oEventsMap ).length }` );
 			for ( const [ nPackageType, oHandlerMap ] of Object.entries( this.m_oEventsMap ) )
@@ -355,42 +395,50 @@ class CThreadBootstrap extends EventEmitter
 			//
 			//	...
 			//
-			const arrCalleeMap	=
-				[
-					[ 'onSocketConnection',	CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CONNECTION ],
-					[ 'onSocketOpen',	CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_OPEN ],
-					[ 'onSocketClose',	CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CLOSE ],
-				];
 			for ( const [ sFileMd5, oThread ] of Object.entries( this.m_oThreadsMap ) )
 			{
 				//
-				//	call start
+				//	set hook for events : socket connection
 				//
-				if ( oThread.methods.includes( 'start' ) &&
-					_p2pUtils.isFunction( oThread.instance[ 'start' ] ) )
+				if ( oThread.methods.includes( 'onSocketConnection' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'onSocketConnection' ] ) )
 				{
-					_p2pLog.info( `* [${ this.constructor.name }] install class, call ${ oThread.instance.constructor.name }.start().` );
-					oThread.instance[ 'start' ]();
-				}
-
-
-				//
-				//	set hook for events : socket connection, open, close
-				//
-				for ( nCalleeIndex = 0; nCalleeIndex < arrCalleeMap.length; nCalleeIndex ++ )
-				{
-					sCalleeName	= arrCalleeMap[ nCalleeIndex ][ 0 ];
-					if ( oThread.methods.includes( sCalleeName ) &&
-						_p2pUtils.isFunction( oThread.instance[ sCalleeName ] ) )
+					sFullEventName = this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CONNECTION );
+					_p2pLog.info( `* [${ this.constructor.name }] set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketConnection.` );
+					oThread.instance.on( sFullEventName, ( oSocket ) =>
 					{
-						sFullEventName	= this.getFullEventName( arrCalleeMap[ nCalleeIndex ][ 1 ], arrCalleeMap[ nCalleeIndex ][ 2 ] );
-						_p2pLog.info( `* [${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.${ sCalleeName }.` );
-						oThread.instance.on( sFullEventName, ( oSocket ) =>
-						{
-							oThread.instance[ sCalleeName ].call( oThread.instance, oSocket );
-						});
-					}
+						oThread.instance[ 'onSocketConnection' ].call( oThread.instance, oSocket );
+					});
 				}
+
+				//
+				//	set hook for events : socket open
+				//
+				if ( oThread.methods.includes( 'onSocketOpen' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'onSocketOpen' ] ) )
+				{
+					sFullEventName = this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_OPEN );
+					_p2pLog.info( `* [${ this.constructor.name }] set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketOpen.` );
+					oThread.instance.on( sFullEventName, ( oSocket ) =>
+					{
+						oThread.instance[ 'onSocketOpen' ].call( oThread.instance, oSocket );
+					});
+				}
+
+				//
+				//	set hook for events : socket close
+				//
+				if ( oThread.methods.includes( 'onSocketClose' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'onSocketClose' ] ) )
+				{
+					sFullEventName = this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CLOSE );
+					_p2pLog.info( `* [${ this.constructor.name }] set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketClose.` );
+					oThread.instance.on( sFullEventName, ( oSocket ) =>
+					{
+						oThread.instance[ 'onSocketClose' ].call( oThread.instance, oSocket );
+					});
+				}
+
 
 				//
 				//	set hook for events : socket error
@@ -399,11 +447,22 @@ class CThreadBootstrap extends EventEmitter
 					_p2pUtils.isFunction( oThread.instance[ 'onSocketError' ] ) )
 				{
 					sFullEventName = this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_ERROR );
-					_p2pLog.info( `* [${ this.constructor.name }] install class, set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketError.` );
+					_p2pLog.info( `* [${ this.constructor.name }] set hook for event[${ sFullEventName }] to ${ oThread.instance.constructor.name }.onSocketError.` );
 					oThread.instance.on( sFullEventName, ( vError ) =>
 					{
 						oThread.instance[ 'onSocketError' ].call( oThread.instance, vError );
 					});
+				}
+
+
+				//
+				//	call start
+				//
+				if ( oThread.methods.includes( 'start' ) &&
+					_p2pUtils.isFunction( oThread.instance[ 'start' ] ) )
+				{
+					_p2pLog.info( `* [${ this.constructor.name }] install class, call ${ oThread.instance.constructor.name }.start().` );
+					oThread.instance[ 'start' ]();
 				}
 			}
 
@@ -430,8 +489,10 @@ class CThreadBootstrap extends EventEmitter
 			//
 			this.removeAllListeners
 			([
-				`${ String( CP2pPackage.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_CLOSE }`,
-				`${ String( CP2pPackage.PACKAGE_SYSTEM ) }-${ CP2pDriver.EVENT_ERROR }`
+				this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CONNECTION ),
+				this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_OPEN  ),
+				this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_CLOSE ),
+				this.getFullEventName( CP2pPackage.PACKAGE_SYSTEM, CP2pDriver.EVENT_ERROR ),
 			]);
 
 			//

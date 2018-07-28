@@ -38,22 +38,22 @@ class CP2pMessage
 
 		if ( ! oSocket )
 		{
-			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } sendMessage with invalid oSocket.` );
+			_p2pLog.error( `* ${ this.constructor.name } sendMessage with invalid oSocket.` );
 			return false;
 		}
 		if ( oSocket.readyState !== oSocket.OPEN )
 		{
-			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } readyState is ${ oSocket.readyState } on peer ${ oSocket.peer }, will not send ${ String( vCommand ) }.` );
+			_p2pLog.error( `* ${ this.constructor.name } readyState is ${ oSocket.readyState } on peer ${ oSocket.peer }, will not send ${ String( vCommand ) }.` );
 			return false;
 		}
 		if ( ! this.m_cP2pPackage.isValidPackageType( nPackageType ) )
 		{
-			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } sendMessage with invalid nPackageType.` );
+			_p2pLog.error( `* ${ this.constructor.name } sendMessage with invalid nPackageType.` );
 			return false;
 		}
 		if ( ! _p2pUtils.isObject( oBody ) )
 		{
-			_p2pLog.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } sendMessage with invalid oBody.` );
+			_p2pLog.error( `* ${ this.constructor.name } sendMessage with invalid oBody.` );
 			return false;
 		}
 

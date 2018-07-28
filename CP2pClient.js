@@ -87,6 +87,13 @@ class CP2pClient extends CP2pDeliver
 			//	send our version information to server peer
 			//
 			this.sendVersion( oSocket );
+			setImmediate
+			(
+				() =>
+				{
+					this.m_cThreadBootstrap.transitSocketOpen( oSocket );
+				}
+			);
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{

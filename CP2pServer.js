@@ -118,6 +118,14 @@ class CP2pServer extends CP2pDeliver
 			// 	//
 			// 	this.m_oOptions.subscribe( ws );
 			// }
+
+			setImmediate
+			(
+				() =>
+				{
+					this.m_cThreadBootstrap.transitSocketConnection( oSocket );
+				}
+			);
 		})
 		.on( CP2pDriver.EVENT_MESSAGE, ( oSocket, vMessage ) =>
 		{

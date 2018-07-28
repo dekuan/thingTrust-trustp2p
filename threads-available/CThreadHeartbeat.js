@@ -92,10 +92,9 @@ class CThreadHeartbeat extends EventEmitter
 			//	if we have exactly same intervals on two clients,
 			//	they might send heartbeats to each other at the same time
 			//
-			this.m_oNode.log.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } heartbeat start only at server end.` );
+			this.m_oNode.log.error( `[${ ( new Date() ).toString() }] * ${ this.constructor.name } heartbeat interval can start only at server end.` );
 			return null;
 		}
-
 
 		if ( null !== this.m_nIntervalHeartbeat )
 		{
