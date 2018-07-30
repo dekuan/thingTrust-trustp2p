@@ -37,6 +37,7 @@ $ npm install trustp2p
 
 ## Examples
 
+### Thread
 
 ```
 const EventEmitter		= require( 'events' );
@@ -194,7 +195,7 @@ $ cd threads-enabled
 $ ln -s ../threads-available/CThreadHeartbeat.js
 ```
 
-As you can see in thread-available/CThreadHeartbeat.js, write your own thread!
+As you can see in thread-available/CThreadHeartbeat.js, go ahead and try to write your own thread now!
 
 
 ## Documentation
