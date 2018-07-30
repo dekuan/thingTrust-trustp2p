@@ -188,7 +188,7 @@ $ mkdir threads-available
 $ mkdir threads-enabled
 ```
 
-And, then I strongly recommend you that you copy thread-available/CThreadHeartbeat.js to ./thread-available/CThreadHeartbeat.js and make it works.
+And, then I strongly recommend that you copy thread-available/CThreadHeartbeat.js to ./thread-available/CThreadHeartbeat.js and make it works.
 Following these steps:
 ```
 $ cd threads-enabled
