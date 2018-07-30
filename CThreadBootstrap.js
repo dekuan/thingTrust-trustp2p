@@ -203,14 +203,14 @@ class CThreadBootstrap extends EventEmitter
 			for ( const [ nFileIndex, sFile ] of arrFiles.entries() )
 			{
 				//	...
-				_p2pLog.info( `* [${ this.constructor.name }] load thread from file ${ sFile }` );
-
-				//	...
 				sFullFilename	= `${ sDirectory }${ sFile }`;
 				sFileMd5	= String( _crypto.createHash( 'md5' ).update( sFullFilename ).digest( 'hex' ) ).toLocaleLowerCase();
 				CTClass		= require( sFullFilename );
 				objTInstance	= new CTClass( oNode );
 				arrAllMethods	= _p2pUtils.getAllMethodsOfClass( objTInstance );
+
+				//	...
+				_p2pLog.info( `* [${ this.constructor.name }] load thread from file (${ sFullFilename }).` );
 
 				//
 				// if ( ! arrAllMethods.includes( 'on' ) || ! arrAllMethods.includes( 'emmit' ) )
