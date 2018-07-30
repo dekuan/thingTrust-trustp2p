@@ -1,19 +1,16 @@
 {
-  "name": "TrustNote-Core",
-  "description": "TrustNote Core",
+  "name": "trustp2p",
+  "description": "TrustNote p2p",
   "author": "TrustNote",
   "version": "1.0.0",
   "keywords": [
     "TrustNote"
   ],
-  "homepage": "https://github.com/trustnote/trustnote-core",
+  "homepage": "https://github.com/trustnote/",
   "license": "MIT",
   "repository": {
-    "url": "git://github.com/trustnote/trustnote-core.git",
+    "url": "git://github.com/dekuan/trustp2p.git",
     "type": "git"
-  },
-  "bugs": {
-    "url": "https://github.com/trustnote/trustnote-core/issues"
   },
   "browser": {
     "request": "browser-request",
