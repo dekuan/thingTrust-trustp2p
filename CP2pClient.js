@@ -39,7 +39,7 @@ class CP2pClient extends CP2pDeliver
 		super.cDriver			= this.m_cDriverClient;
 
 		//	...
-		this.m_cThreadBootstrap		= new CThreadBootstrap();
+		this.m_cThreadBootstrap		= new CThreadBootstrap( oOptions );
 
 		//
 		this._init();
