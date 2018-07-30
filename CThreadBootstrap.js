@@ -13,14 +13,18 @@ const _p2pLog			= require( './CP2pLog.js' );
 
 
 
+
 /**
  * 	@class	CThreadBootstrap
  */
 class CThreadBootstrap extends EventEmitter
 {
-	constructor()
+	constructor( oOptions )
 	{
 		super();
+
+		this.m_oOptions		= { cwd : __dirname };
+		this.m_oOptions		= Object.assign( {}, this.m_oOptions, oOptions );
 
 		this.m_oThreadsMap	= {};
 		this.m_oEventsMap	= {};
@@ -190,8 +194,15 @@ class CThreadBootstrap extends EventEmitter
 			let objTInstance;
 			let arrAllMethods;
 
+			//
+			//	If any of the accessibility checks fail, an Error will be thrown.
+			// 	Otherwise, this will return undefined.
+			//
+			_fs.accessSync( this.m_oOptions.cwd, _fs.constants.F_OK | _fs.constants.R_OK );
+
+
 			//	...
-			sDirectory	= `${ __dirname }/threads-enabled/`;
+			sDirectory	= `${ this.m_oOptions.cwd }/threads-enabled/`;
 			arrFiles	= _fs.readdirSync( sDirectory );
 
 			if ( ! Array.isArray( arrFiles ) )
@@ -203,14 +214,21 @@ class CThreadBootstrap extends EventEmitter
 			for ( const [ nFileIndex, sFile ] of arrFiles.entries() )
 			{
 				//	...
-				_p2pLog.info( `* [${ this.constructor.name }] load thread from file ${ sFile }` );
+				sFullFilename	= `${ sDirectory }${ sFile }`;
+
+				//
+				//	If any of the accessibility checks fail, an Error will be thrown.
+				// 	Otherwise, this will return undefined.
+				//
+				_fs.accessSync( sFullFilename, _fs.constants.F_OK | _fs.constants.R_OK );
+				_p2pLog.info( `* [${ this.constructor.name }] load thread from file (${ sFullFilename }).` );
 
 				//	...
-				sFullFilename	= `${ sDirectory }${ sFile }`;
 				sFileMd5	= String( _crypto.createHash( 'md5' ).update( sFullFilename ).digest( 'hex' ) ).toLocaleLowerCase();
 				CTClass		= require( sFullFilename );
 				objTInstance	= new CTClass( oNode );
 				arrAllMethods	= _p2pUtils.getAllMethodsOfClass( objTInstance );
+
 
 				//
 				// if ( ! arrAllMethods.includes( 'on' ) || ! arrAllMethods.includes( 'emmit' ) )

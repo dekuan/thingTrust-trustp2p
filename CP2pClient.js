@@ -39,7 +39,7 @@ class CP2pClient extends CP2pDeliver
 		super.cDriver			= this.m_cDriverClient;
 
 		//	...
-		this.m_cThreadBootstrap		= new CThreadBootstrap();
+		this.m_cThreadBootstrap		= new CThreadBootstrap( oOptions );
 
 		//
 		this._init();
@@ -124,7 +124,7 @@ class CP2pClient extends CP2pDeliver
 			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_CLOSE }].` );
 
 			//
-			//	handle things while a socket was closed
+			//	handle a socket was closed
 			//
 			this.handleClosed( oSocket );
 			setImmediate( () =>
