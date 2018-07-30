@@ -124,7 +124,7 @@ class CP2pClient extends CP2pDeliver
 			_p2pLog.info( `* ${ this.constructor.name } Received [${ CP2pDriver.EVENT_CLOSE }].` );
 
 			//
-			//	handle things while a socket was closed
+			//	handle a socket was closed
 			//
 			this.handleClosed( oSocket );
 			setImmediate( () =>

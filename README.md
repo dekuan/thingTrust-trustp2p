@@ -1,19 +1,37 @@
-# trustp2p
-peer to peer network of TrustNote
+# Trustp2p
+peer to peer network of TrustNote.
 
 
-
-
-### Layer
+### Architecture
 ```
-client
-server
+Node( client, server )
+    ThreadBootstrap
+        threads
+            threads-available
+                CThreadHeartbeat
+                CThreadNode
+                CThreadCatchup
+                CThread...
+            threads-enabled
+    Driver
+        Adapters
+            Web Socket
+            ...
     Deliver
-        Request, Response, Heartbeat
-        Connection
-            Adapters
-                Web Socket
+        Request, Response
+            CP2pMessage
+                CP2pPackage
+                    Protocol Buffer
+
 ```
 
 
+
+### How It Works?
+
+### Installation
+
+### Examples
+
+### Documentation
 

@@ -151,7 +151,15 @@ class CP2pServer extends CP2pDeliver
 		.on( CP2pDriver.EVENT_CLOSE, ( oSocket ) =>
 		{
 			_p2pLog.info( `* ${ this.constructor.name } Received a message [${ CP2pDriver.EVENT_CLOSE }].` );
-			this.m_cThreadBootstrap.transitSocketClose( oSocket );
+
+			//
+			//	handle a socket was closed
+			//
+			this.handleClosed( oSocket );
+			setImmediate( () =>
+			{
+				this.m_cThreadBootstrap.transitSocketClose( oSocket );
+			});
 		})
 		.on( CP2pDriver.EVENT_ERROR, ( vError ) =>
 		{
