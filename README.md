@@ -189,7 +189,7 @@ Register events you like here, trustp2p will transit all these events to you.
     return {
         [ CP2pPackage.PACKAGE_HEARTBEAT_PING ]	:
         {
-            [ MESSAGE_PING ]	: this._handleMessagePing,	//	ping by server
+            'ping'	: this._handleMessagePing,	//	ping by server
         }
     }
 ```
