@@ -1,0 +1,49 @@
+{
+  "name": "TrustNote-Core",
+  "description": "TrustNote Core",
+  "author": "TrustNote",
+  "version": "1.0.0",
+  "keywords": [
+    "TrustNote"
+  ],
+  "homepage": "https://github.com/trustnote/trustnote-core",
+  "license": "MIT",
+  "repository": {
+    "url": "git://github.com/trustnote/trustnote-core.git",
+    "type": "git"
+  },
+  "bugs": {
+    "url": "https://github.com/trustnote/trustnote-core/issues"
+  },
+  "browser": {
+    "request": "browser-request",
+    "secp256k1": "secp256k1/js"
+  },
+  "dependencies": {
+    "async": "^1.5.2",
+    "bitcore-mnemonic": "~1.0.0",
+    "bittorrent-dht": ">=v1.0",
+    "co": "^1.0.1",
+    "lodash": "^4.6.1",
+    "longjohn": "^0.2.11",
+    "magnet-uri": "^1.0.1",
+    "mysql": "^2.10.2",
+    "node4mailer": "git+https://github.com/edemaine/node4mailer.git",
+    "protobufjs": ">=1.0",
+    "secp256k1": "^3.1.0",
+    "socks": "1.1.10",
+    "sqlite3": "3.1.4",
+    "redis": ">=1.0",
+    "thirty-two": "^1.0.1",
+    "torrent-discovery": ">=v1.0",
+    "ws": "^1.0.1",
+    "sleep": ">=1.0"
+  },
+  "scripts": {
+    "test": "yarn ava"
+  },
+  "devDependencies": {
+    "ava": "^0.22.0",
+    "testcheck": "^1.0.0-rc.2"
+  }
+}
