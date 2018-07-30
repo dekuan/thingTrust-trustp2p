@@ -1,5 +1,5 @@
 # Trustp2p
-peer to peer network of TrustNote.
+A peer to peer network framework by TrustNote Foundation.
 
 
 ## Architecture
