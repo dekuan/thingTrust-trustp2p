@@ -19,8 +19,8 @@ const _object_hash		= require( './common/object_hash.js' );
 const PACKAGE_P2P_PROTO		= `${ __dirname }/CP2pPackage.proto`;
 
 const PACKAGE_SYSTEM		= 0;		//	system
-const PACKAGE_HEARTBEAT_PING	= 10;		//	send on server side
-const PACKAGE_HEARTBEAT_PONG	= 11;		//	send on client side
+const PACKAGE_PING		= 10;		//	send on server side
+const PACKAGE_PONG		= 11;		//	send on client side
 const PACKAGE_TALK		= 20;		//
 const PACKAGE_REQUEST		= 30;		//	send on client side
 const PACKAGE_RESPONSE		= 31;		//	send on server side
@@ -311,8 +311,8 @@ class CP2pPackage
 module.exports	= CP2pPackage;
 
 module.exports.PACKAGE_SYSTEM		= PACKAGE_SYSTEM;
-module.exports.PACKAGE_HEARTBEAT_PING	= PACKAGE_HEARTBEAT_PING;
-module.exports.PACKAGE_HEARTBEAT_PONG	= PACKAGE_HEARTBEAT_PONG;
+module.exports.PACKAGE_PING		= PACKAGE_PING;
+module.exports.PACKAGE_PONG		= PACKAGE_PONG;
 module.exports.PACKAGE_TALK		= PACKAGE_TALK;
 module.exports.PACKAGE_REQUEST		= PACKAGE_REQUEST;
 module.exports.PACKAGE_RESPONSE		= PACKAGE_RESPONSE;

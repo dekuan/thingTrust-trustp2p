@@ -45,12 +45,12 @@ class CP2pRequest extends CP2pMessage
 	 *	@param	{object}	oInstance
 	 *	@param	{array}		arrSockets
 	 *	@param	{number}	nPackageType
-	 *					- PACKAGE_SYSTEM		= 0;
-	 *					- PACKAGE_HEARTBEAT_PING	= 0;
-	 *					- PACKAGE_HEARTBEAT_PONG	= 1;
-	 *					- PACKAGE_TALK			= 10;
-	 *					- PACKAGE_REQUEST		= 20;
-	 *					- PACKTYPE_RESPONSE		= 21;
+	 *					- PACKAGE_SYSTEM
+	 *					- PACKAGE_PING
+	 *					- PACKAGE_PONG
+	 *					- PACKAGE_TALK
+	 *					- PACKAGE_REQUEST
+	 *					- PACKAGE_RESPONSE
 	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody
 	 *	@param	{boolean}	bReroute
@@ -86,12 +86,12 @@ class CP2pRequest extends CP2pMessage
 	 *	@param	{object}	oInstance
 	 *	@param	{object}	oSocket
 	 *	@param	{number}	nPackageType
-	 *					- PACKAGE_SYSTEM		= 0;
-	 *					- PACKAGE_HEARTBEAT_PING	= 0;
-	 *					- PACKAGE_HEARTBEAT_PONG	= 1;
-	 *					- PACKAGE_TALK			= 10;
-	 *					- PACKAGE_REQUEST		= 20;
-	 *					- PACKTYPE_RESPONSE		= 21;
+	 *					- PACKAGE_SYSTEM
+	 *					- PACKAGE_PING
+	 *					- PACKAGE_PONG
+	 *					- PACKAGE_TALK
+	 *					- PACKAGE_REQUEST
+	 *					- PACKAGE_RESPONSE
 	 *	@param	{string}	sEvent
 	 *	@param	{object}	oBody
 	 *	@param	{boolean}	bReroute

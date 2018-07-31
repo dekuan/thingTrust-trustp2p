@@ -103,7 +103,7 @@ class CP2pClient extends CP2pDeliver
 				_p2pLog.info( `* ${ this.constructor.name } Received ${ CP2pDriver.EVENT_MESSAGE } :: ( type:${ objMessage.type }, event:${ objMessage.event }, tag:${ objMessage.tag } )` );
 				switch ( objMessage.type )
 				{
-					case CP2pPackage.PACKAGE_HEARTBEAT_PING:
+					case CP2pPackage.PACKAGE_PING:
 					case CP2pPackage.PACKAGE_REQUEST:
 						this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
 						break;

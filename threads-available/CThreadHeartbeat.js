@@ -72,7 +72,7 @@ class CThreadHeartbeat extends EventEmitter
 	get eventMap()
 	{
 		return {
-			[ CP2pPackage.PACKAGE_HEARTBEAT_PING ]	:
+			[ CP2pPackage.PACKAGE_PING ]	:
 				{
 					[ MESSAGE_PING ]	: this._handleMessagePing,	//	ping by server
 					// [ MESSAGE_PONG ]	: this._handleMessagePong,	//	pong by client
@@ -237,7 +237,7 @@ class CThreadHeartbeat extends EventEmitter
 		return this.m_oNode.client.sendResponse
 		(
 			oSocket,
-			CP2pPackage.PACKAGE_HEARTBEAT_PONG,
+			CP2pPackage.PACKAGE_PONG,
 			MESSAGE_PONG,
 			{ tag : objMessage.tag, sleep : bSleep }
 		);
@@ -340,7 +340,7 @@ class CThreadHeartbeat extends EventEmitter
 				(
 					this,
 					oSocket,
-					CP2pPackage.PACKAGE_HEARTBEAT_PING,
+					CP2pPackage.PACKAGE_PING,
 					MESSAGE_PING,
 					{},
 					false,

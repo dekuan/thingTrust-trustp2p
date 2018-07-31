@@ -138,7 +138,7 @@ class CP2pServer extends CP2pDeliver
 					case CP2pPackage.PACKAGE_REQUEST:
 						this.m_cThreadBootstrap.transitSocketMessage( oSocket, objMessage );
 						break;
-					case CP2pPackage.PACKAGE_HEARTBEAT_PONG:
+					case CP2pPackage.PACKAGE_PONG:
 					case CP2pPackage.PACKAGE_RESPONSE:
 						this.onRequestResponded( oSocket, objMessage );
 						break;

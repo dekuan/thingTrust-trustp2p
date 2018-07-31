@@ -124,7 +124,7 @@ Register events you like here, trustp2p will transit all these events to you.
 
 ```js
 return {
-    [ CP2pPackage.PACKAGE_HEARTBEAT_PING ]	:
+    [ CP2pPackage.PACKAGE_PING ]	:
     {
         'ping'	: this._handleMessagePing,	//	ping by server
     }
