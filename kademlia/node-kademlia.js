@@ -13,6 +13,7 @@ const _utils				= require( './utils' );
 
 
 
+
 /**
  *	Extends {@link AbstractNode} with Kademlia-specific rules
  *	@class
@@ -39,12 +40,12 @@ class KademliaNode extends AbstractNode
 		this._pings			= new Map();
 		this._updateContactQueue	= _async.queue
 		(
-			(task, cb) => this._updateContactWorker(task, cb),
+			( task, cb )	=> this._updateContactWorker( task, cb ),
 			1
 		);
 
-		this.replicatePipeline = new MetaPipe({objectMode: true});
-		this.expirePipeline = new MetaPipe({objectMode: true});
+		this.replicatePipeline		= new MetaPipe( { objectMode: true } );
+		this.expirePipeline		= new MetaPipe( { objectMode: true } );
 	}
 
 
@@ -60,9 +61,11 @@ class KademliaNode extends AbstractNode
 		this.use( 'FIND_NODE', handlers.findNode.bind( handlers ) );
 		this.use( 'FIND_VALUE', handlers.findValue.bind( handlers ) );
 
+		//	...
 		setInterval( () => this.refresh(0), _constants.T_REFRESH );
 		setInterval( () => this.replicate( () => this.expire() ), _constants.T_REPLICATE );
 
+		//	...
 		super.listen( ...arguments );
 	}
 
@@ -71,8 +74,8 @@ class KademliaNode extends AbstractNode
 	 *	a {@link KademliaNode#iterativeFindNode} for this node's identity,
 	 *	then refreshes all buckets further than it's closest neighbor, which will
 	 *	be in the occupied bucket with the lowest index
-	 *	@param {Bucket~contact} peer - Peer to bootstrap from
-	 *	@param {function} [joinListener] - Function to set as join listener
+	 *	@param {Bucket~contact} peer	- Peer to bootstrap from
+	 *	@param {function} [callback]	- joinListener, Function to set as join listener
 	 *	@emits AbstractNode#join
 	 */
 	join( [ identity, contact ], callback )
@@ -84,6 +87,7 @@ class KademliaNode extends AbstractNode
 			this.once( 'error', callback );
 		}
 
+		//	...
 		this.router.addContactByNodeId( identity, contact );
 		_async.series
 		(
@@ -113,7 +117,7 @@ class KademliaNode extends AbstractNode
 
 	/**
 	 *	Sends a PING message to the supplied contact
-	 *	@param {Bucket~contact} peer
+	 *	@param {Bucket~contact} contact			- peer
 	 *	@param {KademliaNode~pingCallback} callback
 	 */
 	ping( contact, callback )
@@ -287,7 +291,7 @@ class KademliaNode extends AbstractNode
 
 		function maybeReplicate( { key, value }, enc, next )
 		{
-			const isPublisher	= value.publisher === self.identity.toString('hex');
+			const isPublisher	= value.publisher === self.identity.toString( 'hex' );
 			const republishDue	= ( value.timestamp + _constants.T_REPUBLISH ) <= now;
 			const replicateDue	= ( value.timestamp + _constants.T_REPLICATE ) <= now;
 			const shouldRepublish	= isPublisher && republishDue;
@@ -394,7 +398,7 @@ class KademliaNode extends AbstractNode
 				{
 					return this.iterativeFindNode
 					(
-						_utils.getRandomBufferInBucketRange( this.identity, index ).toString('hex'),
+						_utils.getRandomBufferInBucketRange( this.identity, index ).toString( 'hex' ),
 						next
 					);
 				}
