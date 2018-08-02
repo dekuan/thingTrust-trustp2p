@@ -594,11 +594,10 @@ class KademliaNode extends AbstractNode
 		const [ headId, headContact ]	= bucket.head;
 		const lastPing			= this._pings.get( headId );
 
-		if ( contactIndex !== -1 )
+		if ( -1 !== contactIndex )
 		{
 			return callback();
 		}
-
 		if ( lastPing && lastPing.responded && lastPing.timestamp > ( now - reset ) )
 		{
 			return callback();
@@ -622,4 +621,9 @@ class KademliaNode extends AbstractNode
 
 }
 
+
+/**
+ *	@exports
+ *	@type {KademliaNode}
+ */
 module.exports = KademliaNode;
