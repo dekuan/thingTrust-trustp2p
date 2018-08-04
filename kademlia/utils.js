@@ -90,8 +90,8 @@ exports.getDistance = function ( id1, id2 )
 
 /**
  *	Compare two buffers for sorting
- *	@param {buffer}	b1 - Buffer to compare
- *	@param {buffer}	b2 - Buffer to compare
+ *	@param {Buffer}	b1 - Buffer to compare
+ *	@param {Buffer}	b2 - Buffer to compare
  *	@returns {number}
  */
 exports.compareKeyBuffers = function( b1, b2 )

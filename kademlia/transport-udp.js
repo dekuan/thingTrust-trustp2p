@@ -2,7 +2,6 @@
 
 const { Duplex : DuplexStream }		= require( 'stream' );
 
-const merge		= require( 'merge' );
 const dgram		= require( 'dgram' );
 
 
@@ -31,7 +30,7 @@ class UDPTransport extends DuplexStream
 		super( { objectMode : true } );
 
 		//	...
-		this.socket	= dgram.createSocket( merge( UDPTransport.DEFAULTS, options ) )
+		this.socket	= dgram.createSocket( Object.assign( {}, UDPTransport.DEFAULTS, options ) )
 			.on( 'error', ( err ) => this.emit( 'error', err ) );
 	}
 
