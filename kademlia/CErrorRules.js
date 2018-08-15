@@ -2,15 +2,15 @@
 
 
 /**
- *	@class	ErrorRules
+ *	@class	CErrorRules
  */
-class ErrorRules
+class CErrorRules
 {
 	/**
 	 *	Constructs a error rules instance in the context of a
-	 *	{@link AbstractNode}
+	 *	{@link CKademliaNodeAbstract}
 	 *	@constructor
-	 *	@param {AbstractNode} node
+	 *	@param {CKademliaNodeAbstract} node
 	 */
 	constructor( node )
 	{
@@ -20,9 +20,9 @@ class ErrorRules
 	/**
 	 *	Assumes if no error object exists, then there is simply no method defined
 	 *	@param {error|null} err
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
-	 *	@param {AbstractNode~next} next
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
+	 *	@param {CKademliaNodeAbstract~next} next
 	 */
 	methodNotFound( err, request, response, next )
 	{
@@ -37,9 +37,9 @@ class ErrorRules
 	/**
 	 *	Formats the errors response according to the error object given
 	 *	@param {error|null} err
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
-	 *	@param {AbstractNode~next} next
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
+	 *	@param {CKademliaNodeAbstract~next} next
 	 */
 	internalError( err, request, response, next )
 	{
@@ -51,6 +51,6 @@ class ErrorRules
 
 /**
  *	@exports
- *	@type {ErrorRules}
+ *	@type {CErrorRules}
  */
-module.exports = ErrorRules;
+module.exports = CErrorRules;

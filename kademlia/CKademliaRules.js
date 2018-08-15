@@ -8,13 +8,13 @@ const utils	= require( './utils' );
 /**
  *	Represent kademlia protocol handlers
  */
-class KademliaRules
+class CKademliaRules
 {
 	/**
 	 *	Constructs a kademlia rules instance in the context of a
-	 *	{@link KademliaNode}
+	 *	{@link CKademliaNode}
 	 *	@constructor
-	 *	@param {KademliaNode} node
+	 *	@param {CKademliaNode} node
 	 */
 	constructor( node )
 	{
@@ -27,8 +27,8 @@ class KademliaRules
 	 *	recipient of the PING must update the bucket corresponding to the
 	 *	sender; and, if there is a reply, the sender must update the bucket
 	 *	appropriate to the recipient.
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
 	 */
 	ping( request, response )
 	{
@@ -39,9 +39,9 @@ class KademliaRules
 	 *	The sender of the STORE RPC provides a key and a block of data and
 	 *	requires that the recipient store the data and make it available for
 	 *	later retrieval by that key.
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
-	 *	@param {AbstractNode~next} next
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
+	 *	@param {CKademliaNodeAbstract~next} next
 	 */
 	store( request, response, next )
 	{
@@ -78,9 +78,9 @@ class KademliaRules
 	 *	up to K contacts that it knows to be closest to the key. The recipient
 	 *	must return K contacts if at all possible. It may only return fewer than K
 	 *	if it is returning all of the contacts that it has knowledge of.
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
-	 *	@param {AbstractNode~next} next
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
+	 *	@param {CKademliaNodeAbstract~next} next
 	 */
 	findNode( request, response, next )
 	{
@@ -99,9 +99,9 @@ class KademliaRules
 	 *	A FIND_VALUE RPC includes a B=160-bit key. If a corresponding value is
 	 *	present on the recipient, the associated data is returned. Otherwise the
 	 *	RPC is equivalent to a FIND_NODE and a set of K contacts is returned.
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
-	 *	@param {AbstractNode~next} next
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
+	 *	@param {CKademliaNodeAbstract~next} next
 	 */
 	findValue( request, response, next )
 	{
@@ -128,6 +128,6 @@ class KademliaRules
 
 /**
  *	@exports
- *	@type {KademliaRules}
+ *	@type {CKademliaRules}
  */
-module.exports = KademliaRules;
+module.exports = CKademliaRules;

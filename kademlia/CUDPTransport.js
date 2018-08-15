@@ -10,7 +10,7 @@ const dgram		= require( 'dgram' );
 /**
  *	Implements a UDP transport adapter
  */
-class UDPTransport extends DuplexStream
+class CUDPTransport extends DuplexStream
 {
 	static get DEFAULTS()
 	{
@@ -30,7 +30,7 @@ class UDPTransport extends DuplexStream
 		super( { objectMode : true } );
 
 		//	...
-		this.socket	= dgram.createSocket( Object.assign( {}, UDPTransport.DEFAULTS, options ) )
+		this.socket	= dgram.createSocket( Object.assign( {}, CUDPTransport.DEFAULTS, options ) )
 			.on( 'error', ( err ) => this.emit( 'error', err ) );
 	}
 
@@ -74,6 +74,6 @@ class UDPTransport extends DuplexStream
 
 /**
  *	@exports
- *	@type {UDPTransport}
+ *	@type {CUDPTransport}
  */
-module.exports = UDPTransport;
+module.exports = CUDPTransport;

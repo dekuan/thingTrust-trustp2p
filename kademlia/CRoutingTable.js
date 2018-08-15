@@ -1,7 +1,7 @@
 'use strict';
 
 const { EventEmitter }	= require( 'events' );
-const Bucket		= require( './bucket' );
+const Bucket		= require( './Bucket' );
 
 const utils		= require( './utils' );
 const constants		= require( './constants' );
@@ -12,7 +12,7 @@ const constants		= require( './constants' );
 /**
  *	Represents a kademlia routing table
  */
-class RoutingTable extends Map
+class CRoutingTable extends Map
 {
 	/**
 	 *	Constructs a routing table
@@ -182,6 +182,6 @@ class RoutingTable extends Map
 
 /**
  *	@exports
- *	@type {RoutingTable}
+ *	@type {CRoutingTable}
  */
-module.exports = RoutingTable;
+module.exports = CRoutingTable;

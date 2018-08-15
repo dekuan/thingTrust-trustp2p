@@ -199,7 +199,7 @@ exports.getRandomBufferInBucketRange = function( referenceKey, index )
 
 /**
  *	Validates the given object is a storage adapter
- *	@param {AbstractNode~storage} storageAdapter
+ *	@param {CKademliaNodeAbstract~storage} storageAdapter
  */
 exports.validateStorageAdapter = function( storage )
 {
@@ -212,7 +212,7 @@ exports.validateStorageAdapter = function( storage )
 
 /**
  *	Validates the given object is a logger
- *	@param {AbstractNode~logger} logger
+ *	@param {CKademliaNodeAbstract~logger} logger
  */
 exports.validateLogger = function( logger )
 {
@@ -225,7 +225,7 @@ exports.validateLogger = function( logger )
 
 /**
  *	Validates the given object is a transport
- *	@param {AbstractNode~transport} transport
+ *	@param {CKademliaNodeAbstract~transport} transport
  */
 exports.validateTransport = function( transport )
 {

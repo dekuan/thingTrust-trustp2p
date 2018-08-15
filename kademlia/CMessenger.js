@@ -14,24 +14,24 @@ const uuid				= require( 'uuid' );
  *	adapter and receiving messages to process through middleware stacks
  *	@class
  */
-class Messenger extends EventEmitter
+class CMessenger extends EventEmitter
 {
 	static get DEFAULTS()
 	{
 		return {
-			serializer	: Messenger.JsonRpcSerializer,
-			deserializer	: Messenger.JsonRpcDeserializer
+			serializer	: CMessenger.JsonRpcSerializer,
+			deserializer	: CMessenger.JsonRpcDeserializer
 		};
 	}
 
 	/**
 	 *	@function
-	 *	@memberof Messenger
-	 *	@param {array} data - Object to transform
-	 *	@param {object} data.0 - JSON payload, parsed into an object
-	 *	@param {Bucket~contact} sender - Origin peer for message
-	 *	@param {Bucket~contact} receiver - Destination peer for message
-	 *	@param {function} callback - Transform stream callback(err, data)
+	 *	@memberof CMessenger
+	 *	@param {array} data			- Object to transform
+	 *	@param {object} data.0			- JSON payload, parsed into an object
+	 *	@param {Bucket~contact} sender		- Origin peer for message
+	 *	@param {Bucket~contact} receiver	- Destination peer for message
+	 *	@param {function} callback		- Transform stream callback(err, data)
 	 */
 	static get JsonRpcSerializer()
 	{
@@ -78,13 +78,13 @@ class Messenger extends EventEmitter
 
 	/**
 	 *	@function
-	 *	@memberof Messenger
-	 *	@param {buffer} rawMessage - Incoming message as buffer
-	 *	@param {function} callback - Transform stream callback(err, data)
+	 *	@memberof CMessenger
+	 *	@param {buffer} rawMessage	- Incoming message as buffer
+	 *	@param {function} callback	- Transform stream callback(err, data)
 	 */
 	static get JsonRpcDeserializer()
 	{
-		return function ( buffer, callback )
+		return function( buffer, callback )
 		{
 			let [ message, notification ]	= jsonrpc.parse( buffer.toString( 'utf8' ) );
 
@@ -103,29 +103,29 @@ class Messenger extends EventEmitter
 	}
 
 	/**
-	 *	@interface Messenger~serializer
+	 *	@interface CMessenger~serializer
 	 *	@function
 	 *	@param {object|buffer}	data - Outgoing message buffer or parsed JSON data
 	 *	@param {string|null}	encoding - Encoding of incoming data
-	 *	@param {Messenger~serializerCallback} callback
+	 *	@param {CMessenger~serializerCallback} callback
 	 */
 
 	/**
-	 *	@callback Messenger~serializerCallback
+	 *	@callback CMessenger~serializerCallback
 	 *	@param {error|null} error
 	 *	@param {buffer|object} data - Serialized data to pass through middleware
 	 */
 
 	/**
-	 *	@interface Messenger~deserializer
+	 *	@interface CMessenger~deserializer
 	 *	@function
 	 *	@param {object|buffer} data - Incoming message buffer or parsed JSON data
 	 *	@param {string|null} encoding - Encoding of incoming data
-	 *	@param {Messenger~deserializerCallback} callback
+	 *	@param {CMessenger~deserializerCallback} callback
 	 */
 
 	/**
-	 *	@callback Messenger~deserializerCallback
+	 *	@callback CMessenger~deserializerCallback
 	 *	@param {error|null} error
 	 *	@param {buffer|object} data - Deserialized data to pass through middleware
 	 */
@@ -133,14 +133,14 @@ class Messenger extends EventEmitter
 	/**
 	 *	@constructor
 	 *	@param {object} [options]
-	 *	@param {Messenger~serializer} [options.serializer] - Serializer function
-	 *	@param {Messenger~deserializer} [options.deserializer] - Deserializer function
+	 *	@param {CMessenger~serializer} [options.serializer] - Serializer function
+	 *	@param {CMessenger~deserializer} [options.deserializer] - Deserializer function
 	 */
-	constructor( options = Messenger.DEFAULTS )
+	constructor( options = CMessenger.DEFAULTS )
 	{
 		super();
 
-		this._opts		= Object.assign( {}, Messenger.DEFAULTS, options );
+		this._opts		= Object.assign( {}, CMessenger.DEFAULTS, options );
 		this.serializer		= new MetaPipe( { objectMode: true } );
 		this.deserializer	= new MetaPipe( { objectMode: true } );
 
@@ -205,6 +205,6 @@ class Messenger extends EventEmitter
 
 /**
  *	@exports
- *	@type {Messenger}
+ *	@type {CMessenger}
  */
-module.exports = Messenger;
+module.exports = CMessenger;

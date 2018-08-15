@@ -6,7 +6,7 @@ const utils	= require( './utils' );
 /**
  *	Manages contact lists returned from FIND_NODE queries
  */
-class ContactList
+class CContactList
 {
 	/**
 	 *	@constructor
@@ -103,4 +103,4 @@ class ContactList
 
 }
 
-module.exports = ContactList;
+module.exports = CContactList;

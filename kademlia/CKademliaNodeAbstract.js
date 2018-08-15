@@ -1,8 +1,8 @@
 'use strict';
 
 const {EventEmitter}	= require( 'events' );
-const RoutingTable	= require( './routing-table' );
-const Messenger		= require( './messenger' );
+const CRoutingTable	= require( './CRoutingTable' );
+const CMessenger	= require( './CMessenger' );
 
 const uuid		= require( 'uuid' );
 const async		= require( 'async' );
@@ -10,11 +10,11 @@ const assert		= require( 'assert' );
 const bunyan		= require( 'bunyan' );
 const constants		= require( './constants' );
 const utils		= require( './utils' );
-const ErrorRules	= require( './rules-errors' );
+const CErrorRules	= require( './CErrorRules' );
 
 
 /**
- *	@typedef {object} AbstractNode~logger
+ *	@typedef {object} CKademliaNodeAbstract~logger
  *	@property {function} debug - Passed string of debug information
  *	@property {function} info - Passed string of general information
  *	@property {function} warn - Passed string of warnings
@@ -22,13 +22,13 @@ const ErrorRules	= require( './rules-errors' );
  */
 
 /**
- *	@typedef {object} AbstractNode~transport
+ *	@typedef {object} CKademliaNodeAbstract~transport
  *	@property {function} read - Returns raw message buffer if available
  *	@property {function} write - Passed raw message buffer
  */
 
 /**
- *	@typedef {object} AbstractNode~storage
+ *	@typedef {object} CKademliaNodeAbstract~storage
  *	@description Implements a subset of the LevelUP interface
  *	@property {function} get
  *	@property {function} put
@@ -37,7 +37,7 @@ const ErrorRules	= require( './rules-errors' );
  */
 
 /**
- *	@typedef AbstractNode~request
+ *	@typedef CKademliaNodeAbstract~request
  *	@property {array} contact - Peer who sent this request
  *	@property {string} contact.0 - Peer's node identity
  *	@property {object} contact.1 - Peer's contact information (varies by plugin)
@@ -46,23 +46,23 @@ const ErrorRules	= require( './rules-errors' );
  */
 
 /**
- *	@typedef AbstractNode~response
- *	@property {AbstractNode~responseSend} send
- * 	@property {AbstractNode~responseError} error
+ *	@typedef CKademliaNodeAbstract~response
+ *	@property {CKademliaNodeAbstract~responseSend} send
+ * 	@property {CKademliaNodeAbstract~responseError} error
  */
 
 /**
- *	@typedef {function} AbstractNode~next
+ *	@typedef {function} CKademliaNodeAbstract~next
  *	@param {error|null} error - Indicates to exit the middleware stack
  */
 
 /**
- *	@method AbstractNode~responseSend
+ *	@method CKademliaNodeAbstract~responseSend
  *	@param {array|object} results - Result parameters to respond with
  */
 
 /**
- *	@method AbstractNode~responseError
+ *	@method CKademliaNodeAbstract~responseError
  *	@param {string} errorMessage - Text describing the error encountered
  *	@param {number} [errorCode] - Error code
  */
@@ -70,17 +70,17 @@ const ErrorRules	= require( './rules-errors' );
 /**
  *	Represents a network node
  */
-class AbstractNode extends EventEmitter
+class CKademliaNodeAbstract extends EventEmitter
 {
 	/**
 	 *	Join event is triggered when the routing table is no longer empty
-	 *	@event AbstractNode#join
+	 *	@event CKademliaNodeAbstract#join
 	 */
 
 	/**
 	 *	Error event fires when a critical failure has occurred; if no handler is
 	 *	specified, then it will throw
-	 *	@event AbstractNode#error
+	 *	@event CKademliaNodeAbstract#error
 	 *	@type {Error}
 	 */
 
@@ -91,7 +91,7 @@ class AbstractNode extends EventEmitter
 			identity	: utils.getRandomKeyBuffer(),
 			transport	: null,
 			storage		: null,
-			messenger	: new Messenger(),
+			messenger	: new CMessenger(),
 			contact		: {}
 		};
 	}
@@ -113,16 +113,16 @@ class AbstractNode extends EventEmitter
 	 *	Contructs the primary interface for a kad node
 	 *	@constructor
 	 *	@param {object} options
-	 *	@param {AbstractNode~transport} options.transport - See {@tutorial transport-adapters}
+	 *	@param {CKademliaNodeAbstract~transport} options.transport - See {@tutorial transport-adapters}
 	 *	@param {buffer} options.identity - See {@tutorial identities}
 	 *	@param {Bucket~contact} options.contact - See {@tutorial identities}
-	 *	@param {AbstractNode~storage} options.storage - See {@tutorial storage-adapters}
-	 *	@param {AbstractNode~logger} [options.logger]
-	 *	@param {Messenger} [options.messenger] - See {@tutorial messengers}
+	 *	@param {CKademliaNodeAbstract~storage} options.storage - See {@tutorial storage-adapters}
+	 *	@param {CKademliaNodeAbstract~logger} [options.logger]
+	 *	@param {CMessenger} [options.messenger] - See {@tutorial messengers}
 	 */
 	constructor( options )
 	{
-		AbstractNode.validate( options = Object.assign( {}, AbstractNode.DEFAULTS, options ) );
+		CKademliaNodeAbstract.validate( options = Object.assign( {}, CKademliaNodeAbstract.DEFAULTS, options ) );
 		super();
 
 		this._middlewares	= {'*': []};
@@ -135,7 +135,7 @@ class AbstractNode extends EventEmitter
 		this.identity		= options.identity;
 		this.contact		= options.contact;
 		this.logger		= options.logger;
-		this.router		= new RoutingTable( this.identity );
+		this.router		= new CRoutingTable( this.identity );
 
 		this._init();
 	}
@@ -286,7 +286,7 @@ class AbstractNode extends EventEmitter
 	 *	@param {string} method - RPC method name
 	 *	@param {object|array} params - RPC parameters
 	 *	@param {Bucket~contact} target	contact - Destination address information
-	 *	@param {AbstractNode~sendCallback} handler	[callback]
+	 *	@param {CKademliaNodeAbstract~sendCallback} handler	[callback]
 	 */
 	send( method, params, target, handler = () => null )
 	{
@@ -322,7 +322,7 @@ class AbstractNode extends EventEmitter
 	}
 
 	/**
-	 *	@callback AbstractNode~sendCallback
+	 *	@callback CKademliaNodeAbstract~sendCallback
 	 *	@param {null|error} error
 	 *	@param {object|array|string|number} result
 	 */
@@ -342,7 +342,7 @@ class AbstractNode extends EventEmitter
 	/**
 	 *	Mounts a message handler route for processing incoming RPC messages
 	 *	@param {string} [method] - RPC method name to route through
-	 *	@param {AbstractNode~middleware} middleware
+	 *	@param {CKademliaNodeAbstract~middleware} middleware
 	 */
 	use( method, middleware )
 	{
@@ -362,19 +362,19 @@ class AbstractNode extends EventEmitter
 	}
 
 	/**
-	 *	@callback AbstractNode~middleware
+	 *	@callback CKademliaNodeAbstract~middleware
 	 *	@param {error} [error] - Error object resulting from a middleware
-	 *	@param {AbstractNode~request} request - The incoming message object
-	 *	@param {AbstractNode~response} response - The outgoing response object
-	 *	@param {AbstractNode~next} next - Call to proceed to next middleware
+	 *	@param {CKademliaNodeAbstract~request} request - The incoming message object
+	 *	@param {CKademliaNodeAbstract~response} response - The outgoing response object
+	 *	@param {CKademliaNodeAbstract~next} next - Call to proceed to next middleware
 	 */
 
 	/**
-	 *	Passes through to the {@link AbstractNode~transport}
+	 *	Passes through to the {@link CKademliaNodeAbstract~transport}
 	 */
 	listen()
 	{
-		let handlers	= new ErrorRules(this);
+		let handlers	= new CErrorRules(this);
 
 		this.use( handlers.methodNotFound.bind( handlers ) );
 		this.use( handlers.internalError.bind( handlers ) );
@@ -384,8 +384,8 @@ class AbstractNode extends EventEmitter
 
 	/**
 	 *	Processes a the given arguments by sending them through the appropriate middleware stack
-	 *	@param {AbstractNode~request} request
-	 *	@param {AbstractNode~response} response
+	 *	@param {CKademliaNodeAbstract~request} request
+	 *	@param {CKademliaNodeAbstract~response} response
 	 */
 	receive( request, response )
 	{
@@ -470,6 +470,6 @@ class AbstractNode extends EventEmitter
 
 /**
  *	@exports
- *	@type {AbstractNode}
+ *	@type {CKademliaNodeAbstract}
  */
-module.exports = AbstractNode;
+module.exports = CKademliaNodeAbstract;

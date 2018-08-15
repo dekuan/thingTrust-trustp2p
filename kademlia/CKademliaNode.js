@@ -2,9 +2,9 @@
 "use strict";
 
 const { Writable : WritableStream }	= require( 'stream' );
-const AbstractNode			= require( './node-abstract' );
-const KademliaRules			= require( './rules-kademlia' );
-const ContactList			= require( './contact-list' );
+const CKademliaNodeAbstract		= require( './CKademliaNodeAbstract' );
+const CKademliaRules			= require( './CKademliaRules' );
+const CContactList			= require( './CContactList' );
 const MetaPipe				= require( 'metapipe' );
 
 const _async				= require( 'async' );
@@ -15,14 +15,14 @@ const _utils				= require( './utils' );
 
 
 /**
- *	Extends {@link AbstractNode} with Kademlia-specific rules
+ *	Extends {@link CKademliaNodeAbstract} with Kademlia-specific rules
  *	@class
- *	@extends {AbstractNode}
+ *	@extends {CKademliaNodeAbstract}
  */
-class KademliaNode extends AbstractNode
+class CKademliaNode extends CKademliaNodeAbstract
 {
 	/**
-	 *	@typedef	{object}		KademliaNode~entry
+	 *	@typedef	{object}		CKademliaNode~entry
 	 *	@property	{string|object|array}	value - The primary entry value
 	 *	@property	{string}		publisher - Node identity of the original publisher
 	 *	@property	{number}		timestamp - Last update/replicate time
@@ -54,7 +54,7 @@ class KademliaNode extends AbstractNode
 	 */
 	listen()
 	{
-		let handlers	= new KademliaRules( this );
+		let handlers	= new CKademliaRules( this );
 
 		this.use( 'PING', handlers.ping.bind( handlers ) );
 		this.use( 'STORE', handlers.store.bind( handlers ) );
@@ -71,12 +71,12 @@ class KademliaNode extends AbstractNode
 
 	/**
 	 *	Inserts the given contact into the routing table and uses it to perform
-	 *	a {@link KademliaNode#iterativeFindNode} for this node's identity,
+	 *	a {@link CKademliaNode#iterativeFindNode} for this node's identity,
 	 *	then refreshes all buckets further than it's closest neighbor, which will
 	 *	be in the occupied bucket with the lowest index
 	 *	@param {Bucket~contact} peer	- Peer to bootstrap from
 	 *	@param {function} [callback]	- joinListener, Function to set as join listener
-	 *	@emits AbstractNode#join
+	 *	@emits CKademliaNodeAbstract#join
 	 */
 	join( [ identity, contact ], callback )
 	{
@@ -118,7 +118,7 @@ class KademliaNode extends AbstractNode
 	/**
 	 *	Sends a PING message to the supplied contact
 	 *	@param {Bucket~contact} contact			- peer
-	 *	@param {KademliaNode~pingCallback} callback
+	 *	@param {CKademliaNode~pingCallback} callback
 	 */
 	ping( contact, callback )
 	{
@@ -136,7 +136,7 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 * @callback KademliaNode~pingCallback
+	 * @callback CKademliaNode~pingCallback
 	 * @param {error|null} error
 	 * @param {number} latency - Milliseconds before response received
 	 */
@@ -167,11 +167,11 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	Performs a {@link KademliaNode#iterativeFindNode} to collect K contacts
+	 *	Performs a {@link CKademliaNode#iterativeFindNode} to collect K contacts
 	 *	closests to the given key, sending a STORE message to each of them
 	 *	@param {buffer|string} key - Key to store data under
 	 *	@param {buffer|string|object} value - Value to store by key
-	 *	@param {KademliaNode~iterativeStoreCallback} callback
+	 *	@param {CKademliaNode~iterativeStoreCallback} callback
 	 */
 	iterativeStore( key, value, callback )
 	{
@@ -226,7 +226,7 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	@callback KademliaNode~iterativeStoreCallback
+	 *	@callback CKademliaNode~iterativeStoreCallback
 	 *	@param {error|null} error
 	 *	@param {number} stored - Total nodes who stored the pair
 	 */
@@ -235,7 +235,7 @@ class KademliaNode extends AbstractNode
 	 *	Basic kademlia lookup operation that builds a set of K contacts closest
 	 *	to the given key
 	 *	@param {buffer|string} key - Reference key for node lookup
-	 *	@param {KademliaNode~iterativeFindNodeCallback} callback
+	 *	@param {CKademliaNode~iterativeFindNodeCallback} callback
 	 */
 	iterativeFindNode( key, callback )
 	{
@@ -244,7 +244,7 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	@callback KademliaNode~iterativeFindNodeCallback
+	 *	@callback CKademliaNode~iterativeFindNodeCallback
 	 *	@param {error|null} error
 	 *	@param {Bucket~contact[]} contacts - Result of the lookup operation
 	 */
@@ -256,7 +256,7 @@ class KademliaNode extends AbstractNode
 	 *	contacts are returned. Upon success, we must store the value at the
 	 *	nearest node seen during the search that did not return the value.
 	 *	@param {buffer|string} key - Key for value lookup
-	 *	@param {KademliaNode~iterativeFindValueCallback} callback
+	 *	@param {CKademliaNode~iterativeFindValueCallback} callback
 	 */
 	iterativeFindValue( key, callback )
 	{
@@ -265,9 +265,9 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	@callback KademliaNode~iterativeFindValueCallback
+	 *	@callback CKademliaNode~iterativeFindValueCallback
 	 *	@param {error|null} error
-	 *	@param {KademliaNode~entry} value
+	 *	@param {CKademliaNode~entry} value
 	 *	@param {null|Bucket~contact} contact - Contact responded with entry
 	 */
 
@@ -276,7 +276,7 @@ class KademliaNode extends AbstractNode
 	 *	republishing/replication of items stored. Items that we did not publish
 	 *	ourselves get republished every T_REPLICATE. Items we did publish get
 	 *	republished every T_REPUBLISH.
-	 *	@param {KademliaNode~replicateCallback} [callback]
+	 *	@param {CKademliaNode~replicateCallback} [callback]
 	 */
 	replicate( callback = () => null )
 	{
@@ -319,7 +319,7 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	@callback KademliaNode~replicateCallback
+	 *	@callback CKademliaNode~replicateCallback
 	 *	@param {error|null} error
 	 *	@param {number} itemsReplicated
 	 */
@@ -330,7 +330,7 @@ class KademliaNode extends AbstractNode
 	 *	proportional to the number of nodes between the current node and the node
 	 *	whose ID is closest to the key", where this number is "inferred from the
 	 *	bucket structure of the current node".
-	 *	@param {KademliaNode~expireCallback} [callback]
+	 *	@param {CKademliaNode~expireCallback} [callback]
 	 */
 	expire( callback = () => null )
 	{
@@ -367,7 +367,7 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	@callback KademliaNode~expireCallback
+	 *	@callback CKademliaNode~expireCallback
 	 *	@param {error|null} error
 	 *	@param {number} itemsExpired
 	 */
@@ -377,7 +377,7 @@ class KademliaNode extends AbstractNode
 	 *	T_REFRESH, the node selects a random number in that range and does a
 	 *	refresh, an iterativeFindNode using that number as key.
 	 *	@param {number} startIndex - bucket index to start refresh from
-	 *	@param {KademliaNode~refreshCallback} [callback]
+	 *	@param {CKademliaNode~refreshCallback} [callback]
 	 */
 	refresh( startIndex = 0, callback = () => null )
 	{
@@ -410,7 +410,7 @@ class KademliaNode extends AbstractNode
 	}
 
 	/**
-	 *	@callback KademliaNode~refreshCallback
+	 *	@callback CKademliaNode~refreshCallback
 	 *	@param {error|null} error
 	 *	@param {array} bucketsRefreshed
 	 */
@@ -426,7 +426,7 @@ class KademliaNode extends AbstractNode
 			return [ method, [ key ], target ];
 		}
 
-		let shortlist = new ContactList
+		let shortlist = new CContactList
 		(
 			key,
 			[
@@ -628,6 +628,6 @@ class KademliaNode extends AbstractNode
 
 /**
  *	@exports
- *	@type {KademliaNode}
+ *	@type {CKademliaNode}
  */
-module.exports = KademliaNode;
+module.exports = CKademliaNode;
