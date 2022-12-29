@@ -38,7 +38,7 @@
     "test": "yarn ava"
   },
   "devDependencies": {
-    "ava": "^0.22.0",
+    "ava": "^5.1.0",
     "testcheck": "^1.0.0-rc.2"
   }
 }
